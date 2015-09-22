@@ -1,0 +1,13 @@
+#
+# Main entry
+#
+menuconfig INIT_MAIN
+	bool "Init main"
+	---help---
+	This is main function for bootmemory allocator.
+config MAIN
+	tristate "The entry of Bootmemory allocator"
+	help 
+		The machine of Bootmemory allocator is main allocator in initial 
+		memory.
+endif
