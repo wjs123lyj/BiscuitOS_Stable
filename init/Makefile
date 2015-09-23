@@ -1,14 +1,14 @@
 CC=gcc
-FLAGS=-g -o 
-SRCS = main.c \
-	   test-add.c \
-	   test-sub.c
+FLAGS=-g 
+SRCS = main.c 
 
 INC= -I./
 TARGET=align
 OBJS = ${SRCS:.c=.o}
-${TARGET}:
-	${CC} ${SRCS} ${FLAGS} ${TARGET}
+${TARGET}:memblock.o
+	${CC} ${SRCS} ${FLAGS} -o ${TARGET}
+memblock.o:
+	${CC} ../lib/mm/memblock.c ${FLAGS} -c
 clean:
 	rm -rf *.o a
 	ctags -R
