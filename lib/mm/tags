@@ -1,0 +1,20 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+__memblock_add_region	memblock.c	/^int __memblock_add_region(unsigned long starts,unsigned long ends,$/;"	f
+arch_setup	memblock.c	/^void arch_setup(void)$/;"	f
+bootmem_bitmap_bytes	memblock.c	/^unsigned long bootmem_bitmap_bytes(unsigned long start,unsigned long end)$/;"	f
+bootmem_bitmap_pages	memblock.c	/^unsigned long bootmem_bitmap_pages(unsigned long bytes)$/;"	f
+bootmem_init	memblock.c	/^void bootmem_init(void)$/;"	f
+buddy_memory	memblock.c	/^struct memory buddy_memory = {$/;"	v	typeref:struct:memory
+calculate_limit	memblock.c	/^void calculate_limit(unsigned long *min,unsigned long *max_low)$/;"	f
+initrd_memory	memblock.c	/^struct memblock_region initrd_memory[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+initrd_reserve	memblock.c	/^struct memblock_region initrd_reserve[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+memblock	memblock.c	/^struct memblock memblock;$/;"	v	typeref:struct:memblock
+memblock_add_region	memblock.c	/^int memblock_add_region(unsigned long size)$/;"	f
+memblock_adjust	memblock.c	/^void memblock_adjust(unsigned long idx,unsigned long base,unsigned long size)$/;"	f
+memblock_init	memblock.c	/^int memblock_init(void)$/;"	f
+memblock_overlap	memblock.c	/^int memblock_overlap(unsigned long base0,unsigned long size0,$/;"	f

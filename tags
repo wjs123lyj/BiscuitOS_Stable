@@ -4,3 +4,53 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ALIGN	include/linux/kernel.h	17;"	d
+CC	init/Makefile	/^CC=gcc$/;"	m
+DEBUG	include/linux/debug.h	6;"	d
+FLAGS	init/Makefile	/^FLAGS=-g -pg $/;"	m
+INC	init/Makefile	/^INC= -I.\/$/;"	m
+L1_CACHE_ALIGN	include/linux/page.h	10;"	d
+L1_CACHE_SHIFT	include/linux/page.h	8;"	d
+L1_CACHE_SIZE	include/linux/page.h	9;"	d
+MAX_MEMBLOCK	include/linux/memblock.h	8;"	d
+MAX_MEMBLOCK_TYPE	include/linux/memblock.h	7;"	d
+MAX_REGIONS	include/linux/memblock.h	6;"	d
+OBJS	init/Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
+PAGE_MASK	include/linux/page.h	6;"	d
+PAGE_SHIFT	include/linux/page.h	4;"	d
+PAGE_SIZE	include/linux/page.h	5;"	d
+SRCS	init/Makefile	/^SRCS = main.c \\$/;"	m
+TARGET	init/Makefile	/^TARGET=align$/;"	m
+_DEBUG_H_	include/linux/debug.h	2;"	d
+_KERNEL_H_	include/linux/kernel.h	2;"	d
+_MEMBLOCK_H_	include/linux/memblock.h	2;"	d
+_PAGE_H_	include/linux/page.h	2;"	d
+__memblock_add_region	lib/mm/memblock.c	/^int __memblock_add_region(unsigned long starts,unsigned long ends,$/;"	f
+arch_setup	lib/mm/memblock.c	/^void arch_setup(void)$/;"	f
+base	include/linux/memblock.h	/^	unsigned long base;$/;"	m	struct:memblock_region
+bootmem_bitmap_bytes	lib/mm/memblock.c	/^unsigned long bootmem_bitmap_bytes(unsigned long start,unsigned long end)$/;"	f
+bootmem_bitmap_pages	lib/mm/memblock.c	/^unsigned long bootmem_bitmap_pages(unsigned long bytes)$/;"	f
+bootmem_init	lib/mm/memblock.c	/^void bootmem_init(void)$/;"	f
+buddy_memory	lib/mm/memblock.c	/^struct memory buddy_memory = {$/;"	v	typeref:struct:memory
+calculate_limit	lib/mm/memblock.c	/^void calculate_limit(unsigned long *min,unsigned long *max_low)$/;"	f
+cnt	include/linux/memblock.h	/^	unsigned long cnt;$/;"	m	struct:memblock_type
+end_pfn	include/linux/memblock.h	/^	unsigned long end_pfn;$/;"	m	struct:memory
+initrd_memory	lib/mm/memblock.c	/^struct memblock_region initrd_memory[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+initrd_reserve	lib/mm/memblock.c	/^struct memblock_region initrd_reserve[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+main	init/main.c	/^int main()$/;"	f
+max	include/linux/kernel.h	5;"	d
+memblock	include/linux/memblock.h	/^struct memblock {$/;"	s
+memblock	lib/mm/memblock.c	/^struct memblock memblock;$/;"	v	typeref:struct:memblock
+memblock_add_region	lib/mm/memblock.c	/^int memblock_add_region(unsigned long size)$/;"	f
+memblock_adjust	lib/mm/memblock.c	/^void memblock_adjust(unsigned long idx,unsigned long base,unsigned long size)$/;"	f
+memblock_init	lib/mm/memblock.c	/^int memblock_init(void)$/;"	f
+memblock_overlap	lib/mm/memblock.c	/^int memblock_overlap(unsigned long base0,unsigned long size0,$/;"	f
+memblock_region	include/linux/memblock.h	/^struct memblock_region {$/;"	s
+memblock_type	include/linux/memblock.h	/^struct memblock_type {$/;"	s
+memory	include/linux/memblock.h	/^	struct memblock_type memory;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
+memory	include/linux/memblock.h	/^struct memory {$/;"	s
+min	include/linux/kernel.h	11;"	d
+regions	include/linux/memblock.h	/^	struct memblock_region *regions;$/;"	m	struct:memblock_type	typeref:struct:memblock_type::memblock_region
+reserved	include/linux/memblock.h	/^	struct memblock_type reserved;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
+size	include/linux/memblock.h	/^	unsigned long size;$/;"	m	struct:memblock_region
+start_pfn	include/linux/memblock.h	/^	unsigned long start_pfn;$/;"	m	struct:memory

@@ -9,8 +9,10 @@ OBJS = ${SRCS:.c=.o}
 ${TARGET}:
 	${CC} ${SRCS} ${FLAGS} -o ${TARGET}
 	ctags -R
+	./${TARGET}
 memblock.o:
 	${CC} ../lib/mm/memblock.c ${FLAGS} -c
 clean:
 	rm -rf *.o a
 	ctags -R
+	rm ${TARGET}

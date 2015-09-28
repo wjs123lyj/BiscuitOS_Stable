@@ -1,18 +1,17 @@
 #include "../include/linux/memblock.h"
 #include "../include/linux/debug.h"
+#include "../include/linux/kernel.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-extern struct memblock memblock;
-extern int memblock_init(void);
+extern void arch_setup(void);
 
 int main()
 {
 
-	memblock_init();
-	printf("memblock memory[%p - %p]\n",
-			(void *)memblock.memory.regions[0].base,
-			(void *)memblock.memory.regions[0].size);
+	unsigned long min,max;
+
+	arch_setup();
 
 	printf("Hello World\n");
 	return 0;
