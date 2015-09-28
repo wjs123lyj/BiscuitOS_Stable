@@ -3,16 +3,14 @@
 #include "../../include/linux/page.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-
 /*
  * Get pfn of start and end.
  */
 void calculate_limit(unsigned long *min,unsigned long *max_low)
 {
 
-	*min = memory.start_pfn;
-	*max_low   = memory.end_pfn;
+	*min = buddy_memory.start_pfn;
+	*max_low   = buddy_memory.end_pfn;
 
 	/*
 	 * Domain check.

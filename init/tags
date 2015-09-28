@@ -5,9 +5,9 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 CC	Makefile	/^CC=gcc$/;"	m
-FLAGS	Makefile	/^FLAGS=-g $/;"	m
+FLAGS	Makefile	/^FLAGS=-g -pg $/;"	m
 INC	Makefile	/^INC= -I.\/$/;"	m
 OBJS	Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
-SRCS	Makefile	/^SRCS = main.c $/;"	m
+SRCS	Makefile	/^SRCS = main.c \\$/;"	m
 TARGET	Makefile	/^TARGET=align$/;"	m
 main	main.c	/^int main()$/;"	f

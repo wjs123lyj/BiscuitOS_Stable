@@ -39,12 +39,11 @@ struct memory {
  * This structure uses to hold the range of
  * real memory size in pfn.
  */
-struct memory memory = {
+struct memory buddy_memory = {
 	.start_pfn = 0x50000000,
 	.end_pfn   = 0x60000000,
 };
 struct memblock default_memblock;
 
-static void calculate_limit(unsigned long *min,unsigned long *max_low);
 
 #endif

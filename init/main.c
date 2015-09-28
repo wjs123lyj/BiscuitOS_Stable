@@ -1,8 +1,7 @@
-#include "../include/linux/memblock.h"
+//#include "../include/linux/memblock.h"
 #include "../include/linux/debug.h"
 #include <stdio.h>
 #include <stdlib.h>
-
 
 int main()
 {
