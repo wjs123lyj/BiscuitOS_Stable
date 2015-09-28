@@ -50,6 +50,8 @@ memblock_type	include/linux/memblock.h	/^struct memblock_type {$/;"	s
 memory	include/linux/memblock.h	/^	struct memblock_type memory;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
 memory	include/linux/memblock.h	/^struct memory {$/;"	s
 min	include/linux/kernel.h	11;"	d
+mm_debug	include/linux/debug.h	11;"	d
+mm_debug	include/linux/debug.h	9;"	d
 regions	include/linux/memblock.h	/^	struct memblock_region *regions;$/;"	m	struct:memblock_type	typeref:struct:memblock_type::memblock_region
 reserved	include/linux/memblock.h	/^	struct memblock_type reserved;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
 size	include/linux/memblock.h	/^	unsigned long size;$/;"	m	struct:memblock_region
