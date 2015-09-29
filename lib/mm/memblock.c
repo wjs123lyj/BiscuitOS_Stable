@@ -118,78 +118,122 @@ void memblock_migrate(unsigned long idx,unsigned long base,unsigned long size)
 		memblock.reserved.regions[i].base = memblock.reserved.regions[i - 1].base;
 		memblock.reserved.regions[i].size = memblock.reserved.regions[i - 1].size;
 	}
-	memblock.reserved.cnt++;
+}
+/*
+ * Find alloc address
+ */
+unsigned long memblock_find_alloc(unsigned long start,unsigned long end,
+		unsigned long base,unsigned long size)
+{
+	int i;
+	
+	base = end - size;
+
+	for(i = memblock.reserved.cnt - 1 ; i >= 0 ; i--)
+	{
+		if(memblock_overlap(base,size,memblock.reserved.regions[i].base,
+					memblock.reserved.regions[i].size) != 0)
+		{
+			mm_debug("Alloc overlap\n");
+			base = memblock.reserved.regions[i].base - size;
+			continue;
+		} else
+		{
+			mm_debug("No overlap\n");
+			return base;
+		}
+	}
+	if(base < start)
+		return MM_NOREGION;
+	else
+		return base;
+}
+/*
+ * find base address for allocate
+ */
+unsigned long memblock_find_base(unsigned long start,unsigned long size)
+{
+	unsigned long end;
+	unsigned long base = 0;
+	int i;
+
+	for(i = 0 ; i < memblock.memory.cnt ; i++)
+	{
+		unsigned long regbase,regsize;
+		unsigned long topbase,topend;
+
+		regbase = memblock.memory.regions[i].base;
+		regsize = memblock.memory.regions[i].size;
+		topend = regsize + regbase;
+
+		if(size > regsize)
+		{
+			mm_err("No match size\n");
+			continue;
+		}
+
+		topbase = max(start,regbase);
+		end = topbase + size;
+		if(end > topend)
+		{
+			mm_err("Overflow tail\n");
+			continue;
+		}
+		mm_debug("TopRegions[%d][%p - %p]\n",i,(void *)topbase,
+				(void *)topend);
+		return memblock_find_alloc(topbase,topend,base,size);
+	}
+	return MM_NOREGION;
 }
 /*
  * Add region underlying opertion
  */
-int __memblock_add_region(unsigned long starts,unsigned long ends,
-			unsigned long base,unsigned long size)
+int memblock_add_region_core(struct memblock_type *type,unsigned long base,
+			unsigned long size)
 {
-	int i;
+	int i,j;
 	unsigned long end = base + size;
 
-	mm_debug("FRegion[%p - %p]\n",
-			(void *)base,(void *)end);
-
-	mm_debug("cnt %ld\n",memblock.reserved.cnt);
-
-	for(i = memblock.reserved.cnt - 1; i >= 0; i--)
-	{
-		mm_debug("CRegions[%d][%p - %p]\n",
-				i,(void *)memblock.reserved.regions[i].base,
-				(void *)(memblock.reserved.regions[i].base +
-					memblock.reserved.regions[i].size));
-		if(memblock_overlap(base,size,memblock.reserved.regions[i].base,
-					memblock.reserved.regions[i].size) != 0)
-		{
-			base = memblock.reserved.regions[i].base - size;
-			mm_debug("Reserved regions[%p - %p]\n",
-				(void *)memblock.reserved.regions[i].base,
-				(void *)(memblock.reserved.regions[i].base + 
-					memblock.reserved.regions[i].size));
-		} else
-		{
-			mm_debug("This is test\n");
-		}
-	}
-	mm_debug("NewRegion[%p - %p]\n",(void *)base,
-			(void *)(base + size));
 	end = base + size;
-	for(i = memblock.reserved.cnt - 1 ; i >= 0 ; i--)
+	j = type->cnt;
+	for(i = 0; i < type->cnt ; i--)
 	{
-		if(memblock.reserved.regions[0].base == 0 &&
-				memblock.reserved.regions[0].size == 0)
+		if(type->regions[0].base == 0 &&
+				type->regions[0].size == 0)
 		{
 			mm_debug("This is first reserved\n");
-			memblock.reserved.regions[0].base = base;
-			memblock.reserved.regions[0].size = size;
+			type->regions[0].base = base;
+			type->regions[0].size = size;
 			break;
 		}
-		else if(end > memblock.reserved.regions[i].base)
+		else if(base < (type->regions[i].base + 
+					type->regions[i].size))
 		{
 			mm_debug("o\n");
 			memblock_migrate(i,base,end);
-			memblock.reserved.regions[i].base = base;
-			memblock.reserved.regions[i].size = size;
-			memblock.reserved.cnt++;
+			type->regions[i].base = base;
+			type->regions[i].size = size;
+			type->cnt++;
 			break;
 		} else
 		{
-			mm_debug("b\n");
-			memblock.reserved.regions[i + 1].base = base;
-			memblock.reserved.regions[i + 1].size = size;
-			memblock.reserved.cnt++;
-			break;
+			mm_debug("Search loop\n");
 		}
+	}
+	if(j == type->cnt && j != 1)
+	{
+		mm_debug("Add tail\n");
+		type->regions[j].base = base;
+		type->regions[j].size = size;
+		type->cnt++;
 	}
 #ifdef DEBUG
 	for(i = 0 ; i < memblock.reserved.cnt; i++)
 	{
-		mm_debug("Region[%p - %p]\n",
-				(void *)memblock.reserved.regions[i].base,
-				(void *)(memblock.reserved.regions[i].base + 
-					memblock.reserved.regions[i].size));
+		mm_debug(">>>Region[%d][%p - %p]\n",i,
+				(void *)type->regions[i].base,
+				(void *)(type->regions[i].base + 
+					type->regions[i].size));
 	}
 	mm_debug("======================================\n");
 #endif
@@ -200,31 +244,13 @@ int __memblock_add_region(unsigned long starts,unsigned long ends,
 int memblock_add_region(unsigned long size)
 {
 	unsigned long base = 0;
-	unsigned long i;
-	unsigned long regbase = 0,regend = 0;
+	int i;
 
-	for(i = 0 ; i < memblock.memory.cnt ; i++)
-	{
-		mm_debug("Findregion[%ld] End[%p] rivee end[%p]\n",i,
-				(void *)(memblock.memory.regions[i].base +
-					memblock.memory.regions[i].size),
-				(void *)regend);
-		regend = max(regend,memblock.memory.regions[i].base + 
-				memblock.memory.regions[i].size);
-	}
-	base = regend - size;
-	regbase = base;
-
-	for(i = 0 ; i < memblock.memory.cnt ; i++)
-	{
-		mm_debug("Findregion[%ld] Base[%p] regb[%p]\n",
-				i,(void *)base,
-				(void *)memblock.memory.regions[i].base);
-		regbase = min(regbase,memblock.memory.regions[i].base);
-	}
-	
-	mm_debug("Reg[%p - %p]\n",(void *)regbase,(void *)regend);
-	__memblock_add_region(regbase,regend,base,size);
+	base = memblock_find_base(0,size);
+	if(base == MM_NOREGION)
+		mm_err("Cant add region\n");
+	mm_debug("Base %p\n",(void *)base);
+	memblock_add_region_core(&memblock.reserved,base,size);
 	return 0;
 }
 /*
@@ -233,21 +259,12 @@ int memblock_add_region(unsigned long size)
 void bootmem_init(void)
 {
 	unsigned long min,max;
+	int i;
 
 	calculate_limit(&min,&max);
 
-	memblock_add_region(0x80);
-
-	memblock_add_region(0x80);
-
-
-	memblock_add_region(0x80);
-	memblock_add_region(0x80);
-	memblock_add_region(0x80);
-	memblock_add_region(0x80);
-	memblock_add_region(0x80);
-	memblock_add_region(0x80);
-	memblock_add_region(0x80);
+	for(i = 0 ; i < 50 ; i++)
+		memblock_add_region(0x80);
 }
 /*
  * ARCH init

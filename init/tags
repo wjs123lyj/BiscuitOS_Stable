@@ -7,6 +7,7 @@
 CC	Makefile	/^CC=gcc$/;"	m
 FLAGS	Makefile	/^FLAGS=-g -pg $/;"	m
 INC	Makefile	/^INC= -I.\/$/;"	m
+LOG_FILE	Makefile	/^LOG_FILE=debug.log$/;"	m
 OBJS	Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
 SRCS	Makefile	/^SRCS = main.c \\$/;"	m
 TARGET	Makefile	/^TARGET=align$/;"	m

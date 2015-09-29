@@ -11,4 +11,8 @@
 #define mm_debug
 #endif
 
+#define mm_err printf
+
+#define MM_NOREGION 22/* No match region */
+
 #endif
