@@ -1,5 +1,6 @@
 CC=gcc
-FLAGS=-g -pg 
+FLAGS=-g -pg
+DEBUG_FLAGS=-C -E -g 
 SRCS = main.c \
 	   ../lib/mm/memblock.c
 
@@ -12,6 +13,8 @@ ${TARGET}:
 	ctags -R
 	./${TARGET} > ${LOG_FILE}
 	vim ${LOG_FILE}
+debug:
+	${CC} ${SRCS} ${DEBUG_FLAGS}
 memblock.o:
 	${CC} ../lib/mm/memblock.c ${FLAGS} -c
 clean:

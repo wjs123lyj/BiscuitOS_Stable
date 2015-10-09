@@ -4,6 +4,7 @@
 #include "../../include/linux/kernel.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct memblock_region initrd_memory[MAX_REGIONS];
 struct memblock_region initrd_reserve[MAX_REGIONS];
@@ -21,8 +22,6 @@ void calculate_limit(unsigned long *min,unsigned long *max_low)
 	*min = buddy_memory.start_pfn;
 	*max_low   = buddy_memory.end_pfn;
 
-	mm_debug("Calculate limit Region[%p - %p]\n",
-			(void *)*min,(void *)*max_low);
 	/*
 	 * Domain check.
 	 */
@@ -37,7 +36,7 @@ void calculate_limit(unsigned long *min,unsigned long *max_low)
  */
 unsigned long bootmem_bitmap_bytes(unsigned long start,unsigned long end)
 {
-	return (end - start + 7) >> 8;
+	return (end - start + 7) >> 3;
 }
 /*
  * Calculate the bit that store pfn.
@@ -56,8 +55,12 @@ int memblock_init(void)
 	 */
 	memblock.memory.regions = initrd_memory;
 	memblock.memory.cnt = 1;
+	memblock.memory.max = MAX_REGIONS;
+	memblock.memory.limit = 3 * MAX_REGIONS;
 	memblock.reserved.regions = initrd_reserve;
 	memblock.reserved.cnt = 1;
+	memblock.reserved.max = MAX_REGIONS;
+	memblock.reserved.limit = 3 * MAX_REGIONS;
 	/*
 	 * Init Region.
 	 */
@@ -66,14 +69,6 @@ int memblock_init(void)
 	memblock.reserved.regions[0].base = 0;
 	memblock.reserved.regions[0].size = 0;
 
-	mm_debug("Memblock_init Meory.region[%p - %p]\n",
-			(void *)memblock.memory.regions[0].base,
-			(void *)(memblock.memory.regions[0].base +
-			memblock.memory.regions[0].size));
-	mm_debug("Membloc_init Reserved.region[%p - %p]\n",
-			(void *)memblock.reserved.regions[0].base,
-			(void *)(memblock.reserved.regions[0].base +
-				memblock.reserved.regions[0].size));
 	return 0;
 }
 /*
@@ -91,20 +86,11 @@ int memblock_overlap(unsigned long base0,unsigned long size0,
 	end0 = base0 + size0;
 	end1 = base1 + size1;
 	if(base0 <= base1 && end0 > base1)
-	{
-		mm_debug("Overlap below\n");
 		return 1;
-	}
 	else if(base1 <= base0 && end1 > base0)
-	{
-		mm_debug("Overlap after\n");
 		return -1;
-	}
 	else
-	{
-		mm_debug("No overlap\n");
 		return 0;
-	}
 }
 /*
  * memblock region adjust
@@ -126,20 +112,19 @@ unsigned long memblock_find_alloc(unsigned long start,unsigned long end,
 		unsigned long base,unsigned long size)
 {
 	int i;
+	struct memblock_type *type = &memblock.reserved;
 	
 	base = end - size;
 
-	for(i = memblock.reserved.cnt - 1 ; i >= 0 ; i--)
+	for(i = type->cnt - 1 ; i >= 0 ; i--)
 	{
-		if(memblock_overlap(base,size,memblock.reserved.regions[i].base,
-					memblock.reserved.regions[i].size) != 0)
+		if(memblock_overlap(base,size,type->regions[i].base,
+					type->regions[i].size) != 0)
 		{
-			mm_debug("Alloc overlap\n");
-			base = memblock.reserved.regions[i].base - size;
+			base = type->regions[i].base - size;
 			continue;
 		} else
 		{
-			mm_debug("No overlap\n");
 			return base;
 		}
 	}
@@ -156,14 +141,15 @@ unsigned long memblock_find_base(unsigned long start,unsigned long size)
 	unsigned long end;
 	unsigned long base = 0;
 	int i;
+	struct memblock_type *type = &memblock.memory;
 
-	for(i = 0 ; i < memblock.memory.cnt ; i++)
+	for(i = 0 ; i < type->cnt ; i++)
 	{
 		unsigned long regbase,regsize;
 		unsigned long topbase,topend;
 
-		regbase = memblock.memory.regions[i].base;
-		regsize = memblock.memory.regions[i].size;
+		regbase = type->regions[i].base;
+		regsize = type->regions[i].size;
 		topend = regsize + regbase;
 
 		if(size > regsize)
@@ -188,7 +174,7 @@ unsigned long memblock_find_base(unsigned long start,unsigned long size)
 /*
  * Add region underlying opertion
  */
-int memblock_add_region_core(struct memblock_type *type,unsigned long base,
+unsigned long memblock_add_region_core(struct memblock_type *type,unsigned long base,
 			unsigned long size)
 {
 	int i,j;
@@ -201,7 +187,6 @@ int memblock_add_region_core(struct memblock_type *type,unsigned long base,
 		if(type->regions[0].base == 0 &&
 				type->regions[0].size == 0)
 		{
-			mm_debug("This is first reserved\n");
 			type->regions[0].base = base;
 			type->regions[0].size = size;
 			break;
@@ -209,7 +194,6 @@ int memblock_add_region_core(struct memblock_type *type,unsigned long base,
 		else if(base < (type->regions[i].base + 
 					type->regions[i].size))
 		{
-			mm_debug("o\n");
 			memblock_migrate(i,base,end);
 			type->regions[i].base = base;
 			type->regions[i].size = size;
@@ -227,31 +211,99 @@ int memblock_add_region_core(struct memblock_type *type,unsigned long base,
 		type->regions[j].size = size;
 		type->cnt++;
 	}
-#ifdef DEBUG
-	for(i = 0 ; i < memblock.reserved.cnt; i++)
+
+	return base;
+}
+/*
+ * Expand array of regions.
+ */
+int memblock_double_array(struct memblock_type *type)
+{
+	struct memblock_region *region = NULL;
+	struct memblock_region **new;
+
+	if(type->max + MAX_REGIONS > type->limit)
 	{
-		mm_debug(">>>Region[%d][%p - %p]\n",i,
-				(void *)type->regions[i].base,
-				(void *)(type->regions[i].base + 
-					type->regions[i].size));
+		mm_err("Can't expand the region\n");
+		return MM_NOEXPAND;
 	}
-	mm_debug("======================================\n");
-#endif
+	
+	region = (struct memblock_region *)malloc(
+			sizeof(struct memblock_region) * (MAX_REGIONS +
+				type->max));
+	memcpy(region,type->regions,type->max * sizeof(struct memblock_region));	
+	memset(region + type->max,0,MAX_REGIONS);
+	type->max += MAX_REGIONS;
+	type->regions = region;
+
+	return 0;
 }
 /*
  * Add region
  */
-int memblock_add_region(unsigned long size)
+unsigned long memblock_add_region(struct memblock_type *type,unsigned long size)
 {
 	unsigned long base = 0;
 	int i;
 
+	if(type->cnt == type->max)
+		if(type->max >= type->limit)
+		{
+			mm_err("Can't add region\n");
+			return MM_NOEXPAND;
+		} else
+		{
+			mm_debug("Double array\n");
+			memblock_double_array(type);
+		}
+
 	base = memblock_find_base(0,size);
 	if(base == MM_NOREGION)
+	{
 		mm_err("Cant add region\n");
-	mm_debug("Base %p\n",(void *)base);
-	memblock_add_region_core(&memblock.reserved,base,size);
+		return MM_NOREGION;
+	}
+	return memblock_add_region_core(&memblock.reserved,base,size);
+}
+/*
+ * Free region.
+ */
+int memblock_remove_region(struct memblock_type *type,unsigned long base,
+		unsigned long size)
+{
+	int i;
+
+	mm_debug("Remove base %p\n",(void *)base);
+	for(i = 0 ; i < type->cnt ; i++)
+	{
+		unsigned long regbase = type->regions[i].base;
+		unsigned long regend  = type->regions[i].size + regbase;
+
+		if(base >= regbase && base < regend)
+			break;
+	}
+	if(i == type->cnt)
+	{
+		mm_err("Can't match region in [%s]\n",__FUNCTION__);
+		return MM_NOREGION;
+	}
+	for(; i < type->cnt ; i++)
+	{
+		type->regions[i].base = type->regions[i + 1].base;
+		type->regions[i].size = type->regions[i + 1].size;
+	}
+	type->regions[i].base = 0;
+	type->regions[i].size = 0;
+	type->cnt--;
+	
 	return 0;
+}
+/*
+ * Allocate a new region for bitmap.
+ */
+unsigned long bootmem_bitmap_region(unsigned long pages)
+{
+	return memblock_add_region(&memblock.memory,pages);
 }
 /*
  * bootmem_init.
@@ -259,12 +311,17 @@ int memblock_add_region(unsigned long size)
 void bootmem_init(void)
 {
 	unsigned long min,max;
-	int i;
+	unsigned long bytes,pages;
+	unsigned long bitmap;
 
 	calculate_limit(&min,&max);
 
-	for(i = 0 ; i < 50 ; i++)
-		memblock_add_region(0x80);
+	bytes = bootmem_bitmap_bytes(min,max);
+	pages = bootmem_bitmap_pages(bytes);
+	bitmap = bootmem_bitmap_region(pages);
+
+	mm_debug("Pages %p\n",(void *)bitmap);
+
 }
 /*
  * ARCH init

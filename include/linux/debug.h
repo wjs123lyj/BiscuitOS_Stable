@@ -13,6 +13,7 @@
 
 #define mm_err printf
 
-#define MM_NOREGION 22/* No match region */
+#define MM_NOREGION 22 /* No match region */
+#define MM_NOEXPAND 23 /* Can't expand array */
 
 #endif

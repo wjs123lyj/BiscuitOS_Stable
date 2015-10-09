@@ -1,0 +1,21 @@
+[kernel] preprocessing with "gcc -C -E -I.  main.c"
+[value] Analyzing a complete application starting at main
+[value] Computing initial state
+[value] Initial state computed
+[value] Values of globals at initialization
+  
+[value] computing for function arch_setup <- main.
+        Called from main.c:14.
+main.c:14:[kernel] warning: Neither code nor specification for function arch_setup, generating default assigns from the prototype
+[value] using specification for function arch_setup
+[value] Done for function arch_setup
+[value] computing for function printf <- main.
+        Called from main.c:16.
+main.c:16:[kernel] warning: Neither code nor specification for function printf, generating default assigns from the prototype
+[value] using specification for function printf
+[value] Done for function printf
+[value] Recording results for main
+[value] done for function main
+[value] ====== VALUES COMPUTED ======
+[value] Values at end of function main:
+  __retres ∈ {0}

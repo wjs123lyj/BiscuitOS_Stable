@@ -5,7 +5,8 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 CC	Makefile	/^CC=gcc$/;"	m
-FLAGS	Makefile	/^FLAGS=-g -pg $/;"	m
+DEBUG_FLAGS	Makefile	/^DEBUG_FLAGS=-C -E -g $/;"	m
+FLAGS	Makefile	/^FLAGS=-g -pg$/;"	m
 INC	Makefile	/^INC= -I.\/$/;"	m
 LOG_FILE	Makefile	/^LOG_FILE=debug.log$/;"	m
 OBJS	Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m

@@ -3,7 +3,7 @@
 /*
  * This is open source,you can modify it or copy it.
  */
-#define MAX_REGIONS 256
+#define MAX_REGIONS 32
 #define MAX_MEMBLOCK_TYPE 2
 #define MAX_MEMBLOCK 1UL
 
@@ -17,6 +17,8 @@ struct memblock_region {
 
 struct memblock_type {
 	unsigned long cnt;
+	unsigned long max;
+	unsigned long limit;
 	struct memblock_region *regions;
 };
 struct memblock {
