@@ -12,8 +12,13 @@
 #endif
 
 #define mm_err printf
+#define panic printf
 
-#define MM_NOREGION 22 /* No match region */
-#define MM_NOEXPAND 23 /* Can't expand array */
+#define BUG_ON(x) \
+	if(!!x) \
+		mm_err("BUG_ON %s\n",__FUNCTION__); \
+	else \
+		;
+#define WARN_ON(x) (x)
 
 #endif

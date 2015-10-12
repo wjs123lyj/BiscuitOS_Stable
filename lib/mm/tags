@@ -4,22 +4,59 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-arch_setup	memblock.c	/^void arch_setup(void)$/;"	f
-bootmem_bitmap_bytes	memblock.c	/^unsigned long bootmem_bitmap_bytes(unsigned long start,unsigned long end)$/;"	f
-bootmem_bitmap_pages	memblock.c	/^unsigned long bootmem_bitmap_pages(unsigned long bytes)$/;"	f
-bootmem_bitmap_region	memblock.c	/^unsigned long bootmem_bitmap_region(unsigned long pages)$/;"	f
-bootmem_init	memblock.c	/^void bootmem_init(void)$/;"	f
-buddy_memory	memblock.c	/^struct memory buddy_memory = {$/;"	v	typeref:struct:memory
-calculate_limit	memblock.c	/^void calculate_limit(unsigned long *min,unsigned long *max_low)$/;"	f
-initrd_memory	memblock.c	/^struct memblock_region initrd_memory[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
-initrd_reserve	memblock.c	/^struct memblock_region initrd_reserve[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
-memblock	memblock.c	/^struct memblock memblock;$/;"	v	typeref:struct:memblock
-memblock_add_region	memblock.c	/^unsigned long memblock_add_region(struct memblock_type *type,unsigned long size)$/;"	f
-memblock_add_region_core	memblock.c	/^unsigned long memblock_add_region_core(struct memblock_type *type,unsigned long base,$/;"	f
-memblock_double_array	memblock.c	/^int memblock_double_array(struct memblock_type *type)$/;"	f
-memblock_find_alloc	memblock.c	/^unsigned long memblock_find_alloc(unsigned long start,unsigned long end,$/;"	f
-memblock_find_base	memblock.c	/^unsigned long memblock_find_base(unsigned long start,unsigned long size)$/;"	f
-memblock_init	memblock.c	/^int memblock_init(void)$/;"	f
-memblock_migrate	memblock.c	/^void memblock_migrate(unsigned long idx,unsigned long base,unsigned long size)$/;"	f
-memblock_overlap	memblock.c	/^int memblock_overlap(unsigned long base0,unsigned long size0,$/;"	f
-memblock_remove_region	memblock.c	/^int memblock_remove_region(struct memblock_type *type,unsigned long base,$/;"	f
+B_show	memblock.c	/^static void B_show(unsigned long *bitmap)$/;"	f	file:
+NODE_DATA	memblock.c	/^static struct pglist_data *NODE_DATA(unsigned long x)$/;"	f	file:
+PHYS_OFFSET	memblock.c	/^unsigned long PHYS_OFFSET;$/;"	v
+R_show	memblock.c	/^static void R_show(struct memblock_type *type,char *s)$/;"	f	file:
+__free	memblock.c	/^static void __free(struct bootmem_data *bdata,unsigned long start,$/;"	f	file:
+__memblock_alloc_base	memblock.c	/^static phys_addr_t __memblock_alloc_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+__reserve	memblock.c	/^static void __reserve(struct bootmem_data *bdata,unsigned long start,$/;"	f	file:
+arch_init	memblock.c	/^void arch_init(void)$/;"	f
+arch_setup	old_memblock.c	/^void arch_setup(void)$/;"	f
+arm_bootmem_init	memblock.c	/^static void arm_bootmem_init(unsigned long start_pfn,$/;"	f	file:
+bootmem_bitmap_bytes	old_memblock.c	/^unsigned long bootmem_bitmap_bytes(unsigned long start,unsigned long end)$/;"	f
+bootmem_bitmap_pages	old_memblock.c	/^unsigned long bootmem_bitmap_pages(unsigned long bytes)$/;"	f
+bootmem_bitmap_region	old_memblock.c	/^unsigned long bootmem_bitmap_region(unsigned long pages)$/;"	f
+bootmem_bootmap_bytes	memblock.c	/^static unsigned long bootmem_bootmap_bytes(unsigned long pages)$/;"	f	file:
+bootmem_bootmap_pages	memblock.c	/^static unsigned long bootmem_bootmap_pages(unsigned long start_pfn,$/;"	f	file:
+bootmem_init	memblock.c	/^static void bootmem_init(void)$/;"	f	file:
+bootmem_init	old_memblock.c	/^void bootmem_init(void)$/;"	f
+buddy_memory	old_memblock.c	/^struct memory buddy_memory = {$/;"	v	typeref:struct:memory
+calculate_limit	old_memblock.c	/^void calculate_limit(unsigned long *min,unsigned long *max_low)$/;"	f
+contig_pglist_data	memblock.c	/^struct pglist_data contig_pglist_data;$/;"	v	typeref:struct:pglist_data
+default_memory	memblock.c	/^struct memblock_region default_memory[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+default_reserved	memblock.c	/^struct memblock_region default_reserved[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+free_bootmem	memblock.c	/^static void free_bootmem(struct bootmem_data *bdata,$/;"	f	file:
+init_bootmem_core	memblock.c	/^static void init_bootmem_core(struct bootmem_data *bdata,unsigned long bitmap,$/;"	f	file:
+init_bootmem_node	memblock.c	/^static void init_bootmem_node(struct pglist_data *pgdat,unsigned long bitmap,$/;"	f	file:
+initrd_memory	old_memblock.c	/^struct memblock_region initrd_memory[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+initrd_reserve	old_memblock.c	/^struct memblock_region initrd_reserve[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+mark_bootmem	memblock.c	/^static void mark_bootmem(struct bootmem_data *bdata,$/;"	f	file:
+memblock	memblock.c	/^struct memblock memblock = {$/;"	v	typeref:struct:memblock
+memblock	old_memblock.c	/^struct memblock memblock;$/;"	v	typeref:struct:memblock
+memblock_add_region	memblock.c	/^static int memblock_add_region(struct memblock_type *type,$/;"	f	file:
+memblock_add_region	old_memblock.c	/^unsigned long memblock_add_region(struct memblock_type *type,unsigned long size)$/;"	f
+memblock_add_region_core	old_memblock.c	/^unsigned long memblock_add_region_core(struct memblock_type *type,unsigned long base,$/;"	f
+memblock_adjacent_addr	memblock.c	/^static int memblock_adjacent_addr(phys_addr_t base1,phys_addr_t size1,$/;"	f	file:
+memblock_align_down	memblock.c	/^static phys_addr_t memblock_align_down(phys_addr_t addr,$/;"	f	file:
+memblock_align_up	memblock.c	/^static phys_addr_t memblock_align_up(phys_addr_t addr,phys_addr_t align)$/;"	f	file:
+memblock_alloc_base	memblock.c	/^static phys_addr_t memblock_alloc_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+memblock_coalesce_regions	memblock.c	/^static void memblock_coalesce_regions(struct memblock_type *type,$/;"	f	file:
+memblock_double_array	old_memblock.c	/^int memblock_double_array(struct memblock_type *type)$/;"	f
+memblock_find_alloc	old_memblock.c	/^unsigned long memblock_find_alloc(unsigned long start,unsigned long end,$/;"	f
+memblock_find_base	memblock.c	/^static phys_addr_t memblock_find_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+memblock_find_base	old_memblock.c	/^unsigned long memblock_find_base(unsigned long start,unsigned long size)$/;"	f
+memblock_find_region	memblock.c	/^static phys_addr_t memblock_find_region(phys_addr_t start,phys_addr_t end,$/;"	f	file:
+memblock_init	old_memblock.c	/^int memblock_init(void)$/;"	f
+memblock_memory_can_coalesce	memblock.c	/^static int memblock_memory_can_coalesce(phys_addr_t addr1,$/;"	f	file:
+memblock_migrate	old_memblock.c	/^void memblock_migrate(unsigned long idx,unsigned long base,unsigned long size)$/;"	f
+memblock_overlap	old_memblock.c	/^int memblock_overlap(unsigned long base0,unsigned long size0,$/;"	f
+memblock_overlaps_addr	memblock.c	/^static int memblock_overlaps_addr(phys_addr_t base1,phys_addr_t size1,$/;"	f	file:
+memblock_overlaps_region	memblock.c	/^static int memblock_overlaps_region(struct memblock_type *type,$/;"	f	file:
+memblock_regions_adjacent	memblock.c	/^static long memblock_regions_adjacent(struct memblock_type *type,$/;"	f	file:
+memblock_remove_region	memblock.c	/^static void memblock_remove_region(struct memblock_type *type,unsigned long r)$/;"	f	file:
+memblock_remove_region	old_memblock.c	/^int memblock_remove_region(struct memblock_type *type,unsigned long base,$/;"	f
+memory	memblock.c	/^struct memory memory = {$/;"	v	typeref:struct:memory
+memory_array	memblock.c	/^unsigned long memory_array[67108864];$/;"	v
+phys_to_virt	memblock.c	24;"	d	file:
+reserve_bootmem	memblock.c	/^static void reserve_bootmem(struct bootmem_data *bdata,$/;"	f	file:

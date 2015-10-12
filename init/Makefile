@@ -2,7 +2,8 @@ CC=gcc
 FLAGS=-g -pg
 DEBUG_FLAGS=-C -E -g 
 SRCS = main.c \
-	   ../lib/mm/memblock.c
+	   ../lib/mm/memblock.c \
+	   ../lib/bitmap.c
 
 INC= -I./
 TARGET=align
@@ -11,6 +12,7 @@ LOG_FILE=debug.log
 ${TARGET}:
 	${CC} ${SRCS} ${FLAGS} -o ${TARGET}
 	ctags -R
+#	./${TARGET}
 	./${TARGET} > ${LOG_FILE}
 	vim ${LOG_FILE}
 debug:

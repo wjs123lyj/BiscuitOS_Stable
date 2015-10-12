@@ -9,4 +9,5 @@
 #define L1_CACHE_SIZE (1UL << L1_CACHE_SHIFT)
 #define L1_CACHE_ALIGN L1_CACHE_SIZE
 
+#define PAGE_ALIGN(x) (x & ~(PAGE_SIZE - 1))
 #endif
