@@ -3,6 +3,7 @@
 #include "../../include/linux/page.h"
 #include "../../include/linux/kernel.h"
 #include "../../include/linux/types.h"
+#include "../../include/linux/list.h"
 #include <malloc.h>
 #include <string.h>
 
@@ -19,10 +20,24 @@ struct memblock memblock = {
 unsigned long memory_array[67108864];
 unsigned long PHYS_OFFSET;
 
+struct list_head bdata_list;
+
 struct pglist_data contig_pglist_data;
 
 #define phys_to_virt(x) ((x) - PHYS_OFFSET)
 
+/*
+ * pfn_to_virt
+ */
+static void *pfn_to_virt(unsigned long idx)
+{
+	unsigned long addr;
+
+	idx += PAGE_OFFSET;
+	addr = idx - PHYS_OFFSET;
+	
+	return (void *)addr;
+}
 static struct pglist_data *NODE_DATA(unsigned long x)
 {
 	return &contig_pglist_data;
@@ -90,6 +105,8 @@ static void bootmem_init(void)
 	memblock.reserved.regions = default_reserved;
 	memblock.reserved.regions[0].base = 0;
 	memblock.reserved.regions[0].size = 0;
+	/* Init list of bdata */
+	INIT_LIST_HEAD(&bdata_list);
 }
 /*
  * Align of memblock
@@ -412,6 +429,21 @@ static phys_addr_t memblock_alloc_base(phys_addr_t size,phys_addr_t align,
 		panic("PANIC:Can't find address\n ");
 	return alloc;
 }
+static void link_bootmem(struct bootmem_data *bdata)
+{
+	struct list_head *iter;
+
+	list_for_each(iter,&bdata_list)
+	{
+		struct bootmem_data *bd;
+
+		bd = list_entry(iter,struct bootmem_data,list);
+
+		if(bdata->node_min_pfn < bd->node_min_pfn)
+			break;
+	}
+	list_add(&bdata->list,&bdata_list);
+}
 /*
  * Init bootmem in core
  */
@@ -423,6 +455,8 @@ static void init_bootmem_core(struct bootmem_data *bdata,unsigned long bitmap,
 	bdata->node_min_pfn = start_pfn;
 	bdata->node_low_pfn = end_pfn;
 	bdata->node_bootmem_map = (void *)phys_to_virt(bitmap);
+
+	link_bootmem(bdata);
 
 	mapsize = bootmem_bootmap_bytes(end_pfn - start_pfn);
 	
@@ -439,15 +473,12 @@ static void init_bootmem_node(struct pglist_data *pgdat,unsigned long bitmap,
 /*
  * free bootmem regions.
  */
-static void __free(struct bootmem_data *bdata,unsigned long start,
-		unsigned long end)
+static void __free(struct bootmem_data *bdata,unsigned long sidx,
+		unsigned long eidx)
 {
 	unsigned long *bitmap = (unsigned long *)bdata->node_bootmem_map;
-	unsigned long sidx,eidx;
 	unsigned long idx;
 
-	sidx = start - bdata->node_min_pfn;
-	eidx = end - bdata->node_min_pfn;
 	for(idx = 0 ; idx < eidx ; idx++)
 	{
 		test_and_clear_bit(idx,bitmap);
@@ -456,55 +487,127 @@ static void __free(struct bootmem_data *bdata,unsigned long start,
 /*
  * reserve bootmem regions.
  */
-static void __reserve(struct bootmem_data *bdata,unsigned long start,
-		unsigned long end,unsigned long flags)
+static int __reserve(struct bootmem_data *bdata,unsigned long sidx,
+		unsigned long eidx,unsigned long flags)
 {
 	unsigned long *bitmap = (unsigned long *)bdata->node_bootmem_map;
-	unsigned long sidx,eidx;
 	unsigned long idx;
+	unsigned long set_flags = flags & 0x01;
+
+	for(idx = sidx ; idx < eidx ; idx++)
+	{
+		if(test_and_set_bit(idx,bitmap))
+		{
+			if(set_flags)
+			{
+				__free(bdata,sidx,idx);
+				return MM_NOREGION;
+			}
+		}
+	}
+	return 0;
+}
+/*
+ * Mark bootmem node
+ */
+static int mark_bootmem_node(struct bootmem_data *bdata,
+		unsigned long start,unsigned long end,
+		unsigned long reserve,unsigned long flags)
+{
+	unsigned long sidx,eidx;
 
 	sidx = start - bdata->node_min_pfn;
 	eidx = end - bdata->node_min_pfn;
 
-	mm_debug("sidx %p eidx %p\n",(void *)sidx,(void *)eidx);
-	for(idx = sidx ; idx < eidx ; idx++)
-	{
-		test_and_set_bit(idx,bitmap);
-	}
+	if(reserve)
+		return __reserve(bdata,sidx,eidx,flags);
+	else
+		__free(bdata,sidx,eidx);
+	return 0;
 }
 /*
  * Mark memblock
  */
-static void mark_bootmem(struct bootmem_data *bdata,
-		struct memblock_region *reg,unsigned long reserve,unsigned long flags)
+static int mark_bootmem(unsigned long start,unsigned long end,
+		unsigned long reserve,unsigned long flags)
 {
-	unsigned long start_pfn,end_pfn;
+	unsigned long pos;
+	struct bootmem_data *bdata;
 
-	start_pfn = phys_to_pfn(reg->base);
-	end_pfn = phys_to_pfn(reg->base + reg->size);
+	pos = start;
+	list_for_each_entry(bdata,&bdata_list,list)
+	{
+		int err;
+		unsigned long max;
 
-	mm_debug("Check [%p - %p]\n",(void *)start_pfn,(void *)end_pfn);
-
-	if(reserve)
-		__reserve(bdata,start_pfn,end_pfn,flags);
-	else
-		__free(bdata,start_pfn,end_pfn);
+		if(pos < bdata->node_min_pfn ||
+				pos >= bdata->node_low_pfn)
+			continue;
+		
+		max = min(end,bdata->node_low_pfn);
+		err = mark_bootmem_node(bdata,start,end,reserve,flags);
+		if(err && reserve)
+		{
+			mark_bootmem(start,end,0,0);
+			return err;
+		}
+		if(max == end)
+			return 0;
+		pos = bdata->node_min_pfn;
+	}
+	mm_err("%s err\n",__FUNCTION__);
 }
 /*
  * Free bit
  */
-static void free_bootmem(struct bootmem_data *bdata,
-		struct memblock_region *reg)
+static void free_bootmem(phys_addr_t addr,phys_addr_t size)
 {
-	mark_bootmem(bdata,reg,0,0);
+	unsigned long start,end;
+
+	start = PFN_UP(addr);
+	end = PFN_DOWN(addr + size);
+
+	mark_bootmem(start,end,0,0);
 }
 /*
  * Reserved bit
  */
-static void reserve_bootmem(struct bootmem_data *bdata,
-		struct memblock_region *reg)
+static void reserve_bootmem(phys_addr_t addr,phys_addr_t size)
 {
-	mark_bootmem(bdata,reg,1,0);
+	unsigned long start,end;
+
+	start = PFN_UP(addr);
+	end   = PFN_DOWN(addr + size);
+
+	mark_bootmem(start,end,1,0);
+}
+/*
+ * The start pfn of memory region.
+ */
+static unsigned long memblock_region_memory_base_pfn(struct memblock_region *reg)
+{
+	return PFN_UP(reg->base);
+}
+/*
+ * The end pfn of memory region.
+ */
+static unsigned long memblock_region_memory_end_pfn(struct memblock_region *reg)
+{
+	return PFN_DOWN(reg->base + reg->size);
+}
+/*
+ * The start pfn of reserved region
+ */
+static unsigned long memblock_region_reserved_base_pfn(struct memblock_region *reg)
+{
+	return PFN_UP(reg->base);
+}
+/*
+ * The end pfn of reserved region.
+ */
+static unsigned long memblock_region_reserved_end_pfn(struct memblock_region *reg)
+{
+	return PFN_DOWN(reg->base + reg->size);
 }
 /*
  * Initialize the arm bootmem
@@ -517,6 +620,7 @@ static void arm_bootmem_init(unsigned long start_pfn,
 	unsigned int pages_alloc;
 	struct pglist_data *pgdat;
 	int i;
+	struct bootmem_data *bd;
 
 	pages_alloc = bootmem_bootmap_pages(start_pfn,end_pfn);
 	bitmap = memblock_alloc_base(pages_alloc << PAGE_SHIFT,L1_CACHE_BYTES,
@@ -530,28 +634,159 @@ static void arm_bootmem_init(unsigned long start_pfn,
 	 */
 	for_each_memblock(memblock.memory,reg)
 	{
-		free_bootmem(&pgdat->bdata,reg);
+		unsigned long start = memblock_region_memory_base_pfn(reg);
+		unsigned long end   = memblock_region_memory_end_pfn(reg);
+
+		if(end > end_pfn)
+			end = end_pfn;
+		if(start > end)
+			break;
+
+		free_bootmem(pfn_to_phys(start),(end - start) << PAGE_SHIFT);
 	}
 	/*
 	 * Set bit that reserved.
 	 */
 	for_each_memblock(memblock.reserved,reg)
 	{
-		reserve_bootmem(&pgdat->bdata,reg);	
+		unsigned long start = memblock_region_reserved_base_pfn(reg);
+		unsigned long end = memblock_region_reserved_end_pfn(reg);
+
+		if(end > end_pfn)
+			end = end_pfn;
+		if(start > end)
+			break;
+
+		reserve_bootmem(pfn_to_phys(start),(end - start) << PAGE_SHIFT);	
 	}
-
-	R_show(&memblock.reserved,"Final show");
-	B_show(pgdat->bdata.node_bootmem_map);
 }
+/*
+ * Calculate spanned pages
+ */
+static unsigned long zone_spanned_pages_in_node(int nid,
+		unsigned long type,unsigned long *zone_sizes)
+{
+	return zone_sizes[type];
+}
+/*
+ * Calculate absent pages.
+ */
+static unsigned long zone_absent_pages_in_node(int nid,
+		unsigned long type,unsigned long *zhole_size)
+{
+	return zhole_size[type];
+}
+/*
+ * Calculate the pages of pglist_data
+ */
+static void calculate_node_pages(struct pglist_data *pgdat,
+		unsigned long *zone_sizes,unsigned long *zhole_size)
+{
+	unsigned long realpages,totalpages = 0;
+	int i;
 
+	for(i = 0 ; i < MAX_REGIONS ; i++)
+	{
+		totalpages += zone_spanned_pages_in_node(pgdat->node_id,
+				i,zone_sizes);
+	}
+	realpages = totalpages;
+	for(i = 0 ; i < MAX_REGIONS ; i++)
+	{
+		realpages -= zone_absent_pages_in_node(pgdat->node_id,
+				i,zhole_size);
+	}
+	pgdat->node_spanned_pages = totalpages;
+	pgdat->node_present_pages = realpages;
+}
+/*
+ * Alloc bootmem_core
+ */
+static void *alloc_bootmem_core(struct bootmem_data *bdata,
+		unsigned long size)
+{
+	unsigned long sidx = 0;
+	long idx;
+	unsigned long eidx;
+	void *region;
 
+Again:
+	sidx = find_next_zero_bit(bdata->node_bootmem_map,size,sidx);
+	eidx = sidx + size;
+	for(idx = sidx ; idx < eidx ; idx++)
+	{
+		if(test_bit(idx,bdata->node_bootmem_map))
+		{
+			sidx++;
+			goto Again;
+		}
+	}
+	if(__reserve(bdata,sidx,eidx,0) != MM_NOREGION)
+	{
+		region = pfn_to_virt(sidx);
+		return region;
+	}
+	return;
+}
+/*
+ * Init area
+ */
+static void free_area_init_node(unsigned long *zone_sizes,
+		unsigned long start_pfn,unsigned long *zhole_size)
+{
+	struct pglist_data *pgdat = NODE_DATA(0);
+	unsigned long size;
+
+	pgdat->node_id = 0;
+	pgdat->node_start_pfn = start_pfn;
+
+	calculate_node_pages(pgdat,zone_sizes,zhole_size);
+
+	size = pgdat->node_spanned_pages * sizeof(struct page);
+
+	pgdat->node_mem_map = alloc_bootmem_core(&pgdat->bdata,size >> PAGE_SHIFT);
+}
+/*
+ * ARM bootmem free
+ */
+static void arm_bootmem_free(unsigned long min,unsigned long max_low,
+		unsigned long max_high)
+{
+	unsigned long zone_sizes[MAX_REGIONS],zhole_size[MAX_REGIONS];
+	struct memblock_region *reg;
+
+	memset(zone_sizes,0,sizeof(zone_sizes));
+
+	zone_sizes[0] = max_low - min;
+#ifdef CONFIG_HIGHMEM
+	zone_sizes[1] = max_high - max_low;
+#endif
+	memcpy(zhole_size,zone_sizes,sizeof(zone_sizes));
+
+	for_each_memblock(memblock.memory,reg)
+	{
+		unsigned long start = memblock_region_memory_base_pfn(reg);
+		unsigned long end   = memblock_region_memory_end_pfn(reg);
+
+		zhole_size[0] -= end - start;
+#ifdef CONFIG_HIGHMEM
+		zhole_size[1] -= max_high - end;
+#endif
+	}
+	free_area_init_node(zone_sizes,min,zhole_size);
+}
 
 /*
  * Arch init,top level
  */
 void arch_init(void)
 {
-	
+	struct pglist_data *pgdat = NODE_DATA(0);
+
 	bootmem_init();
 	arm_bootmem_init(phys_to_pfn(memory.start),phys_to_pfn(memory.end));
+	arm_bootmem_free(phys_to_pfn(memory.start),phys_to_pfn(memory.end),
+			phys_to_pfn(memory.end));
+
+	B_show(pgdat->bdata.node_bootmem_map);
 }

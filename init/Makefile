@@ -3,7 +3,8 @@ FLAGS=-g -pg
 DEBUG_FLAGS=-C -E -g 
 SRCS = main.c \
 	   ../lib/mm/memblock.c \
-	   ../lib/bitmap.c
+	   ../lib/bitmap.c \
+	   ../lib/list.c
 
 INC= -I./
 TARGET=align

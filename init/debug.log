@@ -1,19 +1,14 @@
-Check [0x50000 - 0x60000]
-Check [0x5fffe - 0x60000]
-sidx 0xfffe eidx 0x10000
-Region[0][0x5fffe000 - 0x60000000][Final show]
-start_pfn 0x50000 end_pfn 0x60000
-bytes 0x2000
+page 2
 =============== BitMap =============
 
-Byte[0] 	0 	0 	0 	0 	0 	0 	0 	0 
-Byte[1] 	0 	0 	0 	0 	0 	0 	0 	0 
-Byte[2] 	0 	0 	0 	0 	0 	0 	0 	0 
-Byte[3] 	0 	0 	0 	0 	0 	0 	0 	0 
-Byte[4] 	0 	0 	0 	0 	0 	0 	0 	0 
-Byte[5] 	0 	0 	0 	0 	0 	0 	0 	0 
-Byte[6] 	0 	0 	0 	0 	0 	0 	0 	0 
-Byte[7] 	0 	0 	0 	0 	0 	0 	0 	0 
+Byte[0] 	1 	1 	1 	1 	1 	1 	1 	1 
+Byte[1] 	1 	1 	1 	1 	1 	1 	1 	1 
+Byte[2] 	1 	1 	1 	1 	1 	1 	1 	1 
+Byte[3] 	1 	1 	1 	1 	1 	1 	1 	1 
+Byte[4] 	1 	1 	1 	1 	1 	1 	1 	1 
+Byte[5] 	1 	1 	1 	1 	1 	1 	1 	1 
+Byte[6] 	1 	1 	1 	1 	1 	1 	1 	1 
+Byte[7] 	1 	1 	1 	1 	1 	1 	1 	1 
 Byte[8] 	0 	0 	0 	0 	0 	0 	0 	0 
 Byte[9] 	0 	0 	0 	0 	0 	0 	0 	0 
 Byte[10] 	0 	0 	0 	0 	0 	0 	0 	0 
@@ -8202,5 +8197,5 @@ Byte[8191] 	0 	0 	0 	0 	0 	0 	1 	1
 Main[0x50000000 - 0x60000000]
 Main Curent limit 0x60000000
 Main Memory cnt:1 max 32
-max 0x7ffcdd68fa10
+max 0x7ffe9d699280
 Hello World

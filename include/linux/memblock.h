@@ -1,5 +1,7 @@
 #ifndef _MEMBLOCK_H_
 #define _MEMBLOCK_H_
+#include "list.h"
+#include "page.h"
 /*
  * This is open source,you can modify it or copy it.
  */
@@ -44,11 +46,16 @@ struct bootmem_data {
 	unsigned long node_min_pfn;
 	unsigned long node_low_pfn;
 	void *node_bootmem_map;
-//	struct list_head list;
+	struct list_head list;
 };
 
 struct pglist_data {
 	struct bootmem_data bdata;
+	unsigned long node_id;
+	unsigned long node_start_pfn;
+	unsigned long node_spanned_pages;
+	unsigned long node_present_pages;
+	struct page *node_mem_map;
 };
 
 

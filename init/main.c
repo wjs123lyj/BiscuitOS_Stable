@@ -1,6 +1,7 @@
 #include "../include/linux/memblock.h"
 #include "../include/linux/debug.h"
 #include "../include/linux/kernel.h"
+#include "../include/linux/list.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,6 +10,9 @@ extern struct memory memory;
 extern struct memblock memblock;
 extern void arch_init(void);
 extern int test_and_set_bit(int,volatile unsigned long *);
+extern void list_add(struct list_head *,struct list_head *);
+extern void list_del(struct list_head *);
+
 
 int main()
 {
@@ -18,7 +22,6 @@ int main()
 	int i;
 	int err;
 
-//	arch_setup();
 	arch_init();
 	printf("Main[%p - %p]\n",(void *)memory.start,(void *)memory.end);
 	printf("Main Curent limit %p\n",(void *)memblock.current_limit);

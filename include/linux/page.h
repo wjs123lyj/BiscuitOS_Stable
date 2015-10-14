@@ -10,4 +10,12 @@
 #define L1_CACHE_ALIGN L1_CACHE_SIZE
 
 #define PAGE_ALIGN(x) (x & ~(PAGE_SIZE - 1))
+#define PFN_UP(x) (((x) + PAGE_SIZE - 1) >> PAGE_SHIFT)
+#define PFN_DOWN(x) ((x) >> PAGE_SHIFT)
+
+#define PAGE_OFFSET 0x50000000
+
+struct page {
+	int id;
+};
 #endif
