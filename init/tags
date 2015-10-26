@@ -13,3 +13,4 @@ OBJS	Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
 SRCS	Makefile	/^SRCS = main.c \\$/;"	m
 TARGET	Makefile	/^TARGET=align$/;"	m
 main	main.c	/^int main()$/;"	f
+start_kernel	main.c	/^static void start_kernel(void)$/;"	f	file:

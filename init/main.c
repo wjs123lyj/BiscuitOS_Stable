@@ -2,31 +2,39 @@
 #include "../include/linux/debug.h"
 #include "../include/linux/kernel.h"
 #include "../include/linux/list.h"
+#include "../include/linux/pgtable.h"
+#include "../include/linux/mm_type.h"
+#include "../include/linux/types.h"
+#include "../include/linux/highmem.h"
+#include "../include/linux/config.h"
+#include "../include/linux/boot_arch.h"
+#include "../include/linux/init_mm.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-//extern void arch_setup(void);
-extern struct memory memory;
-extern struct memblock memblock;
-extern void arch_init(void);
-extern int test_and_set_bit(int,volatile unsigned long *);
-extern void list_add(struct list_head *,struct list_head *);
-extern void list_del(struct list_head *);
+//extern unsigned int top_mem;
 
+static void start_kernel(void)
+{
+
+	/* Initialize virtual physical layer */
+	virt_arch_init();
+	/* Early parment */
+	early_parment();
+	/* ARM init memblock */
+	arm_memblock_init(&meminfo);
+	/* Initlize the paging table */
+	paging_init();
+    /* User debug */
+	/* End debug */
+	arch_init();
+	M_show(virt_to_phys(swapper_pg_dir),virt_to_phys(swapper_pg_dir) + 0x40);
+}
 
 int main()
 {
-
-//	unsigned long min,max;
-	unsigned long max[5] = {0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
-	int i;
-	int err;
-
-	arch_init();
-	printf("Main[%p - %p]\n",(void *)memory.start,(void *)memory.end);
-	printf("Main Curent limit %p\n",(void *)memblock.current_limit);
-	printf("Main Memory cnt:%ld max %ld\n",memblock.memory.cnt,memblock.memory.max);
-	printf("max %p\n",(void *)max);
+//	start_kernel();
+	virt_arch_init();
 	printf("Hello World\n");
 	return 0;
 }

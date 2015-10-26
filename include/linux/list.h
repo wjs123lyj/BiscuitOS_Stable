@@ -5,7 +5,6 @@
 struct list_head {
 	struct list_head *prev;
 	struct list_head *next;
-	int debug;
 };
 
 #define list_entry(ptr,type,member) container_of(ptr,type,member)

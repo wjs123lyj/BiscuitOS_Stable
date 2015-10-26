@@ -1,0 +1,2 @@
+gcc main.c ../lib/mm/memblock.c ../lib/bitmap.c ../lib/list.c ../lib/mm/mmu.c ../lib/debug.c ../lib/mm/init-mm.c ../lib/boot_arch.c ../lib/mm/init.c ../lib/mm/pgtable.c -g -pg -o align
+Makefile:20: recipe for target 'align' failed

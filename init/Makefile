@@ -4,7 +4,13 @@ DEBUG_FLAGS=-C -E -g
 SRCS = main.c \
 	   ../lib/mm/memblock.c \
 	   ../lib/bitmap.c \
-	   ../lib/list.c
+	   ../lib/list.c \
+	   ../lib/mm/mmu.c \
+	   ../lib/debug.c \
+	   ../lib/mm/init-mm.c \
+	   ../lib/boot_arch.c \
+	   ../lib/mm/init.c \
+	   ../lib/mm/pgtable.c
 
 INC= -I./
 TARGET=align

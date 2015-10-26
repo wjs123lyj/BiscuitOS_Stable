@@ -53,7 +53,7 @@ int test_and_clear_bit(int nr,unsigned int *byte)
 int test_bit(int nr,unsigned int *byte)
 {
 	unsigned int *f_bytes;
-	unsigned int mask;
+	unsigned int mask = 1UL;
 	int n;
 
 	/* Index of byte */
