@@ -36,30 +36,30 @@ struct memblock_region {
 };
 
 struct memblock_type {
-	unsigned int cnt;
-	unsigned int max;
+	unsigned long cnt;
+	unsigned long max;
 	struct memblock_region *regions;
 };
 struct memblock {
-	unsigned int current_limit;
-	unsigned int memory_size;
+	unsigned long current_limit;
+	unsigned long memory_size;
 	struct memblock_type memory;
 	struct memblock_type reserved;
 };
 
 struct bootmem_data {
-	unsigned int node_min_pfn;
-	unsigned int node_low_pfn;
-	unsigned int *node_bootmem_map;
+	unsigned long node_min_pfn;
+	unsigned long node_low_pfn;
+	unsigned long *node_bootmem_map;
 	struct list_head list;
 };
 
 struct pglist_data {
 	struct bootmem_data bdata;
-	unsigned int node_id;
-	unsigned int node_start_pfn;
-	unsigned int node_spanned_pages;
-	unsigned int node_present_pages;
+	unsigned long node_id;
+	unsigned long node_start_pfn;
+	unsigned long node_spanned_pages;
+	unsigned long node_present_pages;
 	struct page *node_mem_map;
 };
 

@@ -23,22 +23,26 @@ unsigned int high_to_low(unsigned int old)
 /*
  * Show all region of Memory->type.
  */
-void R_show(struct memblock_type *type,char *s)
+void __R_show(struct memblock_type *type,char *type_name,char *s)
 {
     int i;
 
     for(i = type->cnt - 1 ; i >= 0 ; i--)
     {
-        mm_debug("Region[%d][%p - %p][%s]\n",i,
+        mm_debug("%s.Region[%d][%p - %p][%s]\n",type_name,i,
                 (void *)type->regions[i].base,
                 (void *)(type->regions[i].base +
                     type->regions[i].size),s);
     }
 }
+void R_show(char *s)
+{
+	__R_show(&memblock.memory,"Memory",s);
+	__R_show(&memblock.reserved,"Reserved",s);
+}
 /*
  * Show some memory segment of Memory_array.
  */
-//void M_show(unsigned int start,unsigned int end)
 void M_show(phys_addr_t start,phys_addr_t end)
 {
     int i,j;
@@ -69,18 +73,24 @@ void M_show(phys_addr_t start,phys_addr_t end)
 /*
  * Show all bitmap of all memory.
  */
-void B_show(unsigned int *bitmap)
+extern void __init find_limits(unsigned int *min,unsigned int *max_low,
+		unsigned int *max_high);
+
+void __B_show(unsigned long *bitmap,char *s)
 {
-    phys_addr_t start_pfn,end_pfn;
+    phys_addr_t start_pfn,end_pfn,high_pfn;
     unsigned long i;
     unsigned long bytes;
     unsigned char *byte_char = (unsigned char *)bitmap;
-#if 0
-    start_pfn = phys_to_pfn(memory.start);
-    end_pfn   = phys_to_pfn(memory.end);
+    
+	/*
+	 * Get the limit of normal memory and high memory.
+	 */
+	find_limits(&start_pfn,&end_pfn,&high_pfn);
     bytes = (end_pfn - start_pfn + 7) / 8;
-    mm_debug("=============== BitMap =============\n");
-    for(i = 0 ; i < 20 ; i++)
+
+    mm_debug("=============== BitMap[%s] =============\n",s);
+    for(i = 0 ; i < 40 ; i++)
     {
         unsigned char byte = byte_char[i];
         int j;
@@ -111,7 +121,13 @@ void B_show(unsigned int *bitmap)
         }
     }
     mm_debug("\n======================================\n");
-#endif
+}
+void B_show(char *s)
+{
+	struct pglist_data *pgdat;
+
+	pgdat = &contig_pglist_data;
+	__B_show(pgdat->bdata.node_bootmem_map,s);
 }
 /*
  * Show membank

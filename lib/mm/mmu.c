@@ -31,19 +31,19 @@ void early_vmalloc(void)
 	/*
 	 * For debug,we set VMALLOC area are 256M.
 	 */
-	unsigned int vmalloc_reserve = SZ_256M;
+	unsigned long vmalloc_reserve = CONFIG_VMALLOC_RESERVE;
 
 	if(vmalloc_reserve < SZ_16M)
 	{
 		mm_debug("VMALLOC too small,and limit the size 16M\n");
 		vmalloc_reserve = SZ_16M;
 	}
-	if(vmalloc_reserve > (unsigned int)(VMALLOC_END - (PAGE_OFFSET + SZ_32M)))
+	if(vmalloc_reserve > (VMALLOC_END - (PAGE_OFFSET + SZ_32M)))
 	{
-		mm_debug("VMALLOC too big,and limit the size\n");
 		vmalloc_reserve = VMALLOC_END - (PAGE_OFFSET + SZ_32M);
+		mm_debug("VMALLOC too big,and limit the size as %p\n",(void *)vmalloc_reserve);
 	}
-	vmalloc_min = VMALLOC_END - vmalloc_reserve;
+	vmalloc_min = (void *)(VMALLOC_END - vmalloc_reserve);
 }
 /*
  * Reserve global pagetable.
@@ -75,13 +75,13 @@ static void __init sanity_check_meminfo(void)
 		*bank = meminfo.bank[i];
 		
 #ifdef CONFIG_HIGHMEM
-		if(__va(bank->start) > vmalloc_min ||
-				__va(bank->start) < (void *)PAGE_OFFSET)
+		if(__va(bank->start) > (unsigned long)vmalloc_min ||
+				__va(bank->start) < PAGE_OFFSET)
 			highmem = 1;
 		bank->highmem = highmem;
 
-		if(__va(bank->start) < vmalloc_min &&
-				bank->size > vmalloc_min - __va(bank->start))
+		if(__va(bank->start) < (unsigned long)vmalloc_min &&
+				bank->size > (unsigned long)vmalloc_min - __va(bank->start))
 		{
 			if(meminfo.nr_banks >= NR_BANKS)
 				mm_err("NR_BANKS too low,ignoring high memory\n");
@@ -92,11 +92,11 @@ static void __init sanity_check_meminfo(void)
 				meminfo.nr_banks++;
 				i++;
 				bank[1].start = __pa(vmalloc_min -1) + 1;
-				bank[1].size -= (unsigned int)vmalloc_min - __va(bank->start);
+				bank[1].size -= (unsigned long)vmalloc_min - __va(bank->start);
 				bank[1].highmem = highmem = 1;
 				j++;
 			}
-			bank[0].size = vmalloc_min - __va(bank->start);
+			bank[0].size = (unsigned long)vmalloc_min - __va(bank->start);
 		}
 		
 #else
@@ -141,7 +141,7 @@ void __init paging_init(void)
 	build_mem_type_table();
 	sanity_check_meminfo();
 
-	bootmem_init();
+//	bootmem_init();
 }
 
 

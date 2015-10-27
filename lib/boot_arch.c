@@ -12,12 +12,9 @@
 struct meminfo meminfo = {
 	.nr_banks = 0,
 };
-/*
- * Get dynamic offset between physical address and virtual memory address.
- */
-static unsigned int MEM0_OFFSET;
+unsigned int MEM0_OFFSET;
 #ifdef CONFIG_BOTH_BANKS
-static unsigned int MEM1_OFFSET;
+unsigned int MEM1_OFFSET;
 #endif
 /*
  * We use an unsigned int array to simulate the first physical memory.
@@ -38,12 +35,12 @@ static void boot_init_meminfo(void)
 	 * Get dynamic virtual address offset.
 	 */
 	memset(memory_array0,0,sizeof(CONFIG_BANK0_SIZE));
-	MEM0_OFFSET = (unsigned int)((unsigned int)CONFIG_BANK0_START -
-			(unsigned int)memory_array0);
+	MEM0_OFFSET = (unsigned long)((unsigned long)(unsigned int *)CONFIG_BANK0_START - 
+		(unsigned long)(unsigned long)memory_array0);
 #ifdef CONFIG_BOTH_BANKS
 	memset(memory_array1,0,sizeof(CONFIG_BANK1_SIZE));
-	MEM1_OFFSET = (unsigned int)((unsigned int)CONFIG_BANK1_START -
-			(unsigned int)memory_array1);
+	MEM1_OFFSET = (unsigned long)((unsigned long)(unsigned int *)CONFIG_BANK1_START -
+		(unsigned long)(unsigned long)memory_array1);
 #endif
 	/*
 	 * Setup meminfo.
@@ -58,7 +55,6 @@ static void boot_init_meminfo(void)
 	meminfo.bank[1].highmem = 0;
 	meminfo.nr_banks++;
 #endif
-	mm_debug("MEM0_OFFSET %08x\n",MEM0_OFFSET);
 }
 /*
  * Physical address turn to virtual memory address.
@@ -73,7 +69,7 @@ void *phys_to_mem(phys_addr_t addr)
 		mm_err("Error:Bad physical address\n");
 		return NULL;
 	}
-	phys = (void *)(addr - MEM0_OFFSET);
+	phys = (void *)((addr - CONFIG_BANK0_START) + memory_array0);
 #else
 	if(addr < CONFIG_BANK0_START || 
 			(addr > MAX_BANK0_PHYS_ADDR && addr < CONFIG_BANK1_START ) ||
@@ -82,11 +78,16 @@ void *phys_to_mem(phys_addr_t addr)
 		mm_err("Error:Bad_physical address\n");
 		return NULL;
 	}
+	mm_debug("addr %p\n",(void *)(unsigned long)addr);
+	mm_debug("CONFIG_BANK0_START :%p\n",(void *)CONFIG_BANK0_START);
+	mm_debug("memory_array0 %p\n",(void *)memory_array0);
+	mm_debug("MEM0_OFFSET %p\n",(void *)(unsigned long)MEM0_OFFSET);
 	if(addr < CONFIG_BANK1_START)
-		phys = (void *)(addr - MEM0_OFFSET);
+		phys = (void *)((unsigned long)addr - (unsigned long)MEM0_OFFSET);
 	else
-		phys = (void *)(addr - MEM1_OFFSET);
+		phys = (void *)((unsigned long)addr - (unsigned long)MEM1_OFFSET);
 #endif
+	mm_debug("phys %p\n",(void *)phys);
 	return phys;
 }
 /*

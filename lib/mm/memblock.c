@@ -665,7 +665,7 @@ void arm_bootmem_init(unsigned int start_pfn,
 			end = end_pfn;
 		if(start > end)
 			break;
-
+		
 		free_bootmem(pfn_to_phys(start),(end - start) << PAGE_SHIFT);
 	}
 	/*
@@ -768,14 +768,15 @@ static void free_area_init_node(unsigned long *zone_sizes,
 
 	size = pgdat->node_spanned_pages * sizeof(struct page);
 
-	pgdat->node_mem_map = alloc_bootmem_core(&pgdat->bdata,size >> PAGE_SHIFT);
+	pgdat->node_mem_map = (struct page *)alloc_bootmem_core(&pgdat->bdata,
+			size >> PAGE_SHIFT);
 
 	mem_map = pgdat->node_mem_map;
 }
 /*
  * ARM bootmem free
  */
-static void arm_bootmem_free(unsigned long min,unsigned long max_low,
+void arm_bootmem_free(unsigned long min,unsigned long max_low,
 		unsigned long max_high)
 {
 	unsigned long zone_sizes[MAX_REGIONS],zhole_size[MAX_REGIONS];
@@ -800,18 +801,4 @@ static void arm_bootmem_free(unsigned long min,unsigned long max_low,
 #endif
 	}
 	free_area_init_node(zone_sizes,min,zhole_size);
-}
-
-/*
- * Arch init,top level
- */
-void arch_init(void)
-{
-	struct pglist_data *pgdat = NODE_DATA(0);
-#if 0
-	arm_bootmem_init(phys_to_pfn(memory.start),phys_to_pfn(memory.end));
-	arm_bootmem_free(phys_to_pfn(memory.start),phys_to_pfn(memory.end),
-			phys_to_pfn(memory.end));
-	B_show(pgdat->bdata.node_bootmem_map);
-#endif
 }

@@ -9,6 +9,7 @@
 #include "../include/linux/config.h"
 #include "../include/linux/boot_arch.h"
 #include "../include/linux/init_mm.h"
+#include "../include/linux/mmu.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -27,14 +28,18 @@ static void start_kernel(void)
 	paging_init();
     /* User debug */
 	/* End debug */
-	arch_init();
-	M_show(virt_to_phys(swapper_pg_dir),virt_to_phys(swapper_pg_dir) + 0x40);
 }
 
 int main()
 {
-//	start_kernel();
-	virt_arch_init();
+	unsigned long addr = 0x5fffffff;
+	unsigned int *p;
+
+	start_kernel();
+	
+	p = phys_to_mem(addr);
+	*p = 0x12345678;
+	M_show(addr,addr + 10);
 	printf("Hello World\n");
 	return 0;
 }

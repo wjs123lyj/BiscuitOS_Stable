@@ -1,5 +1,6 @@
 #ifndef _DEBUG_H_
 #define _DEBUG_H_
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -21,4 +22,8 @@
 		;
 #define WARN_ON(x) (x)
 
+extern void B_show(char *s);
+extern void R_show(char *s);
+extern void BK_show(char *s);
+extern void M_show(phys_addr_t start,phys_addr_t end);
 #endif

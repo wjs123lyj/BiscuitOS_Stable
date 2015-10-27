@@ -1,7 +1,6 @@
 #ifndef _BOOT_ARCH_H_
 #define _BOOT_ARCH_H_
 
-#include "kernel.h"
 #include "config.h"
 /*
  * Configure the number of bank that we set virtual physical memory.

@@ -19,9 +19,9 @@ LOG_FILE=debug.log
 ${TARGET}:
 	${CC} ${SRCS} ${FLAGS} -o ${TARGET}
 	ctags -R
-#	./${TARGET}
-	./${TARGET} > ${LOG_FILE}
-	vim ${LOG_FILE}
+	./${TARGET}
+#	./${TARGET} > ${LOG_FILE}
+#	vim ${LOG_FILE}
 debug:
 	${CC} ${SRCS} ${DEBUG_FLAGS}
 memblock.o:
