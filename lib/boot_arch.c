@@ -69,7 +69,7 @@ void *phys_to_mem(phys_addr_t addr)
 		mm_err("Error:Bad physical address\n");
 		return NULL;
 	}
-	phys = (void *)((addr - CONFIG_BANK0_START) + memory_array0);
+	phys = (void *)((unsigned long)addr - (unsigned long)MEM0_OFFSET);
 #else
 	if(addr < CONFIG_BANK0_START || 
 			(addr > MAX_BANK0_PHYS_ADDR && addr < CONFIG_BANK1_START ) ||
@@ -78,16 +78,11 @@ void *phys_to_mem(phys_addr_t addr)
 		mm_err("Error:Bad_physical address\n");
 		return NULL;
 	}
-	mm_debug("addr %p\n",(void *)(unsigned long)addr);
-	mm_debug("CONFIG_BANK0_START :%p\n",(void *)CONFIG_BANK0_START);
-	mm_debug("memory_array0 %p\n",(void *)memory_array0);
-	mm_debug("MEM0_OFFSET %p\n",(void *)(unsigned long)MEM0_OFFSET);
 	if(addr < CONFIG_BANK1_START)
 		phys = (void *)((unsigned long)addr - (unsigned long)MEM0_OFFSET);
 	else
 		phys = (void *)((unsigned long)addr - (unsigned long)MEM1_OFFSET);
 #endif
-	mm_debug("phys %p\n",(void *)phys);
 	return phys;
 }
 /*

@@ -1,0 +1,1 @@
+void *vectors_page;

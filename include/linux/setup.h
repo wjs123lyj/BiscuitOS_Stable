@@ -1,6 +1,7 @@
 #ifndef _SETUP_H_
 #define _SETUP_H_
 #include "config.h"
+#include "kernel.h"
 /*
  * Memory map description
  */
@@ -32,4 +33,6 @@ extern struct meminfo meminfo;
 #define bank_phys_start(bank) (bank)->start
 #define bank_phys_end(bank)   ((bank)->start + (bank)->size)
 #define bank_phys_size(bank)  (bank)->size
+
+extern void __init setup_arch(void);
 #endif

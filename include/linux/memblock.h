@@ -5,6 +5,8 @@
 #include "types.h"
 #include "boot_arch.h"
 #include "kernel.h"
+#include "mmzone.h"
+#include "bootmem.h"
 /*
  * This is open source,you can modify it or copy it.
  */
@@ -47,21 +49,6 @@ struct memblock {
 	struct memblock_type reserved;
 };
 
-struct bootmem_data {
-	unsigned long node_min_pfn;
-	unsigned long node_low_pfn;
-	unsigned long *node_bootmem_map;
-	struct list_head list;
-};
-
-struct pglist_data {
-	struct bootmem_data bdata;
-	unsigned long node_id;
-	unsigned long node_start_pfn;
-	unsigned long node_spanned_pages;
-	unsigned long node_present_pages;
-	struct page *node_mem_map;
-};
 
 #define top_mem (CONFIG_BANK0_START + CONFIG_BANK0_SIZE)
 

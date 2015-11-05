@@ -3,6 +3,7 @@
 
 typedef unsigned int phys_addr_t;
 typedef unsigned int mem_addr_t;
+typedef unsigned int gfp_t;
 
 /*
  * Use unsigned int to act physical memory.

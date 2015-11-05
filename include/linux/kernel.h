@@ -4,6 +4,10 @@
 #define __init
 #define __init_memblock
 #define __initdata
+#define __meminitdata
+#define __meminit
+#define __paginginit
+#define __init_refok
 
 #define max(x,y) ({ \
 		typeof(x) __x = x; \
@@ -26,4 +30,15 @@
 #define container_of(ptr, type, member) ({			\
 			const typeof(((type *)0)->member) * __mptr = (ptr);	\
 			(type *)((char *)__mptr - offsetof(type, member)); })
+
+#define DIV_ROUND_UP(n,d)   (((n) + (d) - 1) / (d))
+
+#ifdef CONFIG_NUMA
+#define NUMA_BUILD  1
+#else
+#define NUMA_BUILD  0
+#endif
+
+#define likely(x)   (x)
+#define likely(x)   (x)
 #endif

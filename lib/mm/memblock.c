@@ -4,6 +4,9 @@
 #include "../../include/linux/kernel.h"
 #include "../../include/linux/types.h"
 #include "../../include/linux/list.h"
+#include "../../include/linux/mmzone.h"
+#include "../../include/linux/memory.h"
+#include "../../include/linux/highmem.h"
 #include <malloc.h>
 #include <string.h>
 
@@ -14,7 +17,6 @@ struct memblock memblock = {
 };
 
 
-struct page *mem_map;
 struct list_head bdata_list;
 
 struct pglist_data contig_pglist_data;
@@ -37,10 +39,6 @@ void *pfn_to_mem(unsigned int idx)
 	ret = phys_to_mem(idx);
 
 	return (void *)ret;
-}
-static struct pglist_data *NODE_DATA(unsigned long x)
-{
-	return &contig_pglist_data;
 }
 /*
  * Initialize the structure of memblock.
@@ -211,7 +209,7 @@ static phys_addr_t memblock_find_base(phys_addr_t size,phys_addr_t align,
 
 	if(max == MEMBLOCK_ALLOC_ACCESSIBLE)
 		max = memblock.current_limit;
-
+	
 	/*
 	 * We do a top-down search,this tends to limit memory
 	 * fragmentation by keeping early boot allocs near the 
@@ -481,11 +479,8 @@ static void init_bootmem_core(struct bootmem_data *bdata,unsigned long bitmap,
 	bdata->node_min_pfn = start_pfn;
 	bdata->node_low_pfn = end_pfn;
 	bdata->node_bootmem_map = phys_to_mem(bitmap);
-
 	link_bootmem(bdata);
-
 	mapsize = bootmem_bootmap_bytes(end_pfn - start_pfn);
-	
 	memset(bdata->node_bootmem_map,0xFF,mapsize);
 }
 /*
@@ -685,37 +680,21 @@ void arm_bootmem_init(unsigned int start_pfn,
 	}
 }
 /*
- * Calculate spanned pages
- */
-static unsigned long zone_spanned_pages_in_node(int nid,
-		unsigned long type,unsigned long *zone_sizes)
-{
-	return zone_sizes[type];
-}
-/*
- * Calculate absent pages.
- */
-static unsigned long zone_absent_pages_in_node(int nid,
-		unsigned long type,unsigned long *zhole_size)
-{
-	return zhole_size[type];
-}
-/*
  * Calculate the pages of pglist_data
  */
-static void calculate_node_pages(struct pglist_data *pgdat,
+static void calculate_node_totalpages(struct pglist_data *pgdat,
 		unsigned long *zone_sizes,unsigned long *zhole_size)
 {
 	unsigned long realpages,totalpages = 0;
 	int i;
 
-	for(i = 0 ; i < MAX_REGIONS ; i++)
+	for(i = 0 ; i < MAX_NR_ZONES ; i++)
 	{
 		totalpages += zone_spanned_pages_in_node(pgdat->node_id,
 				i,zone_sizes);
 	}
 	realpages = totalpages;
-	for(i = 0 ; i < MAX_REGIONS ; i++)
+	for(i = 0 ; i < MAX_NR_ZONES ; i++)
 	{
 		realpages -= zone_absent_pages_in_node(pgdat->node_id,
 				i,zhole_size);
@@ -747,58 +726,124 @@ Again:
 	}
 	if(__reserve(bdata,sidx,eidx,0) != MM_NOREGION)
 	{
-		region = pfn_to_mem(sidx);
+		region = (void *)phys_to_virt(pfn_to_phys(bdata->node_min_pfn + sidx));
 		return region;
 	}
 	return 0;
 }
 /*
- * Init area
+ * Alloc remap in bootmem.
  */
-static void free_area_init_node(unsigned long *zone_sizes,
+static inline void *alloc_remap(int nid,unsigned long size)
+{
+	return NULL;
+}
+/*
+ * Allocate node mem map.
+ */
+static void alloc_node_mem_map(struct pglist_data *pgdat)
+{
+	/*
+	 * Skip empty nodes.
+	 */
+	if(!pgdat->node_spanned_pages)
+		return;
+#ifdef CONFIG_FLAT_NODE_MEM_MAP
+	if(!pgdat->node_mem_map)
+	{
+		unsigned long size,start,end;
+		struct page *map;
+
+		/*
+		 * The zone's endpoints aren't required to be MAX_ORDER
+		 * aligned but the node_mem_map endpoints must be in order
+		 * for the buddy allocator to function correctly.
+		 */
+		start = pgdat->node_start_pfn & ~(MAX_ORDER_NR_PAGES - 1);
+		end   = pgdat->node_start_pfn + pgdat->node_spanned_pages;
+		end   = ALIGN(end,MAX_ORDER_NR_PAGES);
+		size  = (end - start) * sizeof(struct page);
+		map   = alloc_remap(pgdat->node_id,size);
+		if(!map)
+			map = (struct page*)alloc_bootmem_core(&pgdat->bdata,size >> PAGE_SHIFT);
+		pgdat->node_mem_map = map + (pgdat->node_start_pfn - start);
+	}
+#ifndef CONFIG_NEED_MULTIPLE_NODES
+	if(pgdat == NODE_DATA(0))
+	{
+		mem_map = NODE_DATA(0)->node_mem_map;
+	}
+#endif
+#endif
+}
+/*
+ * Init area
+ * Arguement:start_pfn , zone_sizes and zhold_size in PFN.
+ */
+static void free_area_init_node(int nid,unsigned long *zone_sizes,
 		unsigned long start_pfn,unsigned long *zhole_size)
 {
-	struct pglist_data *pgdat = NODE_DATA(0);
+	struct pglist_data *pgdat = NODE_DATA(nid);
 	unsigned long size;
 
-	pgdat->node_id = 0;
+	pgdat->node_id = nid;
 	pgdat->node_start_pfn = start_pfn;
 
-	calculate_node_pages(pgdat,zone_sizes,zhole_size);
+	calculate_node_totalpages(pgdat,zone_sizes,zhole_size);
 
-	size = pgdat->node_spanned_pages * sizeof(struct page);
-
-	pgdat->node_mem_map = (struct page *)alloc_bootmem_core(&pgdat->bdata,
-			size >> PAGE_SHIFT);
-
-	mem_map = pgdat->node_mem_map;
+	alloc_node_mem_map(pgdat);
+#ifdef CONFIG_FLAT_NODE_MEM_MAP
+	mm_debug("free_area_init_node:node %lu,pgdat %p,node_mem_map %p\n",
+			pgdat->node_id,(void *)pgdat,(void *)pgdat->node_mem_map);
+#endif
+	free_area_init_core(pgdat,zone_sizes,zhole_size);
 }
 /*
  * ARM bootmem free
+ * min,max_low and max_high in PFN.
  */
 void arm_bootmem_free(unsigned long min,unsigned long max_low,
 		unsigned long max_high)
 {
-	unsigned long zone_sizes[MAX_REGIONS],zhole_size[MAX_REGIONS];
+	unsigned long zone_sizes[MAX_NR_ZONES],zhole_size[MAX_NR_ZONES];
 	struct memblock_region *reg;
 
+	/*
+	 * Initialise the zones.
+	 */
 	memset(zone_sizes,0,sizeof(zone_sizes));
 
+	/*
+	 * The memory size has already been determmined.If we need
+	 * to do anything fancy with the allocation of this memory
+	 * to the zones,now is the time to do it.
+	 */
 	zone_sizes[0] = max_low - min;
 #ifdef CONFIG_HIGHMEM
-	zone_sizes[1] = max_high - max_low;
+	zone_sizes[ZONE_HIGHMEM] = max_high - max_low;
 #endif
+	/*
+	 * Calculate the size of the holes.
+	 * holes = node_size - sum(bank_size).
+	 */
 	memcpy(zhole_size,zone_sizes,sizeof(zone_sizes));
-
 	for_each_memblock(memblock.memory,reg)
 	{
 		unsigned long start = memblock_region_memory_base_pfn(reg);
 		unsigned long end   = memblock_region_memory_end_pfn(reg);
 
-		zhole_size[0] -= end - start;
+		if(start < max_low)
+		{
+			unsigned long low_end = min(end,max_low);
+			zhole_size[0] -= low_end - start;
+		}
 #ifdef CONFIG_HIGHMEM
-		zhole_size[1] -= max_high - end;
+		if(end > max_low)
+		{
+			unsigned long high_start = max(start,max_low);
+			zhole_size[1] -= end - high_start;
+		}
 #endif
 	}
-	free_area_init_node(zone_sizes,min,zhole_size);
+	free_area_init_node(0,zone_sizes,min,zhole_size);
 }

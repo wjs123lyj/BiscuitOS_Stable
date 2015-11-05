@@ -4,55 +4,281 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-ALIGN	include/linux/kernel.h	17;"	d
+ALIGN	include/linux/kernel.h	20;"	d
+BK_show	lib/debug.c	/^void BK_show(char *s)$/;"	f
+BUG_ON	include/linux/debug.h	18;"	d
+BYTE_MODIFY	include/linux/config.h	14;"	d
+B_show	lib/debug.c	/^void B_show(char *s)$/;"	f
 CC	init/Makefile	/^CC=gcc$/;"	m
-DEBUG	include/linux/debug.h	6;"	d
-FLAGS	init/Makefile	/^FLAGS=-g -pg $/;"	m
+CONFIG_BANK0_SIZE	include/linux/config.h	25;"	d
+CONFIG_BANK0_SIZE	include/linux/config.h	27;"	d
+CONFIG_BANK0_START	include/linux/config.h	23;"	d
+CONFIG_BANK1_SIZE	include/linux/config.h	37;"	d
+CONFIG_BANK1_START	include/linux/config.h	35;"	d
+CONFIG_BOTH_BANKS	include/linux/config.h	9;"	d
+CONFIG_HIGHMEM	include/linux/config.h	53;"	d
+CONFIG_MEMORY_SIZE	include/linux/config.h	19;"	d
+CONFIG_VMALLOC_RESERVE	include/linux/config.h	48;"	d
+DEBUG	include/linux/debug.h	7;"	d
+DEBUG_FLAGS	init/Makefile	/^DEBUG_FLAGS=-C -E -g $/;"	m
+FLAGS	init/Makefile	/^FLAGS=-g -pg$/;"	m
 INC	init/Makefile	/^INC= -I.\/$/;"	m
+INIT_LIST_HEAD	lib/list.c	/^inline void INIT_LIST_HEAD(struct list_head *list)$/;"	f
+INIT_MEMBLOCK_REGIONS	include/linux/memblock.h	14;"	d
+KERNEL_RAM_VADDR	include/linux/highmem.h	7;"	d
 L1_CACHE_ALIGN	include/linux/page.h	10;"	d
+L1_CACHE_BYTES	include/linux/memblock.h	24;"	d
 L1_CACHE_SHIFT	include/linux/page.h	8;"	d
 L1_CACHE_SIZE	include/linux/page.h	9;"	d
-MAX_MEMBLOCK	include/linux/memblock.h	8;"	d
-MAX_MEMBLOCK_TYPE	include/linux/memblock.h	7;"	d
-MAX_REGIONS	include/linux/memblock.h	6;"	d
+LOG_FILE	init/Makefile	/^LOG_FILE=debug.log$/;"	m
+MAX_BANK0_PHYS_ADDR	include/linux/config.h	29;"	d
+MAX_BANK1_PHYS_ADDR	include/linux/config.h	38;"	d
+MAX_MEMBLOCK	include/linux/memblock.h	13;"	d
+MAX_MEMBLOCK_TYPE	include/linux/memblock.h	12;"	d
+MAX_REGIONS	include/linux/memblock.h	11;"	d
+MEM0_OFFSET	lib/boot_arch.c	/^unsigned int MEM0_OFFSET;$/;"	v
+MEM1_OFFSET	lib/boot_arch.c	/^unsigned int MEM1_OFFSET;$/;"	v
+MEMBLOCK_ALLOC_ACCESSIBLE	include/linux/memblock.h	23;"	d
+MEMBLOCK_ALLOC_ANYWHERE	include/linux/memblock.h	22;"	d
+MEMORY_HOLE_SIZE	include/linux/config.h	34;"	d
+MM_NOEXPAND	include/linux/memblock.h	17;"	d
+MM_NOREGION	include/linux/memblock.h	16;"	d
+M_show	lib/debug.c	/^void M_show(phys_addr_t start,phys_addr_t end)$/;"	f
+NODE_DATA	lib/mm/memblock.c	/^static struct pglist_data *NODE_DATA(unsigned long x)$/;"	f	file:
+NR_BANKS	include/linux/setup.h	10;"	d
+NR_BANKS	include/linux/setup.h	8;"	d
 OBJS	init/Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
+PAGE_ALIGN	include/linux/page.h	11;"	d
 PAGE_MASK	include/linux/page.h	6;"	d
+PAGE_OFFSET	include/linux/page.h	15;"	d
 PAGE_SHIFT	include/linux/page.h	4;"	d
 PAGE_SIZE	include/linux/page.h	5;"	d
+PFN_DOWN	include/linux/page.h	13;"	d
+PFN_UP	include/linux/page.h	12;"	d
+PGDIR_SHIFT	include/linux/pgtable.h	9;"	d
+PHYS_OFFSET	include/linux/page.h	16;"	d
+PTRS_PER_PGD	include/linux/pgtable.h	11;"	d
+PTRS_PER_PMD	include/linux/pgtable.h	12;"	d
+PTRS_PER_PTE	include/linux/pgtable.h	13;"	d
+RED_ACTIVE	include/linux/memblock.h	20;"	d
+RED_INACTIVE	include/linux/memblock.h	19;"	d
+R_show	lib/debug.c	/^void R_show(char *s)$/;"	f
 SRCS	init/Makefile	/^SRCS = main.c \\$/;"	m
+SZ_128K	include/linux/types.h	35;"	d
+SZ_128M	include/linux/types.h	19;"	d
+SZ_16K	include/linux/types.h	32;"	d
+SZ_16M	include/linux/types.h	16;"	d
+SZ_1G	include/linux/types.h	23;"	d
+SZ_1K	include/linux/types.h	28;"	d
+SZ_1M	include/linux/types.h	12;"	d
+SZ_256K	include/linux/types.h	36;"	d
+SZ_256M	include/linux/types.h	20;"	d
+SZ_2G	include/linux/types.h	24;"	d
+SZ_2K	include/linux/types.h	29;"	d
+SZ_2M	include/linux/types.h	13;"	d
+SZ_32K	include/linux/types.h	33;"	d
+SZ_32M	include/linux/types.h	17;"	d
+SZ_4G	include/linux/types.h	25;"	d
+SZ_4K	include/linux/types.h	30;"	d
+SZ_4M	include/linux/types.h	14;"	d
+SZ_512K	include/linux/types.h	37;"	d
+SZ_512M	include/linux/types.h	21;"	d
+SZ_64K	include/linux/types.h	34;"	d
+SZ_64M	include/linux/types.h	18;"	d
+SZ_8G	include/linux/types.h	26;"	d
+SZ_8K	include/linux/types.h	31;"	d
+SZ_8M	include/linux/types.h	15;"	d
 TARGET	init/Makefile	/^TARGET=align$/;"	m
+VIRTUAL_MEMORY_SIZE	include/linux/config.h	18;"	d
+VMALLOC_END	include/linux/config.h	44;"	d
+WARN_ON	include/linux/debug.h	23;"	d
+_BITMAP_H_	include/linux/bitmap.h	2;"	d
+_BOOT_ARCH_H_	include/linux/boot_arch.h	2;"	d
+_CONFIG_H_	include/linux/config.h	2;"	d
 _DEBUG_H_	include/linux/debug.h	2;"	d
+_HIGHMEM_H_	include/linux/highmem.h	2;"	d
+_INIT_MM_H_	include/linux/init_mm.h	2;"	d
 _KERNEL_H_	include/linux/kernel.h	2;"	d
+_LIST_H_	include/linux/list.h	2;"	d
 _MEMBLOCK_H_	include/linux/memblock.h	2;"	d
+_MMU_H_	include/linux/mmu.h	2;"	d
+_MM_TYPE_H_	include/linux/mm_type.h	2;"	d
 _PAGE_H_	include/linux/page.h	2;"	d
-__memblock_add_region	lib/mm/memblock.c	/^int __memblock_add_region(unsigned long starts,unsigned long ends,$/;"	f
-arch_setup	lib/mm/memblock.c	/^void arch_setup(void)$/;"	f
+_PGTABLE_H_	include/linux/pgtable.h	2;"	d
+_SETUP_H_	include/linux/setup.h	2;"	d
+_TYPES_H_	include/linux/types.h	2;"	d
+__B_show	lib/debug.c	/^void __B_show(unsigned long *bitmap,char *s)$/;"	f
+__R_show	lib/debug.c	/^void __R_show(struct memblock_type *type,char *type_name,char *s)$/;"	f
+__free	lib/mm/memblock.c	/^static void __free(struct bootmem_data *bdata,unsigned long sidx,$/;"	f	file:
+__init	include/linux/kernel.h	4;"	d
+__init_memblock	include/linux/kernel.h	5;"	d
+__initdata	include/linux/kernel.h	6;"	d
+__list_add	lib/list.c	/^inline void __list_add(struct list_head *new,$/;"	f
+__list_del	lib/list.c	/^inline void __list_del(struct list_head *prev,struct list_head *next)$/;"	f
+__memblock_alloc_base	lib/mm/memblock.c	/^static phys_addr_t __memblock_alloc_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+__pa	include/linux/page.h	24;"	d
+__reserve	lib/mm/memblock.c	/^static int __reserve(struct bootmem_data *bdata,unsigned long sidx,$/;"	f	file:
+__va	include/linux/page.h	25;"	d
+alloc_bootmem_core	lib/mm/memblock.c	/^static unsigned int *alloc_bootmem_core(struct bootmem_data *bdata,$/;"	f	file:
+arm_bootmem_free	lib/mm/memblock.c	/^void arm_bootmem_free(unsigned long min,unsigned long max_low,$/;"	f
+arm_bootmem_init	lib/mm/memblock.c	/^void arm_bootmem_init(unsigned int start_pfn,$/;"	f
+arm_memblock_init	lib/mm/init.c	/^void __init arm_memblock_init(struct meminfo *mi)$/;"	f
+arm_mm_memblock_reserve	lib/mm/mmu.c	/^void arm_mm_memblock_reserve(void)$/;"	f
+bank	include/linux/setup.h	/^	struct membank bank[NR_BANKS];$/;"	m	struct:meminfo	typeref:struct:meminfo::membank
+bank_pfn_end	include/linux/setup.h	30;"	d
+bank_pfn_size	include/linux/setup.h	31;"	d
+bank_pfn_start	include/linux/setup.h	29;"	d
+bank_phys_end	include/linux/setup.h	33;"	d
+bank_phys_size	include/linux/setup.h	34;"	d
+bank_phys_start	include/linux/setup.h	32;"	d
 base	include/linux/memblock.h	/^	unsigned long base;$/;"	m	struct:memblock_region
-bootmem_bitmap_bytes	lib/mm/memblock.c	/^unsigned long bootmem_bitmap_bytes(unsigned long start,unsigned long end)$/;"	f
-bootmem_bitmap_pages	lib/mm/memblock.c	/^unsigned long bootmem_bitmap_pages(unsigned long bytes)$/;"	f
-bootmem_init	lib/mm/memblock.c	/^void bootmem_init(void)$/;"	f
-buddy_memory	lib/mm/memblock.c	/^struct memory buddy_memory = {$/;"	v	typeref:struct:memory
-calculate_limit	lib/mm/memblock.c	/^void calculate_limit(unsigned long *min,unsigned long *max_low)$/;"	f
+bdata	include/linux/memblock.h	/^	struct bootmem_data bdata;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::bootmem_data
+bdata_list	lib/mm/memblock.c	/^struct list_head bdata_list;$/;"	v	typeref:struct:list_head
+boot_init_meminfo	lib/boot_arch.c	/^static void boot_init_meminfo(void)$/;"	f	file:
+bootmem_bootmap_bytes	lib/mm/memblock.c	/^static unsigned long bootmem_bootmap_bytes(unsigned long pages)$/;"	f	file:
+bootmem_bootmap_pages	lib/mm/memblock.c	/^static unsigned long bootmem_bootmap_pages(unsigned long start_pfn,$/;"	f	file:
+bootmem_data	include/linux/memblock.h	/^struct bootmem_data {$/;"	s
+bootmem_init	lib/mm/init.c	/^void __init bootmem_init(void)$/;"	f
+build_mem_type_table	lib/mm/mmu.c	/^static void __init build_mem_type_table(void)$/;"	f	file:
+calculate_node_pages	lib/mm/memblock.c	/^static void calculate_node_pages(struct pglist_data *pgdat,$/;"	f	file:
 cnt	include/linux/memblock.h	/^	unsigned long cnt;$/;"	m	struct:memblock_type
-end_pfn	include/linux/memblock.h	/^	unsigned long end_pfn;$/;"	m	struct:memory
-initrd_memory	lib/mm/memblock.c	/^struct memblock_region initrd_memory[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
-initrd_reserve	lib/mm/memblock.c	/^struct memblock_region initrd_reserve[MAX_REGIONS];$/;"	v	typeref:struct:memblock_region
+container_of	include/linux/kernel.h	26;"	d
+contig_pglist_data	lib/mm/memblock.c	/^struct pglist_data contig_pglist_data;$/;"	v	typeref:struct:pglist_data
+current_limit	include/linux/memblock.h	/^	unsigned long current_limit;$/;"	m	struct:memblock
+default_memory	lib/mm/memblock.c	/^struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];$/;"	v	typeref:struct:memblock_region
+default_reserved	lib/mm/memblock.c	/^struct memblock_region default_reserved[INIT_MEMBLOCK_REGIONS + 1];$/;"	v	typeref:struct:memblock_region
+early_alloc	lib/mm/mmu.c	/^void *early_alloc(unsigned long size)$/;"	f
+early_parment	lib/mm/init.c	/^void early_parment(void)$/;"	f
+early_vmalloc	lib/mm/mmu.c	/^void early_vmalloc(void)$/;"	f
+find_limits	lib/mm/init.c	/^void __init find_limits(unsigned int *min,unsigned int *max_low,$/;"	f
+find_next_zero_bit	lib/bitmap.c	/^int find_next_zero_bit(unsigned int *byte,unsigned long size,unsigned long offset)$/;"	f
+for_each_bank	include/linux/setup.h	26;"	d
+for_each_memblock	include/linux/memblock.h	26;"	d
+free_area_init_node	lib/mm/memblock.c	/^static void free_area_init_node(unsigned long *zone_sizes,$/;"	f	file:
+free_bootmem	lib/mm/memblock.c	/^static void free_bootmem(phys_addr_t addr,phys_addr_t size)$/;"	f	file:
+high_to_low	lib/debug.c	/^unsigned int high_to_low(unsigned int old)$/;"	f
+highmem	include/linux/setup.h	/^	unsigned int highmem;$/;"	m	struct:membank
+id	include/linux/page.h	/^	int id;$/;"	m	struct:page
+init_bootmem_core	lib/mm/memblock.c	/^static void init_bootmem_core(struct bootmem_data *bdata,unsigned long bitmap,$/;"	f	file:
+init_bootmem_node	lib/mm/memblock.c	/^static void init_bootmem_node(struct pglist_data *pgdat,unsigned long bitmap,$/;"	f	file:
+init_mm	lib/mm/init-mm.c	/^struct mm_struct init_mm = {$/;"	v	typeref:struct:mm_struct
+link_bootmem	lib/mm/memblock.c	/^static void link_bootmem(struct bootmem_data *bdata)$/;"	f	file:
+list	include/linux/memblock.h	/^	struct list_head list;$/;"	m	struct:bootmem_data	typeref:struct:bootmem_data::list_head
+list_add	lib/list.c	/^inline void list_add(struct list_head *new,struct list_head *head)$/;"	f
+list_del	lib/list.c	/^inline void list_del(struct list_head *list)$/;"	f
+list_entry	include/linux/list.h	10;"	d
+list_for_each	include/linux/list.h	17;"	d
+list_for_each_entry	include/linux/list.h	12;"	d
+list_head	include/linux/list.h	/^struct list_head {$/;"	s
+lowmem_limit	lib/mm/mmu.c	/^phys_addr_t lowmem_limit = 0;$/;"	v
 main	init/main.c	/^int main()$/;"	f
-max	include/linux/kernel.h	5;"	d
+mark_bootmem	lib/mm/memblock.c	/^static int mark_bootmem(unsigned long start,unsigned long end,$/;"	f	file:
+mark_bootmem_node	lib/mm/memblock.c	/^static int mark_bootmem_node(struct bootmem_data *bdata,$/;"	f	file:
+max	include/linux/kernel.h	8;"	d
+max	include/linux/memblock.h	/^	unsigned long max;$/;"	m	struct:memblock_type
+mem_addr_t	include/linux/types.h	/^typedef unsigned int mem_addr_t;$/;"	t
+mem_map	lib/mm/memblock.c	/^struct page *mem_map;$/;"	v	typeref:struct:page
+mem_to_phys	lib/mm/memblock.c	/^phys_addr_t mem_to_phys(unsigned int addr)$/;"	f
+membank	include/linux/setup.h	/^struct membank {$/;"	s
 memblock	include/linux/memblock.h	/^struct memblock {$/;"	s
-memblock	lib/mm/memblock.c	/^struct memblock memblock;$/;"	v	typeref:struct:memblock
-memblock_add_region	lib/mm/memblock.c	/^int memblock_add_region(unsigned long size)$/;"	f
-memblock_adjust	lib/mm/memblock.c	/^void memblock_adjust(unsigned long idx,unsigned long base,unsigned long size)$/;"	f
-memblock_init	lib/mm/memblock.c	/^int memblock_init(void)$/;"	f
-memblock_overlap	lib/mm/memblock.c	/^int memblock_overlap(unsigned long base0,unsigned long size0,$/;"	f
+memblock	lib/mm/memblock.c	/^struct memblock memblock = {$/;"	v	typeref:struct:memblock
+memblock_add	lib/mm/memblock.c	/^long __init_memblock memblock_add(phys_addr_t base,phys_addr_t size)$/;"	f
+memblock_add_region	lib/mm/memblock.c	/^static int memblock_add_region(struct memblock_type *type,$/;"	f	file:
+memblock_adjacent_addr	lib/mm/memblock.c	/^static int memblock_adjacent_addr(phys_addr_t base1,phys_addr_t size1,$/;"	f	file:
+memblock_align_down	lib/mm/memblock.c	/^static phys_addr_t memblock_align_down(phys_addr_t addr,$/;"	f	file:
+memblock_align_up	lib/mm/memblock.c	/^static phys_addr_t memblock_align_up(phys_addr_t addr,phys_addr_t align)$/;"	f	file:
+memblock_alloc	lib/mm/memblock.c	/^phys_addr_t memblock_alloc(phys_addr_t size,phys_addr_t align)$/;"	f
+memblock_alloc_base	lib/mm/memblock.c	/^static phys_addr_t memblock_alloc_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+memblock_analyze	lib/mm/memblock.c	/^void __init memblock_analyze(void)$/;"	f
+memblock_coalesce_regions	lib/mm/memblock.c	/^static void memblock_coalesce_regions(struct memblock_type *type,$/;"	f	file:
+memblock_dump	lib/mm/memblock.c	/^static void __init_memblock memblock_dump(struct memblock_type *type,$/;"	f	file:
+memblock_dump_all	lib/mm/memblock.c	/^void __init_memblock memblock_dump_all(void)$/;"	f
+memblock_find_base	lib/mm/memblock.c	/^static phys_addr_t memblock_find_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+memblock_find_region	lib/mm/memblock.c	/^static phys_addr_t memblock_find_region(phys_addr_t start,phys_addr_t end,$/;"	f	file:
+memblock_init	lib/mm/memblock.c	/^void __init memblock_init(void)$/;"	f
+memblock_memory_can_coalesce	lib/mm/memblock.c	/^static int memblock_memory_can_coalesce(phys_addr_t addr1,$/;"	f	file:
+memblock_overlaps_addr	lib/mm/memblock.c	/^static int memblock_overlaps_addr(phys_addr_t base1,phys_addr_t size1,$/;"	f	file:
+memblock_overlaps_region	lib/mm/memblock.c	/^static int memblock_overlaps_region(struct memblock_type *type,$/;"	f	file:
 memblock_region	include/linux/memblock.h	/^struct memblock_region {$/;"	s
+memblock_region_memory_base_pfn	lib/mm/memblock.c	/^static unsigned long memblock_region_memory_base_pfn(struct memblock_region *reg)$/;"	f	file:
+memblock_region_memory_end_pfn	lib/mm/memblock.c	/^static unsigned long memblock_region_memory_end_pfn(struct memblock_region *reg)$/;"	f	file:
+memblock_region_reserved_base_pfn	lib/mm/memblock.c	/^static unsigned long memblock_region_reserved_base_pfn(struct memblock_region *reg)$/;"	f	file:
+memblock_region_reserved_end_pfn	lib/mm/memblock.c	/^static unsigned long memblock_region_reserved_end_pfn(struct memblock_region *reg)$/;"	f	file:
+memblock_regions_adjacent	lib/mm/memblock.c	/^static long memblock_regions_adjacent(struct memblock_type *type,$/;"	f	file:
+memblock_remove_region	lib/mm/memblock.c	/^static void memblock_remove_region(struct memblock_type *type,unsigned long r)$/;"	f	file:
+memblock_reserve	lib/mm/memblock.c	/^int memblock_reserve(phys_addr_t base,phys_addr_t size)$/;"	f
+memblock_set_current_limit	lib/mm/memblock.c	/^void memblock_set_current_limit(phys_addr_t limit)$/;"	f
 memblock_type	include/linux/memblock.h	/^struct memblock_type {$/;"	s
+meminfo	include/linux/setup.h	/^struct meminfo {$/;"	s
+meminfo	lib/boot_arch.c	/^struct meminfo meminfo = {$/;"	v	typeref:struct:meminfo
 memory	include/linux/memblock.h	/^	struct memblock_type memory;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
-memory	include/linux/memblock.h	/^struct memory {$/;"	s
-min	include/linux/kernel.h	11;"	d
-mm_debug	include/linux/debug.h	11;"	d
-mm_debug	include/linux/debug.h	9;"	d
+memory_array0	lib/boot_arch.c	/^unsigned int memory_array0[CONFIG_BANK0_SIZE \/ BYTE_MODIFY];$/;"	v
+memory_array1	lib/boot_arch.c	/^unsigned int memory_array1[CONFIG_BANK1_SIZE \/ BYTE_MODIFY];	$/;"	v
+memory_size	include/linux/memblock.h	/^	unsigned long memory_size;$/;"	m	struct:memblock
+min	include/linux/kernel.h	14;"	d
+mm_debug	include/linux/debug.h	10;"	d
+mm_debug	include/linux/debug.h	12;"	d
+mm_err	include/linux/debug.h	15;"	d
+mm_struct	include/linux/mm_type.h	/^struct mm_struct {$/;"	s
+next	include/linux/list.h	/^	struct list_head *next;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
+node_bootmem_map	include/linux/memblock.h	/^	unsigned long *node_bootmem_map;$/;"	m	struct:bootmem_data
+node_id	include/linux/memblock.h	/^	unsigned long node_id;$/;"	m	struct:pglist_data
+node_low_pfn	include/linux/memblock.h	/^	unsigned long node_low_pfn;$/;"	m	struct:bootmem_data
+node_mem_map	include/linux/memblock.h	/^	struct page *node_mem_map;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::page
+node_min_pfn	include/linux/memblock.h	/^	unsigned long node_min_pfn;$/;"	m	struct:bootmem_data
+node_present_pages	include/linux/memblock.h	/^	unsigned long node_present_pages;$/;"	m	struct:pglist_data
+node_spanned_pages	include/linux/memblock.h	/^	unsigned long node_spanned_pages;$/;"	m	struct:pglist_data
+node_start_pfn	include/linux/memblock.h	/^	unsigned long node_start_pfn;$/;"	m	struct:pglist_data
+nr_banks	include/linux/setup.h	/^	int nr_banks;$/;"	m	struct:meminfo
+offsetof	include/linux/kernel.h	24;"	d
+page	include/linux/page.h	/^struct page {$/;"	s
+paging_init	lib/mm/mmu.c	/^void __init paging_init(void)$/;"	f
+panic	include/linux/debug.h	16;"	d
+pfn_to_mem	lib/mm/memblock.c	/^void *pfn_to_mem(unsigned int idx)$/;"	f
+pfn_to_phys	include/linux/page.h	20;"	d
+pfn_to_virt	include/linux/page.h	23;"	d
+pgd	include/linux/mm_type.h	/^	pgd_t *pgd;$/;"	m	struct:mm_struct
+pgd	include/linux/pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	m	struct:__anon1
+pgd_bad	include/linux/pgtable.h	25;"	d
+pgd_clear	include/linux/pgtable.h	26;"	d
+pgd_index	include/linux/pgtable.h	15;"	d
+pgd_none	include/linux/pgtable.h	24;"	d
+pgd_offset	include/linux/pgtable.h	16;"	d
+pgd_offset_k	include/linux/pgtable.h	17;"	d
+pgd_t	include/linux/pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	t	typeref:struct:__anon1
+pgd_val	include/linux/pgtable.h	23;"	d
+pglist_data	include/linux/memblock.h	/^struct pglist_data {$/;"	s
+phys_addr_t	include/linux/types.h	/^typedef unsigned int phys_addr_t;$/;"	t
+phys_to_mem	lib/boot_arch.c	/^void *phys_to_mem(phys_addr_t addr)$/;"	f
+phys_to_pfn	include/linux/page.h	21;"	d
+phys_to_virt	include/linux/page.h	19;"	d
+pmd	include/linux/pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	m	struct:__anon2
+pmd_bad	include/linux/pgtable.h	33;"	d
+pmd_clear	include/linux/pgtable.h	34;"	d
+pmd_none	include/linux/pgtable.h	32;"	d
+pmd_off_k	lib/mm/pgtable.c	/^inline pmd_t *pmd_off_k(unsigned int virt)$/;"	f
+pmd_offset	include/linux/pgtable.h	18;"	d
+pmd_t	include/linux/pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	t	typeref:struct:__anon2
+pmd_val	include/linux/pgtable.h	31;"	d
+prev	include/linux/list.h	/^	struct list_head *prev;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
+pte	include/linux/pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	m	struct:__anon3
+pte_t	include/linux/pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	t	typeref:struct:__anon3
 regions	include/linux/memblock.h	/^	struct memblock_region *regions;$/;"	m	struct:memblock_type	typeref:struct:memblock_type::memblock_region
+reserve_bootmem	lib/mm/memblock.c	/^static void reserve_bootmem(phys_addr_t addr,phys_addr_t size)$/;"	f	file:
 reserved	include/linux/memblock.h	/^	struct memblock_type reserved;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
+sanity_check_meminfo	lib/mm/mmu.c	/^static void __init sanity_check_meminfo(void)$/;"	f	file:
 size	include/linux/memblock.h	/^	unsigned long size;$/;"	m	struct:memblock_region
-start_pfn	include/linux/memblock.h	/^	unsigned long start_pfn;$/;"	m	struct:memory
+size	include/linux/setup.h	/^	unsigned int size;$/;"	m	struct:membank
+start	include/linux/setup.h	/^	unsigned int start;$/;"	m	struct:membank
+start_kernel	init/main.c	/^static void start_kernel(void)$/;"	f	file:
+swapper_pg_dir	include/linux/highmem.h	8;"	d
+test_and_clear_bit	lib/bitmap.c	/^int test_and_clear_bit(int nr,unsigned int *byte)$/;"	f
+test_and_set_bit	lib/bitmap.c	/^int test_and_set_bit(int nr,unsigned int *byte)$/;"	f
+test_bit	lib/bitmap.c	/^int test_bit(int nr,unsigned int *byte)$/;"	f
+top_mem	include/linux/memblock.h	66;"	d
+virt_arch_init	lib/boot_arch.c	/^void virt_arch_init(void)$/;"	f
+virt_to_pfn	include/linux/page.h	22;"	d
+virt_to_phys	include/linux/page.h	18;"	d
+vmalloc_min	lib/mm/mmu.c	/^void *vmalloc_min = (void *)(VMALLOC_END - SZ_128M);$/;"	v
+zone_absent_pages_in_node	lib/mm/memblock.c	/^static unsigned long zone_absent_pages_in_node(int nid,$/;"	f	file:
+zone_spanned_pages_in_node	lib/mm/memblock.c	/^static unsigned long zone_spanned_pages_in_node(int nid,$/;"	f	file:

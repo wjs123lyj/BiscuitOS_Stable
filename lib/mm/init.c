@@ -2,6 +2,8 @@
 #include "../../include/linux/setup.h"
 #include "../../include/linux/page.h"
 #include "../../include/linux/debug.h"
+#include "../../include/linux/memory.h"
+#include "../../include/linux/bootmem.h"
 /*
  * Initialize memblock of ARM
  */
@@ -89,10 +91,21 @@ void __init bootmem_init(void)
 	 */
 	arm_bootmem_init(min,max_low);
 	/*
-	 * Free all bootmem.
+	 * Now free the memory.
 	 */
 	arm_bootmem_free(min,max_low,max_high);
-
+	
+	high_memory = (void *)__va(((max_low) << PAGE_SHIFT) - 1) + 1;
+	/*
+	 * This doesn't seem to be used by the Linux memory manager any
+	 * more,but is used by ll_rw_block.If we can get rid of it,we
+	 * also get rid of some of the stuff above as well.
+	 *
+	 * Note:max_low_pfn and max_pfn reflect the number of _pages_ in
+	 * the system,not the maximum PFN.
+	 */
+	max_low_pfn = max_low - PHYS_PFN_OFFSET;
+	max_pfn     = max_high - PHYS_PFN_OFFSET;
 }
 
 

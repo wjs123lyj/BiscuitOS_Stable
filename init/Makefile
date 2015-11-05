@@ -10,7 +10,20 @@ SRCS = main.c \
 	   ../lib/mm/init-mm.c \
 	   ../lib/boot_arch.c \
 	   ../lib/mm/init.c \
-	   ../lib/mm/pgtable.c
+	   ../lib/mm/pgtable.c \
+	   ../lib/mm/tlb.c \
+	   ../lib/mm/traps.c \
+	   ../lib/mm/highmem.c \
+	   ../lib/mm/memory.c \
+	   ../lib/mm/page_alloc.c \
+	   ../lib/mm/bootmem.c \
+	   ../lib/mm/fork.c \
+	   ../lib/kernel/setup.c \
+       ../lib/mm/mm_init.c  \
+	   ../lib/mm/mmzone.c  \
+	   ../lib/mm/vmscan.c \
+	   ../lib/kernel/init_task.c
+
 
 INC= -I./
 TARGET=align

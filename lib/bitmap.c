@@ -1,4 +1,5 @@
 #include "../include/linux/debug.h"
+#include "../include/linux/bitops.h"
 
 /*
  * Test and set bit.
@@ -70,30 +71,69 @@ int test_bit(int nr,unsigned int *byte)
 }
 /*
  * find the first zero bit.
+ * @offset must be small than @size.
  */
-int find_next_zero_bit(unsigned int *byte,unsigned long size,unsigned long offset)
+int find_next_zero_bit(unsigned int *byte,
+		unsigned long size,unsigned long offset)
 {
 	unsigned int *f_bytes;
 	unsigned int mask;
-	int i,j,n;
+	int i,j,n,m;
 
 	/* Index of byte */
-	n = offset >> 5;
+	n = offset / 32;
+	offset = offset % 32;
 	/* Offset of byte */
 	f_bytes = byte + n;
 	/* Index of bit */
 	size >>= 5;
+	m = offset;
 
 	for(i = 0; i <= size ; i++)
 	{
 		mask = f_bytes[i];
-		for(j = 0 ; j < 32 ; j++)
+		mask >>= offset;
+		for(j = 0 ; j < 32 - offset ; j++)
 		{
 			if(((mask >> j) & 0x1) == 0)
 			{
-				return offset + i * 32 + j;
+				return m + i * 32 + j + n * 32;
 			}
 		}
+		offset = 0;
 	}
 	return -1;
 }
+/*
+ * Find the next set bit in a memory region.
+ */
+int find_next_bit(unsigned int *addr,unsigned long size,
+		unsigned long offset)
+{
+	unsigned int *f_byte;
+	unsigned long i,j,m,n;
+	unsigned int mask;
+
+	/* Get offset of Byte */
+	n = offset / 32;
+	offset = offset % 32;
+	/* Get the start address */
+	f_byte = addr + n;
+	size >>= 5;
+	/* Store the offset */
+	m = offset;
+
+	for( i = 0 ; i <= size ; i++)
+	{
+		mask = f_byte[i];
+		mask >>= offset;
+		for(j = 0 ; j < 32 - offset ; j++)
+		{
+			if((mask >> j) & 0x01 == 1)
+				return i * 32 + n * 32 + m + j;
+		}
+		offset = 0;
+	}
+	return -1;
+}
+

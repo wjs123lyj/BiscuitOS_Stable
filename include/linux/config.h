@@ -51,4 +51,17 @@
  * Configure to support highmem.
  */
 #define CONFIG_HIGHMEM
+/*
+ * Configure to support FLAT MEMORY.
+ */
+#define CONFIG_FLAT_NODE_MEM_MAP
+/*
+ * Configure to support owner for MM.
+ */
+#define CONFIG_MM_OWNER
+/*
+ * Simulate the state of system
+ */
+#define SYSTEM_BOOTING 1
+#define system_state SYSTEM_BOOTING
 #endif

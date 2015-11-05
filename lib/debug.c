@@ -3,6 +3,7 @@
 #include "../include/linux/types.h"
 #include "../include/linux/boot_arch.h"
 #include "../include/linux/setup.h"
+#include "../include/linux/mmzone.h"
 
 unsigned int high_to_low(unsigned int old)
 {
@@ -46,25 +47,31 @@ void R_show(char *s)
 void M_show(phys_addr_t start,phys_addr_t end)
 {
     int i,j;
-
 	unsigned int *memory_array;
+	unsigned long phys_offset;
+
 #ifndef CONFIG_BOTH_BANKS
 	memory_array = memory_array0;
+    phys_offset =  CONFIG_BANK0_START;
 #else
-	if(start >= CONFIG_BANK1_START )
+	if(start >= CONFIG_BANK1_START)
+	{
 		memory_array = memory_array1;
+		phys_offset = CONFIG_BANK1_START;
+	}
 	else
+	{
 		memory_array = memory_array0;
+		phys_offset = CONFIG_BANK0_START;
+	}
 #endif
-
-	start -= PHYS_OFFSET;
-	end   -= PHYS_OFFSET;
+	start -= phys_offset;
+	end   -= phys_offset;
 
     printf("=============Memory=============\n");
-//  for(i = 0 ; i < SZ_256M / BYTE_MODIFY / 5 ; i++)
     for(i = start / BYTE_MODIFY / 5; i <= end / BYTE_MODIFY / 5 ; i++)
     {
-        printf("\n[%08x]",(unsigned int)(i * 5 * BYTE_MODIFY + PHYS_OFFSET));
+        printf("\n[%08x]",(unsigned int)(i * 5 * BYTE_MODIFY + phys_offset));
         for(j = 0 ; j < 5 ; j++)
             printf("\t%08x",high_to_low(memory_array[i * 5 + j]));
     }
@@ -146,4 +153,144 @@ void BK_show(char *s)
 	}
 	mm_debug("=================================================\n");
 }
+/*
+ * This function is used to show bitmap.
+ */
+void BITMAP_show(unsigned int *bitmap,unsigned long bits)
+{
+	unsigned long bytes = BITS_TO_LONGS(bits);
+	int i;
 
+	if(bitmap == NULL)
+		return;
+
+	mm_debug("========Bitmap===========\n");
+	for(i = 0 ; i < bytes ; i++)
+	{
+		int j;
+		int mask;
+
+		mask = bitmap[i];
+		mm_debug("[%d]",(i * 8));
+		for(j = 0 ; j < 8 ; j++)
+		{
+			mm_debug(" %d",(mask & 0x1));
+			mask >>= 1;
+		}
+		mm_debug("\n");
+	}
+}
+/*
+ * Those functions are used to show themself information quickly.
+ * Use ST_xx(struct *xx);
+ */
+/*
+ * Struct bootmem_data.
+ */
+void ST_bootmem_data(struct bootmem_data *bdata)
+{
+	if(bdata == NULL)
+		return;
+	mm_debug("Bootmem_data.node_min_pfn %p\n",(void *)bdata->node_min_pfn);
+	mm_debug("Bootmem_data.node_low_pfn %p\n",(void *)bdata->node_low_pfn);
+}
+/*
+ * Struct zone_reclaim_stat
+ */
+void ST_zone_reclaim_stat(struct zone_reclaim_stat *zr)
+{
+	if(zr == NULL)
+		return;
+	mm_debug("zr.recent_rotated[0] %p\n",(void *)zr->recent_rotated[0]);
+	mm_debug("zr.recent_rotated[1] %p\n",(void *)zr->recent_rotated[1]);
+	mm_debug("zr.recent_scanned[0] %p\n",(void *)zr->recent_scanned[0]);
+	mm_debug("zr.recent_scanned[1] %p\n",(void *)zr->recent_scanned[1]);
+}
+/*
+ * Struct zone node_zones
+ */
+void ST_node_zones(struct zone *zone,int nr)
+{
+	int i;
+
+	if(zone == NULL)
+		return;
+	for(i = 0 ; i < nr ; i++)
+	{
+		struct zone *z;
+
+		z = zone + i;
+		mm_debug("zone.watermark[WMARK_MIN] %p\n",
+				(void *)z->watermark[WMARK_MIN]);
+		mm_debug("zone.watermark[WMARK_LOW] %p\n",
+				(void *)z->watermark[WMARK_LOW]);
+		mm_debug("zone.watermark[WMARK_HIGH] %p\n",
+				(void *)z->watermark[WMARK_HIGH]);
+		ST_zone_reclaim_stat(&z->reclaim_stat);
+		mm_debug("zone.flags %p\n",(void *)z->flags);
+		mm_debug("zone.name %s\n",z->name);
+		mm_debug("zone.zone_start_pfn %p\n",(void *)z->zone_start_pfn);
+		mm_debug("zone.present_pages %p\n",(void *)z->present_pages);
+	}
+}
+/*
+ * Struct zone
+ */
+void ST_zone(struct zone *zone)
+{
+	if(zone == NULL)
+		return;
+	ST_node_zones(zone,1);
+}
+/*
+ * Struct zonelist_cache
+ */
+void ST_zonelist_cache(struct zonelist_cache *zc)
+{
+	int i;
+
+	if(zc == NULL)
+		return;
+
+	for(i = 0 ; i < MAX_ZONES_PER_ZONELIST ; i++)
+	{
+		mm_debug("zonelist_cache.z_to_n[%d] %u\n",i,
+				(zc->z_to_n[i]));
+	}
+	BITMAP_show(zc->fullzones,MAX_ZONES_PER_ZONELIST);
+	mm_debug("zonelist_cache.last_full_zap[%p]\n",
+			(void *)zc->last_full_zap);
+}
+/*
+ * Struct zonelist
+ */
+void ST_zonelist(struct zonelist *zl)
+{
+	if(zl == NULL)
+		return;
+	ST_zonelist_cache(zl->zlcache_ptr);
+}
+/*
+ * Struct page
+ */
+void ST_page(struct page *page)
+{
+}
+/*
+ * Struct pglist_data
+ */
+void ST_pglist_data(void)
+{
+	struct pglist_data *pgdat = NODE_DATA(0);
+
+	ST_bootmem_data(&pgdat->bdata);
+	ST_node_zones(pgdat->node_zones,MAX_NR_ZONES);
+	ST_zonelist(pgdat->node_zonelists);
+	mm_debug("pglist.node_id %ld\n",pgdat->node_id);
+	mm_debug("pglist.node_start_pfn %p\n",(void *)pgdat->node_start_pfn);
+	mm_debug("pglist.node_spanned_pages %p\n",
+			(void *)pgdat->node_spanned_pages);
+	mm_debug("pglist.node_present_pages %p\n",(void *)pgdat->node_present_pages);
+	mm_debug("pglist.nr_zones %d\n",pgdat->nr_zones);
+	ST_page(pgdat->node_mem_map);
+}
