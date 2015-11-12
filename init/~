@@ -4,8 +4,6 @@
 #include "../include/linux/debug.h"
 #include "../include/linux/bitops.h"
 #include "../include/linux/page-flags.h"
-#include "../include/linux/highmem.h"
-#include "../include/linux/page.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,6 +17,7 @@ static void start_kernel(void)
 
 int main()
 {
+
 	start_kernel();
 
 	printf("Hello World\n");

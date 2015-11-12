@@ -22,7 +22,8 @@ SRCS = main.c \
        ../lib/mm/mm_init.c  \
 	   ../lib/mm/mmzone.c  \
 	   ../lib/mm/vmscan.c \
-	   ../lib/kernel/init_task.c
+	   ../lib/kernel/init_task.c \
+	   ../lib/mm/nommu.c   
 
 
 INC= -I./

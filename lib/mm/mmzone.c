@@ -1,3 +1,5 @@
+#include "../../include/linux/config.h"
+#include "../../include/linux/debug.h"
 #include "../../include/linux/mmzone.h"
 #include "../../include/linux/nodemask.h"
 #include "../../include/linux/kernel.h"

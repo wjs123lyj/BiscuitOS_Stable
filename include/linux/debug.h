@@ -15,12 +15,17 @@
 #define mm_err printf
 #define panic printf
 
-#define BUG_ON(x) \
-	if(!!x) \
-		mm_err("BUG_ON %s\n",__FUNCTION__); \
+#if 0
+#define BUG_ON(x) ({ \
+	if((!!(x))) \
+		mm_err("BUG_ON %s:%d\n",__FUNCTION__,__LINE__); \
 	else \
-		;
-#define WARN_ON(x) (x)
+		; \
+		})
+#endif
+#define BUG_ON(x) (x)
+#define WARN_ON(x) BUG_ON(x)
+#define VM_BUG_ON(x) BUG_ON(x)
 
 extern void B_show(char *s);
 extern void R_show(char *s);

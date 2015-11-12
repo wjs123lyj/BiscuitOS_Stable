@@ -15,4 +15,5 @@ extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
 extern unsigned int memory_array1[CONFIG_BANK1_SIZE / BYTE_MODIFY];
 #endif
 extern void *phys_to_mem(phys_addr_t addr);
+extern phys_addr_t mem_to_phys(void *ad);
 #endif

@@ -7,6 +7,7 @@
 #include "../../include/linux/mmzone.h"
 #include "../../include/linux/memory.h"
 #include "../../include/linux/highmem.h"
+#include "../../include/linux/mm_type.h"
 #include <malloc.h>
 #include <string.h>
 
@@ -21,13 +22,6 @@ struct list_head bdata_list;
 
 struct pglist_data contig_pglist_data;
 
-/*
- * memory address to phys address
- */
-phys_addr_t mem_to_phys(unsigned int addr)
-{
-	return 0;
-}
 /*
  * pfn_to_mem
  */
@@ -705,7 +699,7 @@ static void calculate_node_totalpages(struct pglist_data *pgdat,
 /*
  * Alloc bootmem_core
  */
-static unsigned int *alloc_bootmem_core(struct bootmem_data *bdata,
+unsigned int *alloc_bootmem_core(struct bootmem_data *bdata,
 		unsigned long size)
 {
 	unsigned long sidx = 0;
@@ -766,12 +760,19 @@ static void alloc_node_mem_map(struct pglist_data *pgdat)
 		map   = alloc_remap(pgdat->node_id,size);
 		if(!map)
 			map = (struct page*)alloc_bootmem_core(&pgdat->bdata,size >> PAGE_SHIFT);
-		pgdat->node_mem_map = map + (pgdat->node_start_pfn - start);
+		/*
+		 * In order to use node_mem_map directly,we use virtual memory address to 
+		 * replace the physcial address.Note,all address which allocate from virtual 
+		 * memory use virtual memory address.
+		 */
+		pgdat->node_mem_map = 
+			phys_to_mem(virt_to_phys(((unsigned long)(struct page *)map + 
+				(pgdat->node_start_pfn - start))));
 	}
 #ifndef CONFIG_NEED_MULTIPLE_NODES
 	if(pgdat == NODE_DATA(0))
 	{
-		mem_map = NODE_DATA(0)->node_mem_map;
+		mem_map = (struct page *)(unsigned long)mem_to_phys(NODE_DATA(0)->node_mem_map);
 	}
 #endif
 #endif

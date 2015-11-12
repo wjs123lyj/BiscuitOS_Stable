@@ -25,6 +25,13 @@
 		((x) & ~((align) - 1)); \
 		})
 
+#define roundup(x,y)  (            \
+		{                          \
+		const typeof(y) __y = y;   \
+		(((x) + (__y - 1)) / __y) * __y; \
+		}                          \
+		)
+
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 
 #define container_of(ptr, type, member) ({			\
@@ -40,5 +47,5 @@
 #endif
 
 #define likely(x)   (x)
-#define likely(x)   (x)
+#define unlikely(x)   (x)
 #endif

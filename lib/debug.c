@@ -4,6 +4,8 @@
 #include "../include/linux/boot_arch.h"
 #include "../include/linux/setup.h"
 #include "../include/linux/mmzone.h"
+#include "../include/linux/atomic.h"
+#include "../include/linux/mm_type.h"
 
 unsigned int high_to_low(unsigned int old)
 {
@@ -275,6 +277,8 @@ void ST_zonelist(struct zonelist *zl)
  */
 void ST_page(struct page *page)
 {
+	mm_debug("page->flags %ld\n",page->flags);
+	mm_debug("page->_count %d\n",atomic_read(&page->_count));
 }
 /*
  * Struct pglist_data

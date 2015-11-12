@@ -327,7 +327,6 @@ void __init paging_init(void)
 	map_lowmem();
 	devicemaps_init();
 	kmap_init();
-
 	top_pmd = pmd_off_k(0xFFFF0000);
 	
 	/*

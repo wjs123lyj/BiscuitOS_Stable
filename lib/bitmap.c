@@ -70,6 +70,44 @@ int test_bit(int nr,unsigned int *byte)
 		return 0;
 }
 /*
+ * Set bit
+ */
+void set_bit(int nr,unsigned int *byte)
+{
+	unsigned int *f_bytes;
+	unsigned int mask = 1UL;
+	int n;
+
+	/* Index of byte */
+	n = nr >> 5;
+	f_bytes = byte + n;
+	/* Offset of byte */
+	n = nr % 32;
+	/* Mask */
+	mask = mask << n;
+	/* Set bit */
+	*f_bytes |= mask;
+}
+/*
+ * Clear bit
+ */
+void clear_bit(int nr,unsigned int *byte)
+{
+	unsigned int *f_bytes;
+	unsigned int mask = 1UL;
+	int n;
+
+	/* Index of byte */
+	n = nr >> 5;
+	f_bytes = byte + n;
+	/* Offset of byte */
+	n = nr % 32;
+	/* Mask */
+	mask = mask << n;
+	/* Clear bit */
+	*f_bytes &= ~mask;
+}
+/*
  * find the first zero bit.
  * @offset must be small than @size.
  */

@@ -1,7 +1,12 @@
+#include "../../include/linux/kernel.h"
+#include "../../include/linux/config.h"
 #include "../../include/linux/internal.h"
 #include "../../include/linux/nodemask.h"
 #include "../../include/linux/mmzone.h"
 #include "../../include/linux/debug.h"
+#include "../../include/linux/page.h"
+#include "../../include/linux/mm.h"
+#include "../../include/linux/mm_type.h"
 
 int mminit_loglevel;
 
@@ -12,6 +17,7 @@ void mminit_verify_zonelist(void)
 {
 	int nid;
 
+	mminit_loglevel = MMINIT_VERIFY;
 	if(mminit_loglevel < MMINIT_VERIFY)
 		return;
 
@@ -47,4 +53,12 @@ void mminit_verify_zonelist(void)
 			mm_debug("\n");
 		}
 	}
+}
+
+void __meminit mminit_verify_page_links(struct page *page,enum zone_type zone,
+		unsigned long nid,unsigned long pfn)
+{
+	BUG_ON(page_to_nid(page) != nid);
+	BUG_ON(page_zonenum(page) != zone);
+	BUG_ON(page_to_pfn(page) != pfn);
 }

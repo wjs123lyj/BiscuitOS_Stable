@@ -1,0 +1,519 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ALIGN	kernel.h	24;"	d
+ATOMIC_INIT	atomic.h	4;"	d
+BIT	bitops.h	7;"	d
+BITS_PER_BYTE	bitops.h	10;"	d
+BITS_PER_LONG	bitops.h	5;"	d
+BITS_TO_LONGS	bitops.h	11;"	d
+BIT_MASK	bitops.h	8;"	d
+BIT_WORD	bitops.h	9;"	d
+BUG_ON	debug.h	26;"	d
+BYTE_MODIFY	config.h	14;"	d
+CONFIG_BANK0_SIZE	config.h	25;"	d
+CONFIG_BANK0_SIZE	config.h	27;"	d
+CONFIG_BANK0_START	config.h	23;"	d
+CONFIG_BANK1_SIZE	config.h	37;"	d
+CONFIG_BANK1_START	config.h	35;"	d
+CONFIG_BOTH_BANKS	config.h	9;"	d
+CONFIG_FLAT_NODE_MEM_MAP	config.h	57;"	d
+CONFIG_HIGHMEM	config.h	53;"	d
+CONFIG_MEMORY_SIZE	config.h	19;"	d
+CONFIG_MM_OWNER	config.h	61;"	d
+CONFIG_VMALLOC_RESERVE	config.h	48;"	d
+DEBUG	debug.h	7;"	d
+DECLARE_BITMAP	bitops.h	23;"	d
+DIV_ROUND_UP	kernel.h	34;"	d
+GFP_HIGHUSER_MOVABLE	gfp.h	47;"	d
+GFP_KERNEL	gfp.h	51;"	d
+GFP_ZONEMASK	gfp.h	46;"	d
+GFP_ZONE_TABLE	gfp.h	101;"	d
+INIT_MEMBLOCK_REGIONS	memblock.h	16;"	d
+KERNEL_RAM_VADDR	highmem.h	8;"	d
+L1_CACHE_ALIGN	page.h	11;"	d
+L1_CACHE_BYTES	memblock.h	26;"	d
+L1_CACHE_SHIFT	page.h	9;"	d
+L1_CACHE_SIZE	page.h	10;"	d
+LAST_PKMAP	highmem.h	14;"	d
+LAST_PKMAP_MASK	highmem.h	15;"	d
+LRU_ACTIVE	mmzone.h	59;"	d
+LRU_ACTIVE_ANON	mmzone.h	/^	LRU_ACTIVE_ANON   = LRU_BASE + LRU_ACTIVE,$/;"	e	enum:lru_list
+LRU_ACTIVE_FILE	mmzone.h	/^	LRU_ACTIVE_FILE   = LRU_BASE + LRU_FILE + LRU_ACTIVE,$/;"	e	enum:lru_list
+LRU_BASE	mmzone.h	58;"	d
+LRU_FILE	mmzone.h	60;"	d
+LRU_INACTIVE_ANON	mmzone.h	/^	LRU_INACTIVE_ANON = LRU_BASE,$/;"	e	enum:lru_list
+LRU_INACTIVE_FILE	mmzone.h	/^	LRU_INACTIVE_FILE = LRU_BASE + LRU_FILE,$/;"	e	enum:lru_list
+LRU_UNEVICTABLE	mmzone.h	/^	LRU_UNEVICTABLE,$/;"	e	enum:lru_list
+MAX_BANK0_PHYS_ADDR	config.h	29;"	d
+MAX_BANK1_PHYS_ADDR	config.h	38;"	d
+MAX_MEMBLOCK	memblock.h	15;"	d
+MAX_MEMBLOCK_TYPE	memblock.h	14;"	d
+MAX_NR_ZONES	highmem.h	20;"	d
+MAX_NR_ZONES	highmem.h	22;"	d
+MAX_NUMNODES	mmzone.h	55;"	d
+MAX_ORDER	mmzone.h	52;"	d
+MAX_ORDER_NR_PAGES	mmzone.h	53;"	d
+MAX_REGIONS	memblock.h	13;"	d
+MAX_ZONELISTS	mmzone.h	48;"	d
+MAX_ZONELISTS	mmzone.h	50;"	d
+MAX_ZONES_PER_ZONELIST	mmzone.h	56;"	d
+MEMBLOCK_ALLOC_ACCESSIBLE	memblock.h	25;"	d
+MEMBLOCK_ALLOC_ANYWHERE	memblock.h	24;"	d
+MEMMAP_EARLY	mmzone.h	/^	MEMMAP_EARLY,$/;"	e	enum:memmap_context
+MEMMAP_HOTPLUG	mmzone.h	/^	MEMMAP_HOTPLUG,$/;"	e	enum:memmap_context
+MEMORY_HOLE_SIZE	config.h	34;"	d
+MIGRATE_ISOLATE	mmzone.h	247;"	d
+MIGRATE_MOVABLE	mmzone.h	244;"	d
+MIGRATE_PCPTYPES	mmzone.h	245;"	d
+MIGRATE_RECLAIMABLE	mmzone.h	243;"	d
+MIGRATE_RESERVE	mmzone.h	246;"	d
+MIGRATE_TYPES	mmzone.h	248;"	d
+MIGRATE_TYPES	mmzone.h	47;"	d
+MIGRATE_UNMOVABLE	mmzone.h	242;"	d
+MMINIT_TRACE	internal.h	/^	MMINIT_TRACE,$/;"	e	enum:mminit_level
+MMINIT_VERIFY	internal.h	/^	MMINIT_VERIFY,$/;"	e	enum:mminit_level
+MMINIT_WARNING	internal.h	/^	MMINIT_WARNING,$/;"	e	enum:mminit_level
+MM_NOEXPAND	memblock.h	19;"	d
+MM_NOREGION	memblock.h	18;"	d
+MODULES_VADDR	pgtable.h	62;"	d
+NODES_MASK	mm.h	16;"	d
+NODES_PGOFF	mm.h	21;"	d
+NODES_PGSHIFT	mm.h	24;"	d
+NODES_SHIFT	mm.h	7;"	d
+NODES_WIDTH	mm.h	12;"	d
+NODE_DATA	mmzone.h	193;"	d
+NR_ACTIVE_ANON	mmzone.h	/^	NR_ACTIVE_ANON,$/;"	e	enum:zone_stat_item
+NR_ACTIVE_FILE	mmzone.h	/^	NR_ACTIVE_FILE,$/;"	e	enum:zone_stat_item
+NR_ANON_PAGES	mmzone.h	/^	NR_ANON_PAGES, \/* Mapped anonymous pages *\/$/;"	e	enum:zone_stat_item
+NR_ANON_TRANSPARENT_HUGEPAGES	mmzone.h	/^	NR_ANON_TRANSPARENT_HUGEPAGES,$/;"	e	enum:zone_stat_item
+NR_BANKS	setup.h	11;"	d
+NR_BANKS	setup.h	9;"	d
+NR_BOUNCE	mmzone.h	/^	NR_BOUNCE,$/;"	e	enum:zone_stat_item
+NR_DIRTIED	mmzone.h	/^	NR_DIRTIED, \/* page dirtyings since bootup *\/$/;"	e	enum:zone_stat_item
+NR_FILE_DIRTY	mmzone.h	/^	NR_FILE_DIRTY,$/;"	e	enum:zone_stat_item
+NR_FILE_MAPPED	mmzone.h	/^	NR_FILE_MAPPED, \/* pagecache pages mapped into pagetables.$/;"	e	enum:zone_stat_item
+NR_FILE_PAGES	mmzone.h	/^	NR_FILE_PAGES,$/;"	e	enum:zone_stat_item
+NR_FREE_PAGES	mmzone.h	/^	NR_FREE_PAGES,$/;"	e	enum:zone_stat_item
+NR_INACTIVE_ANON	mmzone.h	/^	NR_INACTIVE_ANON = NR_LRU_BASE, \/* must match order of LRU_[IN]ACTIVE *\/$/;"	e	enum:zone_stat_item
+NR_INACTIVE_FILE	mmzone.h	/^	NR_INACTIVE_FILE,$/;"	e	enum:zone_stat_item
+NR_ISOLATED_ANON	mmzone.h	/^	NR_ISOLATED_ANON,  \/* Temporary isolated pages from anon lru *\/$/;"	e	enum:zone_stat_item
+NR_ISOLATED_FILE	mmzone.h	/^	NR_ISOLATED_FILE,  \/* Temporary isolated pages from file lru *\/$/;"	e	enum:zone_stat_item
+NR_KERNEL_STACK	mmzone.h	/^	NR_KERNEL_STACK,$/;"	e	enum:zone_stat_item
+NR_LRU_BASE	mmzone.h	/^	NR_LRU_BASE,$/;"	e	enum:zone_stat_item
+NR_LRU_LISTS	mmzone.h	/^	NR_LRU_LISTS$/;"	e	enum:lru_list
+NR_MLOCK	mmzone.h	/^	NR_MLOCK, \/* mlock()ed pages found and moved off LRU *\/$/;"	e	enum:zone_stat_item
+NR_NODE_STATES	nodemask.h	/^	NR_NODE_STATES,$/;"	e	enum:node_states
+NR_PAGEBLOCK_BITS	pageblock-flags.h	/^	NR_PAGEBLOCK_BITS$/;"	e	enum:pageblock_bits
+NR_PAGETABLE	mmzone.h	/^	NR_PAGETABLE, \/* used for pagetables *\/$/;"	e	enum:zone_stat_item
+NR_SHMEM	mmzone.h	/^	NR_SHMEM, \/* shmem pages (included tmpfs \/ GEM pages)*\/$/;"	e	enum:zone_stat_item
+NR_SLAB_RECLAIMABLE	mmzone.h	/^	NR_SLAB_RECLAIMABLE,$/;"	e	enum:zone_stat_item
+NR_SLAB_UNRECLAIMABLE	mmzone.h	/^	NR_SLAB_UNRECLAIMABLE,$/;"	e	enum:zone_stat_item
+NR_UNEVICTABLE	mmzone.h	/^	NR_UNEVICTABLE,$/;"	e	enum:zone_stat_item
+NR_UNSTABLE_NFS	mmzone.h	/^	NR_UNSTABLE_NFS, \/* NFS unstable pages *\/$/;"	e	enum:zone_stat_item
+NR_VMSCAN_WRITE	mmzone.h	/^	NR_VMSCAN_WRITE,$/;"	e	enum:zone_stat_item
+NR_VM_ZONE_STAT_ITEMS	mmzone.h	/^	NR_VM_ZONE_STAT_ITEMS$/;"	e	enum:zone_stat_item
+NR_WMARK	mmzone.h	/^	NR_WMARK$/;"	e	enum:zone_watermarks
+NR_WRITEBACK_TEMP	mmzone.h	/^	NR_WRITEBACK_TEMP, \/* Writeback using temporary buffers *\/$/;"	e	enum:zone_stat_item
+NR_WRITEBASK	mmzone.h	/^	NR_WRITEBASK,$/;"	e	enum:zone_stat_item
+NR_WRITTEN	mmzone.h	/^	NR_WRITTEN, \/* page wirtings since bootup *\/$/;"	e	enum:zone_stat_item
+NUMA_BUILD	kernel.h	37;"	d
+NUMA_BUILD	kernel.h	39;"	d
+N_CPU	nodemask.h	/^	N_CPU, \/* The node has one or more cpus *\/$/;"	e	enum:node_states
+N_HIGH_MEMORY	nodemask.h	/^	N_HIGH_MEMORY,$/;"	e	enum:node_states
+N_NORMAL_MEMORY	nodemask.h	/^	N_NORMAL_MEMORY, \/* The node has regular memory *\/$/;"	e	enum:node_states
+N_ONLINE	nodemask.h	/^	N_ONLINE,   \/* The node is online *\/$/;"	e	enum:node_states
+N_POSSIBLE	nodemask.h	/^	N_POSSIBLE, \/* The node could become online at some point *\/$/;"	e	enum:node_states
+OPT_ZONE_DMA	gfp.h	54;"	d
+OPT_ZONE_DMA	gfp.h	56;"	d
+OPT_ZONE_DMA32	gfp.h	64;"	d
+OPT_ZONE_DMA32	gfp.h	66;"	d
+OPT_ZONE_HIGHMEM	gfp.h	59;"	d
+OPT_ZONE_HIGHMEM	gfp.h	61;"	d
+PAGE_ALIGN	page.h	12;"	d
+PAGE_MASK	page.h	7;"	d
+PAGE_OFFSET	page.h	16;"	d
+PAGE_SHIFT	page.h	5;"	d
+PAGE_SIZE	page.h	6;"	d
+PB_migrate	pageblock-flags.h	/^	PB_migrate,$/;"	e	enum:pageblock_bits
+PB_migrate_end	pageblock-flags.h	/^	PB_migrate_end = PB_migrate + 3 - 1,$/;"	e	enum:pageblock_bits
+PFN_DOWN	page.h	14;"	d
+PFN_UP	page.h	13;"	d
+PGDIR_MASK	pgtable.h	10;"	d
+PGDIR_SHIFT	pgtable.h	8;"	d
+PGDIR_SIZE	pgtable.h	9;"	d
+PG_active	page-flags.h	/^	PG_active,$/;"	e	enum:pageflags
+PG_arch_1	page-flags.h	/^	PG_arch_1,$/;"	e	enum:pageflags
+PG_comound_lock	page-flags.h	/^	PG_comound_lock,$/;"	e	enum:pageflags
+PG_dirty	page-flags.h	/^	PG_dirty,$/;"	e	enum:pageflags
+PG_error	page-flags.h	/^	PG_error,$/;"	e	enum:pageflags
+PG_head	page-flags.h	/^	PG_head,           \/* A head page *\/$/;"	e	enum:pageflags
+PG_hwpoison	page-flags.h	/^	PG_hwpoison,       \/* Hardware poisoned page *\/   $/;"	e	enum:pageflags
+PG_locked	page-flags.h	/^	PG_locked,         \/* Page is locked.Don't touch. *\/$/;"	e	enum:pageflags
+PG_lry	page-flags.h	/^	PG_lry,$/;"	e	enum:pageflags
+PG_mappedtodisk	page-flags.h	/^	PG_mappedtodisk,   \/* Has blocks allocated on-disk *\/$/;"	e	enum:pageflags
+PG_mlocked	page-flags.h	/^	PG_mlocked,        \/* Page is vma mlocked *\/$/;"	e	enum:pageflags
+PG_owner_priv_1	page-flags.h	/^	PG_owner_priv_1,   \/* Owner use.If pagecache,fs may use *\/$/;"	e	enum:pageflags
+PG_private	page-flags.h	/^	PG_private,        \/* If pagecache,has fs-private data *\/$/;"	e	enum:pageflags
+PG_private_2	page-flags.h	/^	PG_private_2,      \/* If pagecache,has fs aux data *\/$/;"	e	enum:pageflags
+PG_reclaim	page-flags.h	/^	PG_reclaim,        \/* To be reclaimed asap *\/$/;"	e	enum:pageflags
+PG_referenced	page-flags.h	/^	PG_referenced,$/;"	e	enum:pageflags
+PG_reserved	page-flags.h	/^	PG_reserved,$/;"	e	enum:pageflags
+PG_slab	page-flags.h	/^	PG_slab,$/;"	e	enum:pageflags
+PG_swapbacked	page-flags.h	/^	PG_swapbacked,     \/* Page is backed by RAM \/swap *\/$/;"	e	enum:pageflags
+PG_swapcache	page-flags.h	/^	PG_swapcache,      \/* Swap page:swp_entry_t in private *\/$/;"	e	enum:pageflags
+PG_tail	page-flags.h	/^	PG_tail,           \/* A tail page *\/$/;"	e	enum:pageflags
+PG_uncached	page-flags.h	/^	PG_uncached,       \/* Page has been mapped as uncached *\/$/;"	e	enum:pageflags
+PG_unevictable	page-flags.h	/^	PG_unevictable,    \/* Page is "unevictable " *\/$/;"	e	enum:pageflags
+PG_uptodate	page-flags.h	/^	PG_uptodate,$/;"	e	enum:pageflags
+PG_wirteback	page-flags.h	/^	PG_wirteback,      \/* Page is under writeback *\/$/;"	e	enum:pageflags
+PHYS_OFFSET	page.h	17;"	d
+PHYS_PFN_OFFSET	page.h	18;"	d
+PKMAP_ADDR	highmem.h	17;"	d
+PKMAP_BASE	highmem.h	13;"	d
+PKMAP_NR	highmem.h	16;"	d
+PMD_SHIFT	pgtable.h	12;"	d
+PMD_SIZE	pgtable.h	13;"	d
+PTE_HWTABLE_OFF	pgtable.h	20;"	d
+PTE_HWTABLE_PTRS	pgtable.h	19;"	d
+PTE_HWTABLE_SIZE	pgtable.h	21;"	d
+PTRS_PER_PGD	pgtable.h	15;"	d
+PTRS_PER_PMD	pgtable.h	16;"	d
+PTRS_PER_PTE	pgtable.h	17;"	d
+RED_ACTIVE	memblock.h	22;"	d
+RED_INACTIVE	memblock.h	21;"	d
+SECTIONS_PGOFF	mm.h	20;"	d
+SECTIONS_SHIFT	mm.h	8;"	d
+SECTIONS_WIDTH	mm.h	10;"	d
+SYSTEM_BOOTING	config.h	65;"	d
+SZ_128K	types.h	49;"	d
+SZ_128M	types.h	33;"	d
+SZ_16K	types.h	46;"	d
+SZ_16M	types.h	30;"	d
+SZ_1G	types.h	37;"	d
+SZ_1K	types.h	42;"	d
+SZ_1M	types.h	26;"	d
+SZ_256K	types.h	50;"	d
+SZ_256M	types.h	34;"	d
+SZ_2G	types.h	38;"	d
+SZ_2K	types.h	43;"	d
+SZ_2M	types.h	27;"	d
+SZ_32K	types.h	47;"	d
+SZ_32M	types.h	31;"	d
+SZ_4G	types.h	39;"	d
+SZ_4K	types.h	44;"	d
+SZ_4M	types.h	28;"	d
+SZ_512K	types.h	51;"	d
+SZ_512M	types.h	35;"	d
+SZ_64K	types.h	48;"	d
+SZ_64M	types.h	32;"	d
+SZ_8G	types.h	40;"	d
+SZ_8K	types.h	45;"	d
+SZ_8M	types.h	29;"	d
+SetPageReserved	page-flags.h	/^static inline void SetPageReserved(struct page *page)$/;"	f
+VIRTUAL_MEMORY_SIZE	config.h	18;"	d
+VMALLOC_END	config.h	44;"	d
+VM_BUG_ON	debug.h	28;"	d
+WARN_ON	debug.h	27;"	d
+WMARK_HIGH	mmzone.h	/^	WMARK_HIGH,$/;"	e	enum:zone_watermarks
+WMARK_LOW	mmzone.h	/^	WMARK_LOW,$/;"	e	enum:zone_watermarks
+WMARK_MIN	mmzone.h	/^	WMARK_MIN,$/;"	e	enum:zone_watermarks
+ZONEID_MASK	mm.h	17;"	d
+ZONEID_SHIFT	mm.h	13;"	d
+ZONES_MASK	mm.h	15;"	d
+ZONES_PGOFF	mm.h	22;"	d
+ZONES_PGSHIFT	mm.h	25;"	d
+ZONES_SHIFT	mmzone.h	38;"	d
+ZONES_SHIFT	mmzone.h	40;"	d
+ZONES_SHIFT	mmzone.h	42;"	d
+ZONES_SHIFT	mmzone.h	44;"	d
+ZONES_WIDTH	mm.h	11;"	d
+ZONE_DMA	mmzone.h	/^	ZONE_DMA,$/;"	e	enum:zone_type
+ZONE_DMA32	mmzone.h	/^	ZONE_DMA32,$/;"	e	enum:zone_type
+ZONE_HIGHMEM	mmzone.h	/^	ZONE_HIGHMEM,$/;"	e	enum:zone_type
+ZONE_MOVABLE	mmzone.h	/^	ZONE_MOVABLE,$/;"	e	enum:zone_type
+ZONE_NORMAL	mmzone.h	/^	ZONE_NORMAL,$/;"	e	enum:zone_type
+_ATOMIC_H_	atomic.h	2;"	d
+_BITMAP_H_	bitmap.h	2;"	d
+_BITOPS_H_	bitops.h	2;"	d
+_BOOTMEM_H_	bootmem.h	2;"	d
+_BOOT_ARCH_H_	boot_arch.h	2;"	d
+_CONFIG_H_	config.h	2;"	d
+_DEBUG_H_	debug.h	2;"	d
+_GFP_H_	gfp.h	2;"	d
+_HIGHMEM_H_	highmem.h	2;"	d
+_INIT_MM_H_	init_mm.h	2;"	d
+_INIT_TASK_H_	init_task.h	2;"	d
+_INTERNAL_H_	internal.h	2;"	d
+_KERNEL_H_	kernel.h	2;"	d
+_LIST_H_	list.h	2;"	d
+_MAP_H_	map.h	2;"	d
+_MEMBLOCK_H_	memblock.h	2;"	d
+_MEMORY_H_	memory.h	2;"	d
+_MMU_H_	mmu.h	2;"	d
+_MMZONE_H_	mmzone.h	2;"	d
+_MM_H_	mm.h	2;"	d
+_MM_TYPE_H_	mm_type.h	2;"	d
+_NODEMASK_H_	nodemask.h	2;"	d
+_NOMMU_H_	nommu.h	2;"	d
+_PAGEBLOCK_FLAGS_H_	pageblock-flags.h	2;"	d
+_PAGE_FLAGS_H_	page-flags.h	2;"	d
+_PAGE_H_	page.h	2;"	d
+_PGALLOC_H_	pgalloc.h	2;"	d
+_PGTABLE_H_	pgtable.h	2;"	d
+_SCHED_H_	sched.h	2;"	d
+_SETUP_H_	setup.h	2;"	d
+_TRAPS_H_	traps.h	2;"	d
+_TYPES_H_	types.h	2;"	d
+_VMSCAN_H_	vmscan.h	2;"	d
+_VMSTAT_H_	vmstat.h	2;"	d
+__GFP_DMA	gfp.h	42;"	d
+__GFP_DMA32	gfp.h	44;"	d
+__GFP_FS	gfp.h	36;"	d
+__GFP_HARDWALL	gfp.h	38;"	d
+__GFP_HIGH	gfp.h	34;"	d
+__GFP_HIGHMEM	gfp.h	39;"	d
+__GFP_HIGHMEM	gfp.h	43;"	d
+__GFP_IO	gfp.h	35;"	d
+__GFP_MOVABLE	gfp.h	40;"	d
+__GFP_MOVABLE	gfp.h	45;"	d
+__GFP_THISNODE	gfp.h	37;"	d
+__GFP_WAIT	gfp.h	33;"	d
+__MAX_NR_ZONES	mmzone.h	/^	__MAX_NR_ZONES$/;"	e	enum:zone_type
+__NR_PAGEFLAGS	page-flags.h	/^	__NR_PAGEFLAGS,$/;"	e	enum:pageflags
+___GFP_COLD	gfp.h	16;"	d
+___GFP_COMP	gfp.h	21;"	d
+___GFP_DMA	gfp.h	8;"	d
+___GFP_DMA32	gfp.h	10;"	d
+___GFP_FS	gfp.h	15;"	d
+___GFP_HARDWALL	gfp.h	24;"	d
+___GFP_HIGH	gfp.h	13;"	d
+___GFP_HIGHMEM	gfp.h	9;"	d
+___GFP_IO	gfp.h	14;"	d
+___GFP_MOVABLE	gfp.h	11;"	d
+___GFP_NOFAIL	gfp.h	19;"	d
+___GFP_NOMEMALLOC	gfp.h	23;"	d
+___GFP_NORETRY	gfp.h	20;"	d
+___GFP_NOTRACK	gfp.h	27;"	d
+___GFP_NOWARN	gfp.h	17;"	d
+___GFP_NO_KSWAPED	gfp.h	28;"	d
+___GFP_RECLAIMABLE	gfp.h	26;"	d
+___GFP_REPEAT	gfp.h	18;"	d
+___GFP_THISNODE	gfp.h	25;"	d
+___GFP_WAIT	gfp.h	12;"	d
+___GFP_ZERO	gfp.h	22;"	d
+__init	kernel.h	4;"	d
+__init_memblock	kernel.h	5;"	d
+__init_refok	kernel.h	10;"	d
+__initdata	kernel.h	6;"	d
+__meminit	kernel.h	8;"	d
+__meminitdata	kernel.h	7;"	d
+__pa	page.h	27;"	d
+__paginginit	kernel.h	9;"	d
+__pmd	pgtable.h	43;"	d
+__pmd_populate	pgalloc.h	/^static inline __pmd_populate(pmd_t *__pmd,phys_addr_t pte,$/;"	f
+__va	page.h	28;"	d
+_count	mm_type.h	/^	atomic_t _count;     \/* Usage count *\/$/;"	m	struct:page
+_mapcount	mm_type.h	/^		atomic_t _mapcount; \/* Count of ptes mapped in mms,$/;"	m	union:page::__anon1
+_zonerefs	mmzone.h	/^	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];$/;"	m	struct:zonelist	typeref:struct:zonelist::zoneref
+arch_adjust_zones	memory.h	5;"	d
+atomic_long_t	types.h	/^typedef atomic_t atomic_long_t;$/;"	t
+atomic_read	atomic.h	5;"	d
+atomic_set	atomic.h	6;"	d
+atomic_t	types.h	/^} atomic_t;$/;"	t	typeref:struct:__anon7
+bank	setup.h	/^	struct membank bank[NR_BANKS];$/;"	m	struct:meminfo	typeref:struct:meminfo::membank
+bank_pfn_end	setup.h	31;"	d
+bank_pfn_size	setup.h	32;"	d
+bank_pfn_start	setup.h	30;"	d
+bank_phys_end	setup.h	34;"	d
+bank_phys_size	setup.h	35;"	d
+bank_phys_start	setup.h	33;"	d
+base	memblock.h	/^	unsigned long base;$/;"	m	struct:memblock_region
+bdata	mmzone.h	/^	struct bootmem_data bdata;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::bootmem_data
+bootmem_data	bootmem.h	/^struct bootmem_data {$/;"	s
+cnt	memblock.h	/^	unsigned long cnt;$/;"	m	struct:memblock_type
+container_of	kernel.h	30;"	d
+counter	types.h	/^	int counter;$/;"	m	struct:__anon7
+current_limit	memblock.h	/^	unsigned long current_limit;$/;"	m	struct:memblock
+early_pfn_in_nid	mmzone.h	255;"	d
+early_pfn_valid	mmzone.h	254;"	d
+find_first_bit	bitops.h	16;"	d
+first_zones_zonelist	nodemask.h	/^static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,$/;"	f
+flags	mm_type.h	/^	unsigned long flags; \/* Atomic flags,some possibly $/;"	m	struct:page
+flags	mmzone.h	/^	unsigned long flags;$/;"	m	struct:zone
+for_each_bank	setup.h	27;"	d
+for_each_lru	mmzone.h	70;"	d
+for_each_memblock	memblock.h	28;"	d
+for_each_migratetype_order	mmzone.h	250;"	d
+for_each_node_state	nodemask.h	28;"	d
+for_each_online_node	nodemask.h	37;"	d
+for_each_set_bit	bitops.h	18;"	d
+for_each_zone_zonelist	mmzone.h	226;"	d
+for_each_zone_zonelist_nodemask	nodemask.h	46;"	d
+free_area	mmzone.h	/^	struct free_area free_area[MAX_ORDER];$/;"	m	struct:zone	typeref:struct:zone::free_area
+free_area	mmzone.h	/^struct free_area {$/;"	s
+free_list	mmzone.h	/^	struct list_head free_list[MIGRATE_TYPES];$/;"	m	struct:free_area	typeref:struct:free_area::list_head
+gfp_t	types.h	/^typedef unsigned int gfp_t;$/;"	t
+gfp_zone	gfp.h	/^static inline enum zone_type gfp_zone(gfp_t flags)$/;"	f
+gfp_zonelist	gfp.h	/^static inline int gfp_zonelist(gfp_t flags)$/;"	f
+high_wmark_pages	mmzone.h	239;"	d
+highmem	setup.h	/^	unsigned int highmem;$/;"	m	struct:membank
+init_page_count	mm.h	/^static inline void init_page_count(struct page *page)$/;"	f
+inuse	mm_type.h	/^			u16 inuse;$/;"	m	struct:page::__anon1::__anon2
+is_highmem_idx	mmzone.h	/^static inline int is_highmem_idx(enum zone_type idx)$/;"	f
+is_normal_idx	mmzone.h	/^static inline int is_normal_idx(enum zone_type idx)$/;"	f
+kswapd_max_order	mmzone.h	/^    int kswapd_max_order;$/;"	m	struct:pglist_data
+last_full_zap	mmzone.h	/^	unsigned long last_full_zap; \/* when last zap'd(jiffies )*\/$/;"	m	struct:zonelist_cache
+length	map.h	/^	unsigned long length;$/;"	m	struct:map_desc
+likely	kernel.h	42;"	d
+list	bootmem.h	/^	struct list_head list;$/;"	m	struct:bootmem_data	typeref:struct:bootmem_data::list_head
+list	mmzone.h	/^		struct list_head list;$/;"	m	struct:zone::zone_lru	typeref:struct:zone::zone_lru::list_head
+list_entry	list.h	10;"	d
+list_for_each	list.h	17;"	d
+list_for_each_entry	list.h	12;"	d
+list_head	list.h	/^struct list_head {$/;"	s
+lru	mm_type.h	/^	struct list_head lru;   \/* Pageout list,eg,active_list$/;"	m	struct:page	typeref:struct:page::list_head
+lru	mmzone.h	/^	} lru[NR_LRU_LISTS];$/;"	m	struct:zone	typeref:struct:zone::zone_lru
+lru_list	mmzone.h	/^enum lru_list {$/;"	g
+map_desc	map.h	/^struct map_desc {$/;"	s
+max	kernel.h	12;"	d
+max	memblock.h	/^	unsigned long max;$/;"	m	struct:memblock_type
+mem_addr_t	types.h	/^typedef unsigned int mem_addr_t;$/;"	t
+membank	setup.h	/^struct membank {$/;"	s
+memblock	memblock.h	/^struct memblock {$/;"	s
+memblock_region	memblock.h	/^struct memblock_region {$/;"	s
+memblock_type	memblock.h	/^struct memblock_type {$/;"	s
+meminfo	setup.h	/^struct meminfo {$/;"	s
+memmap_context	mmzone.h	/^enum memmap_context {$/;"	g
+memory	memblock.h	/^	struct memblock_type memory;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
+memory_size	memblock.h	/^	unsigned long memory_size;$/;"	m	struct:memblock
+min	kernel.h	18;"	d
+mm_debug	debug.h	10;"	d
+mm_debug	debug.h	12;"	d
+mm_err	debug.h	15;"	d
+mm_struct	mm_type.h	/^struct mm_struct {$/;"	s
+mminit_level	internal.h	/^enum mminit_level {$/;"	g
+name	mmzone.h	/^	const char *name;$/;"	m	struct:zone
+next	list.h	/^	struct list_head *next;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
+node_bootmem_map	bootmem.h	/^	unsigned long *node_bootmem_map;$/;"	m	struct:bootmem_data
+node_id	mmzone.h	/^    unsigned long node_id;$/;"	m	struct:pglist_data
+node_low_pfn	bootmem.h	/^	unsigned long node_low_pfn;$/;"	m	struct:bootmem_data
+node_mem_map	mmzone.h	/^    struct page *node_mem_map;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::page
+node_min_pfn	bootmem.h	/^	unsigned long node_min_pfn;$/;"	m	struct:bootmem_data
+node_online	nodemask.h	35;"	d
+node_present_pages	mmzone.h	/^    unsigned long node_present_pages;$/;"	m	struct:pglist_data
+node_spanned_pages	mmzone.h	/^    unsigned long node_spanned_pages;$/;"	m	struct:pglist_data
+node_start_pfn	mmzone.h	/^    unsigned long node_start_pfn;$/;"	m	struct:pglist_data
+node_state	nodemask.h	/^static inline int node_state(int node,enum node_states state)$/;"	f
+node_states	nodemask.h	/^enum node_states {$/;"	g
+node_zonelist	gfp.h	/^static inline struct zonelist *node_zonelist(int nid,gfp_t flags)$/;"	f
+node_zonelists	mmzone.h	/^	struct zonelist node_zonelists[MAX_ZONELISTS];$/;"	m	struct:pglist_data	typeref:struct:pglist_data::zonelist
+node_zones	mmzone.h	/^    struct zone node_zones[MAX_NR_ZONES];$/;"	m	struct:pglist_data	typeref:struct:pglist_data::zone
+nodemask_t	nodemask.h	/^typedef struct {DECLARE_BITMAP(bits,MAX_NUMNODES);} nodemask_t;$/;"	t	typeref:struct:__anon6
+nr_banks	setup.h	/^	int nr_banks;$/;"	m	struct:meminfo
+nr_free	mmzone.h	/^	unsigned long nr_free;$/;"	m	struct:free_area
+nr_online_nodes	nodemask.h	26;"	d
+nr_saved_scan	mmzone.h	/^	unsigned long nr_saved_scan[NR_LRU_LISTS];$/;"	m	struct:zone_reclaim_stat
+nr_zones	mmzone.h	/^    int nr_zones;$/;"	m	struct:pglist_data
+objects	mm_type.h	/^			u16 objects;$/;"	m	struct:page::__anon1::__anon2
+offsetof	kernel.h	28;"	d
+owner	mm_type.h	/^	struct task_struct *owner;$/;"	m	struct:mm_struct	typeref:struct:mm_struct::task_struct
+page	mm_type.h	/^struct page {$/;"	s
+page_to_nid	mm.h	/^static inline int page_to_nid(struct page *page)$/;"	f
+page_to_pfn	page.h	30;"	d
+page_zonenum	mm.h	/^static inline enum zone_type page_zonenum(struct page *page)$/;"	f
+pageblock_bits	pageblock-flags.h	/^enum pageblock_bits {$/;"	g
+pageblock_flags	mmzone.h	/^	unsigned long *pageblock_flags;$/;"	m	struct:zone
+pageblock_nr_pages	pageblock-flags.h	6;"	d
+pageblock_order	pageblock-flags.h	5;"	d
+pageflags	page-flags.h	/^enum pageflags {$/;"	g
+panic	debug.h	16;"	d
+pfn	map.h	/^	unsigned long pfn;$/;"	m	struct:map_desc
+pfn_pte	pgtable.h	57;"	d
+pfn_to_page	page.h	29;"	d
+pfn_to_phys	page.h	23;"	d
+pfn_to_virt	page.h	26;"	d
+pgd	mm_type.h	/^	pgd_t *pgd;$/;"	m	struct:mm_struct
+pgd	pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	m	struct:__anon3
+pgd_addr_end	pgtable.h	46;"	d
+pgd_bad	pgtable.h	33;"	d
+pgd_clear	pgtable.h	34;"	d
+pgd_index	pgtable.h	23;"	d
+pgd_none	pgtable.h	32;"	d
+pgd_offset	pgtable.h	24;"	d
+pgd_offset_k	pgtable.h	25;"	d
+pgd_t	pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	t	typeref:struct:__anon3
+pgd_val	pgtable.h	31;"	d
+pglist_data	mmzone.h	/^struct pglist_data {$/;"	s
+phys_addr_t	types.h	/^typedef unsigned int phys_addr_t;$/;"	t
+phys_to_pfn	page.h	24;"	d
+phys_to_virt	page.h	22;"	d
+pmd	pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	m	struct:__anon4
+pmd_bad	pgtable.h	41;"	d
+pmd_clear	pgtable.h	42;"	d
+pmd_none	pgtable.h	40;"	d
+pmd_off_k	pgtable.h	45;"	d
+pmd_offset	pgtable.h	26;"	d
+pmd_page_vaddr	pgtable.h	53;"	d
+pmd_t	pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	t	typeref:struct:__anon4
+pmd_val	pgtable.h	39;"	d
+present_pages	mmzone.h	/^	unsigned long present_pages;$/;"	m	struct:zone
+prev	list.h	/^	struct list_head *prev;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
+pte	pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	m	struct:__anon5
+pte_index	pgtable.h	54;"	d
+pte_offset_kernel	pgtable.h	55;"	d
+pte_t	pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	t	typeref:struct:__anon5
+recent_rotated	mmzone.h	/^	unsigned long recent_rotated[2];$/;"	m	struct:zone_reclaim_stat
+recent_scanned	mmzone.h	/^	unsigned long recent_scanned[2];$/;"	m	struct:zone_reclaim_stat
+reclaim_stat	mmzone.h	/^	struct zone_reclaim_stat reclaim_stat;$/;"	m	struct:zone	typeref:struct:zone::zone_reclaim_stat
+regions	memblock.h	/^	struct memblock_region *regions;$/;"	m	struct:memblock_type	typeref:struct:memblock_type::memblock_region
+reserved	memblock.h	/^	struct memblock_type reserved;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
+reset_page_mapcount	mm.h	/^static inline void reset_page_mapcount(struct page *page)$/;"	f
+s16	types.h	/^typedef short           s16;$/;"	t
+s32	types.h	/^typedef int             s32;$/;"	t
+s8	types.h	/^typedef signed char     s8;$/;"	t
+set_page_links	mm.h	/^static inline void set_page_links(struct page *page,$/;"	f
+set_page_node	mm.h	/^static inline void set_page_node(struct page *page,unsigned long node)$/;"	f
+set_page_zone	mm.h	/^static inline void set_page_zone(struct page *page,enum zone_type zone)$/;"	f
+size	memblock.h	/^	unsigned long size;$/;"	m	struct:memblock_region
+size	setup.h	/^	unsigned int size;$/;"	m	struct:membank
+spanned_pages	mmzone.h	/^	unsigned long spanned_pages;$/;"	m	struct:zone
+start	setup.h	/^	unsigned int start;$/;"	m	struct:membank
+state	sched.h	/^	unsigned long state;$/;"	m	struct:task_struct
+swapper_pg_dir	highmem.h	9;"	d
+system_state	config.h	66;"	d
+task_struct	sched.h	/^struct task_struct {$/;"	s
+top_mem	memblock.h	53;"	d
+type	map.h	/^	unsigned int type;$/;"	m	struct:map_desc
+u16	types.h	/^typedef unsigned short  u16;$/;"	t
+u32	types.h	/^typedef unsigned int    u32;$/;"	t
+u8	types.h	/^typedef unsigned char   u8;$/;"	t
+unlikely	kernel.h	43;"	d
+virt_to_page	memory.h	11;"	d
+virt_to_pfn	page.h	25;"	d
+virt_to_phys	page.h	21;"	d
+vm_stat	mmzone.h	/^	atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];$/;"	m	struct:zone
+watermark	mmzone.h	/^	unsigned long watermark[NR_WMARK];$/;"	m	struct:zone
+z_to_n	mmzone.h	/^	unsigned short z_to_n[MAX_ZONES_PER_ZONELIST]; \/* zone->nid *\/$/;"	m	struct:zonelist_cache
+zap_zone_vm_stats	vmstat.h	/^static inline void zap_zone_vm_stats(struct zone *zone)$/;"	f
+zlcache_ptr	mmzone.h	/^	struct zonelist_cache *zlcache_ptr; \/* NULL or &zlcache *\/$/;"	m	struct:zonelist	typeref:struct:zonelist::zonelist_cache
+zone	mmzone.h	/^	struct zone *zone;$/;"	m	struct:zoneref	typeref:struct:zoneref::zone
+zone	mmzone.h	/^struct zone {$/;"	s
+zone_idx	mmzone.h	/^	int zone_idx;$/;"	m	struct:zoneref
+zone_idx	mmzone.h	224;"	d
+zone_lru	mmzone.h	/^	struct zone_lru {$/;"	s	struct:zone
+zone_movable_is_highmem	mmzone.h	/^static inline int zone_movable_is_highmem(void)$/;"	f
+zone_pgdat	mmzone.h	/^	struct pglist_data *zone_pgdat;$/;"	m	struct:zone	typeref:struct:zone::pglist_data
+zone_reclaim_stat	mmzone.h	/^struct zone_reclaim_stat {$/;"	s
+zone_start_pfn	mmzone.h	/^	unsigned long zone_start_pfn;$/;"	m	struct:zone
+zone_stat_item	mmzone.h	/^enum zone_stat_item {$/;"	g
+zone_type	mmzone.h	/^enum zone_type {$/;"	g
+zone_watermarks	mmzone.h	/^enum zone_watermarks {$/;"	g
+zonelist	mmzone.h	/^struct zonelist {$/;"	s
+zonelist_cache	mmzone.h	/^struct zonelist_cache {$/;"	s
+zonelist_zone	mmzone.h	/^static inline struct zone *zonelist_zone(struct zoneref *zoneref)$/;"	f
+zonelist_zone_idx	mmzone.h	/^static inline int zonelist_zone_idx(struct zoneref *zoneref)$/;"	f
+zoneref	mmzone.h	/^struct zoneref {$/;"	s
