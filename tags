@@ -4,187 +4,526 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-ALIGN	include/linux/kernel.h	20;"	d
+ALIGN	include/linux/kernel.h	24;"	d
+ATOMIC_INIT	include/linux/atomic.h	4;"	d
+BIT	include/linux/bitops.h	7;"	d
+BITMAP_show	lib/debug.c	/^void BITMAP_show(unsigned int *bitmap,unsigned long bits)$/;"	f
+BITS_PER_BYTE	include/linux/bitops.h	10;"	d
+BITS_PER_LONG	include/linux/bitops.h	5;"	d
+BITS_TO_LONGS	include/linux/bitops.h	11;"	d
+BIT_MASK	include/linux/bitops.h	8;"	d
+BIT_WORD	include/linux/bitops.h	9;"	d
 BK_show	lib/debug.c	/^void BK_show(char *s)$/;"	f
-BUG_ON	include/linux/debug.h	18;"	d
+BOOTMEM_DEFAULT	include/linux/bootmem.h	7;"	d
+BOOTMEM_EXCLUSIVE	include/linux/bootmem.h	8;"	d
+BUG	include/linux/debug.h	31;"	d
+BUG_ON	include/linux/debug.h	27;"	d
 BYTE_MODIFY	include/linux/config.h	14;"	d
 B_show	lib/debug.c	/^void B_show(char *s)$/;"	f
 CC	init/Makefile	/^CC=gcc$/;"	m
+CONFIG_ARM_L1_CACHE_SHIFT	include/linux/config.h	70;"	d
 CONFIG_BANK0_SIZE	include/linux/config.h	25;"	d
 CONFIG_BANK0_SIZE	include/linux/config.h	27;"	d
 CONFIG_BANK0_START	include/linux/config.h	23;"	d
 CONFIG_BANK1_SIZE	include/linux/config.h	37;"	d
 CONFIG_BANK1_START	include/linux/config.h	35;"	d
 CONFIG_BOTH_BANKS	include/linux/config.h	9;"	d
+CONFIG_FLAT_NODE_MEM_MAP	include/linux/config.h	57;"	d
 CONFIG_HIGHMEM	include/linux/config.h	53;"	d
 CONFIG_MEMORY_SIZE	include/linux/config.h	19;"	d
+CONFIG_MM_OWNER	include/linux/config.h	61;"	d
 CONFIG_VMALLOC_RESERVE	include/linux/config.h	48;"	d
 DEBUG	include/linux/debug.h	7;"	d
 DEBUG_FLAGS	init/Makefile	/^DEBUG_FLAGS=-C -E -g $/;"	m
+DECLARE_BITMAP	include/linux/bitops.h	23;"	d
+DIV_ROUND_UP	include/linux/kernel.h	41;"	d
+EBUSY	include/linux/error.h	4;"	d
 FLAGS	init/Makefile	/^FLAGS=-g -pg$/;"	m
+GFP_HIGHUSER_MOVABLE	include/linux/gfp.h	47;"	d
+GFP_KERNEL	include/linux/gfp.h	51;"	d
+GFP_ZONEMASK	include/linux/gfp.h	46;"	d
+GFP_ZONE_TABLE	include/linux/gfp.h	101;"	d
 INC	init/Makefile	/^INC= -I.\/$/;"	m
 INIT_LIST_HEAD	lib/list.c	/^inline void INIT_LIST_HEAD(struct list_head *list)$/;"	f
-INIT_MEMBLOCK_REGIONS	include/linux/memblock.h	14;"	d
-KERNEL_RAM_VADDR	include/linux/highmem.h	7;"	d
-L1_CACHE_ALIGN	include/linux/page.h	10;"	d
-L1_CACHE_BYTES	include/linux/memblock.h	24;"	d
-L1_CACHE_SHIFT	include/linux/page.h	8;"	d
-L1_CACHE_SIZE	include/linux/page.h	9;"	d
+INIT_MEMBLOCK_REGIONS	include/linux/memblock.h	17;"	d
+KERNEL_RAM_VADDR	include/linux/highmem.h	8;"	d
+L1_CACHE_ALIGN	include/asm/cache.h	9;"	d
+L1_CACHE_BYTES	include/asm/cache.h	7;"	d
+L1_CACHE_SHIFT	include/asm/cache.h	6;"	d
+L1_CACHE_SIZE	include/asm/cache.h	8;"	d
+LAST_PKMAP	include/linux/highmem.h	14;"	d
+LAST_PKMAP_MASK	include/linux/highmem.h	15;"	d
 LOG_FILE	init/Makefile	/^LOG_FILE=debug.log$/;"	m
+LRU_ACTIVE	include/linux/mmzone.h	59;"	d
+LRU_ACTIVE_ANON	include/linux/mmzone.h	/^	LRU_ACTIVE_ANON   = LRU_BASE + LRU_ACTIVE,$/;"	e	enum:lru_list
+LRU_ACTIVE_FILE	include/linux/mmzone.h	/^	LRU_ACTIVE_FILE   = LRU_BASE + LRU_FILE + LRU_ACTIVE,$/;"	e	enum:lru_list
+LRU_BASE	include/linux/mmzone.h	58;"	d
+LRU_FILE	include/linux/mmzone.h	60;"	d
+LRU_INACTIVE_ANON	include/linux/mmzone.h	/^	LRU_INACTIVE_ANON = LRU_BASE,$/;"	e	enum:lru_list
+LRU_INACTIVE_FILE	include/linux/mmzone.h	/^	LRU_INACTIVE_FILE = LRU_BASE + LRU_FILE,$/;"	e	enum:lru_list
+LRU_UNEVICTABLE	include/linux/mmzone.h	/^	LRU_UNEVICTABLE,$/;"	e	enum:lru_list
 MAX_BANK0_PHYS_ADDR	include/linux/config.h	29;"	d
 MAX_BANK1_PHYS_ADDR	include/linux/config.h	38;"	d
-MAX_MEMBLOCK	include/linux/memblock.h	13;"	d
-MAX_MEMBLOCK_TYPE	include/linux/memblock.h	12;"	d
-MAX_REGIONS	include/linux/memblock.h	11;"	d
+MAX_DMA_ADDRESS	include/asm/dma.h	5;"	d
+MAX_MEMBLOCK	include/linux/memblock.h	16;"	d
+MAX_MEMBLOCK_TYPE	include/linux/memblock.h	15;"	d
+MAX_NR_ZONES	include/linux/highmem.h	20;"	d
+MAX_NR_ZONES	include/linux/highmem.h	22;"	d
+MAX_NUMNODES	include/linux/mmzone.h	55;"	d
+MAX_NUMNODES	include/linux/numa.h	6;"	d
+MAX_ORDER	include/linux/mmzone.h	52;"	d
+MAX_ORDER_NR_PAGES	include/linux/mmzone.h	53;"	d
+MAX_REGIONS	include/linux/memblock.h	14;"	d
+MAX_ZONELISTS	include/linux/mmzone.h	48;"	d
+MAX_ZONELISTS	include/linux/mmzone.h	50;"	d
+MAX_ZONES_PER_ZONELIST	include/linux/mmzone.h	56;"	d
 MEM0_OFFSET	lib/boot_arch.c	/^unsigned int MEM0_OFFSET;$/;"	v
 MEM1_OFFSET	lib/boot_arch.c	/^unsigned int MEM1_OFFSET;$/;"	v
-MEMBLOCK_ALLOC_ACCESSIBLE	include/linux/memblock.h	23;"	d
-MEMBLOCK_ALLOC_ANYWHERE	include/linux/memblock.h	22;"	d
+MEMBLOCK_ALLOC_ACCESSIBLE	include/linux/memblock.h	27;"	d
+MEMBLOCK_ALLOC_ANYWHERE	include/linux/memblock.h	26;"	d
+MEMBLOCK_ERROR	include/linux/memblock.h	18;"	d
+MEMMAP_EARLY	include/linux/mmzone.h	/^	MEMMAP_EARLY,$/;"	e	enum:memmap_context
+MEMMAP_HOTPLUG	include/linux/mmzone.h	/^	MEMMAP_HOTPLUG,$/;"	e	enum:memmap_context
 MEMORY_HOLE_SIZE	include/linux/config.h	34;"	d
-MM_NOEXPAND	include/linux/memblock.h	17;"	d
-MM_NOREGION	include/linux/memblock.h	16;"	d
+MIGRATE_ISOLATE	include/linux/mmzone.h	249;"	d
+MIGRATE_MOVABLE	include/linux/mmzone.h	246;"	d
+MIGRATE_PCPTYPES	include/linux/mmzone.h	247;"	d
+MIGRATE_RECLAIMABLE	include/linux/mmzone.h	245;"	d
+MIGRATE_RESERVE	include/linux/mmzone.h	248;"	d
+MIGRATE_TYPES	include/linux/mmzone.h	250;"	d
+MIGRATE_TYPES	include/linux/mmzone.h	47;"	d
+MIGRATE_UNMOVABLE	include/linux/mmzone.h	244;"	d
+MMINIT_TRACE	include/linux/internal.h	/^	MMINIT_TRACE,$/;"	e	enum:mminit_level
+MMINIT_VERIFY	include/linux/internal.h	/^	MMINIT_VERIFY,$/;"	e	enum:mminit_level
+MMINIT_WARNING	include/linux/internal.h	/^	MMINIT_WARNING,$/;"	e	enum:mminit_level
+MM_NOEXPAND	include/linux/memblock.h	21;"	d
+MM_NOREGION	include/linux/memblock.h	20;"	d
+MODULES_VADDR	include/linux/pgtable.h	62;"	d
 M_show	lib/debug.c	/^void M_show(phys_addr_t start,phys_addr_t end)$/;"	f
-NODE_DATA	lib/mm/memblock.c	/^static struct pglist_data *NODE_DATA(unsigned long x)$/;"	f	file:
-NR_BANKS	include/linux/setup.h	10;"	d
-NR_BANKS	include/linux/setup.h	8;"	d
+NODES_MASK	include/linux/mm.h	16;"	d
+NODES_PGOFF	include/linux/mm.h	21;"	d
+NODES_PGSHIFT	include/linux/mm.h	24;"	d
+NODES_SHIFT	include/linux/mm.h	7;"	d
+NODES_SHIFT	include/linux/numa.h	4;"	d
+NODES_WIDTH	include/linux/mm.h	12;"	d
+NODE_DATA	include/linux/mmzone.h	195;"	d
+NR_ACTIVE_ANON	include/linux/mmzone.h	/^	NR_ACTIVE_ANON,$/;"	e	enum:zone_stat_item
+NR_ACTIVE_FILE	include/linux/mmzone.h	/^	NR_ACTIVE_FILE,$/;"	e	enum:zone_stat_item
+NR_ANON_PAGES	include/linux/mmzone.h	/^	NR_ANON_PAGES, \/* Mapped anonymous pages *\/$/;"	e	enum:zone_stat_item
+NR_ANON_TRANSPARENT_HUGEPAGES	include/linux/mmzone.h	/^	NR_ANON_TRANSPARENT_HUGEPAGES,$/;"	e	enum:zone_stat_item
+NR_BANKS	include/linux/setup.h	11;"	d
+NR_BANKS	include/linux/setup.h	9;"	d
+NR_BOUNCE	include/linux/mmzone.h	/^	NR_BOUNCE,$/;"	e	enum:zone_stat_item
+NR_DIRTIED	include/linux/mmzone.h	/^	NR_DIRTIED, \/* page dirtyings since bootup *\/$/;"	e	enum:zone_stat_item
+NR_FILE_DIRTY	include/linux/mmzone.h	/^	NR_FILE_DIRTY,$/;"	e	enum:zone_stat_item
+NR_FILE_MAPPED	include/linux/mmzone.h	/^	NR_FILE_MAPPED, \/* pagecache pages mapped into pagetables.$/;"	e	enum:zone_stat_item
+NR_FILE_PAGES	include/linux/mmzone.h	/^	NR_FILE_PAGES,$/;"	e	enum:zone_stat_item
+NR_FREE_PAGES	include/linux/mmzone.h	/^	NR_FREE_PAGES,$/;"	e	enum:zone_stat_item
+NR_INACTIVE_ANON	include/linux/mmzone.h	/^	NR_INACTIVE_ANON = NR_LRU_BASE, \/* must match order of LRU_[IN]ACTIVE *\/$/;"	e	enum:zone_stat_item
+NR_INACTIVE_FILE	include/linux/mmzone.h	/^	NR_INACTIVE_FILE,$/;"	e	enum:zone_stat_item
+NR_ISOLATED_ANON	include/linux/mmzone.h	/^	NR_ISOLATED_ANON,  \/* Temporary isolated pages from anon lru *\/$/;"	e	enum:zone_stat_item
+NR_ISOLATED_FILE	include/linux/mmzone.h	/^	NR_ISOLATED_FILE,  \/* Temporary isolated pages from file lru *\/$/;"	e	enum:zone_stat_item
+NR_KERNEL_STACK	include/linux/mmzone.h	/^	NR_KERNEL_STACK,$/;"	e	enum:zone_stat_item
+NR_LRU_BASE	include/linux/mmzone.h	/^	NR_LRU_BASE,$/;"	e	enum:zone_stat_item
+NR_LRU_LISTS	include/linux/mmzone.h	/^	NR_LRU_LISTS$/;"	e	enum:lru_list
+NR_MLOCK	include/linux/mmzone.h	/^	NR_MLOCK, \/* mlock()ed pages found and moved off LRU *\/$/;"	e	enum:zone_stat_item
+NR_NODE_STATES	include/linux/nodemask.h	/^	NR_NODE_STATES,$/;"	e	enum:node_states
+NR_PAGEBLOCK_BITS	include/linux/pageblock-flags.h	/^	NR_PAGEBLOCK_BITS$/;"	e	enum:pageblock_bits
+NR_PAGETABLE	include/linux/mmzone.h	/^	NR_PAGETABLE, \/* used for pagetables *\/$/;"	e	enum:zone_stat_item
+NR_SHMEM	include/linux/mmzone.h	/^	NR_SHMEM, \/* shmem pages (included tmpfs \/ GEM pages)*\/$/;"	e	enum:zone_stat_item
+NR_SLAB_RECLAIMABLE	include/linux/mmzone.h	/^	NR_SLAB_RECLAIMABLE,$/;"	e	enum:zone_stat_item
+NR_SLAB_UNRECLAIMABLE	include/linux/mmzone.h	/^	NR_SLAB_UNRECLAIMABLE,$/;"	e	enum:zone_stat_item
+NR_UNEVICTABLE	include/linux/mmzone.h	/^	NR_UNEVICTABLE,$/;"	e	enum:zone_stat_item
+NR_UNSTABLE_NFS	include/linux/mmzone.h	/^	NR_UNSTABLE_NFS, \/* NFS unstable pages *\/$/;"	e	enum:zone_stat_item
+NR_VMSCAN_WRITE	include/linux/mmzone.h	/^	NR_VMSCAN_WRITE,$/;"	e	enum:zone_stat_item
+NR_VM_ZONE_STAT_ITEMS	include/linux/mmzone.h	/^	NR_VM_ZONE_STAT_ITEMS$/;"	e	enum:zone_stat_item
+NR_WMARK	include/linux/mmzone.h	/^	NR_WMARK$/;"	e	enum:zone_watermarks
+NR_WRITEBACK_TEMP	include/linux/mmzone.h	/^	NR_WRITEBACK_TEMP, \/* Writeback using temporary buffers *\/$/;"	e	enum:zone_stat_item
+NR_WRITEBASK	include/linux/mmzone.h	/^	NR_WRITEBASK,$/;"	e	enum:zone_stat_item
+NR_WRITTEN	include/linux/mmzone.h	/^	NR_WRITTEN, \/* page wirtings since bootup *\/$/;"	e	enum:zone_stat_item
+NUMA_BUILD	include/linux/kernel.h	44;"	d
+NUMA_BUILD	include/linux/kernel.h	46;"	d
+N_CPU	include/linux/nodemask.h	/^	N_CPU, \/* The node has one or more cpus *\/$/;"	e	enum:node_states
+N_HIGH_MEMORY	include/linux/nodemask.h	/^	N_HIGH_MEMORY,$/;"	e	enum:node_states
+N_NORMAL_MEMORY	include/linux/nodemask.h	/^	N_NORMAL_MEMORY, \/* The node has regular memory *\/$/;"	e	enum:node_states
+N_ONLINE	include/linux/nodemask.h	/^	N_ONLINE,   \/* The node is online *\/$/;"	e	enum:node_states
+N_POSSIBLE	include/linux/nodemask.h	/^	N_POSSIBLE, \/* The node could become online at some point *\/$/;"	e	enum:node_states
 OBJS	init/Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
-PAGE_ALIGN	include/linux/page.h	11;"	d
-PAGE_MASK	include/linux/page.h	6;"	d
-PAGE_OFFSET	include/linux/page.h	15;"	d
-PAGE_SHIFT	include/linux/page.h	4;"	d
-PAGE_SIZE	include/linux/page.h	5;"	d
-PFN_DOWN	include/linux/page.h	13;"	d
-PFN_UP	include/linux/page.h	12;"	d
-PGDIR_SHIFT	include/linux/pgtable.h	9;"	d
-PHYS_OFFSET	include/linux/page.h	16;"	d
-PTRS_PER_PGD	include/linux/pgtable.h	11;"	d
-PTRS_PER_PMD	include/linux/pgtable.h	12;"	d
-PTRS_PER_PTE	include/linux/pgtable.h	13;"	d
-RED_ACTIVE	include/linux/memblock.h	20;"	d
-RED_INACTIVE	include/linux/memblock.h	19;"	d
+OPT_ZONE_DMA	include/linux/gfp.h	54;"	d
+OPT_ZONE_DMA	include/linux/gfp.h	56;"	d
+OPT_ZONE_DMA32	include/linux/gfp.h	64;"	d
+OPT_ZONE_DMA32	include/linux/gfp.h	66;"	d
+OPT_ZONE_HIGHMEM	include/linux/gfp.h	59;"	d
+OPT_ZONE_HIGHMEM	include/linux/gfp.h	61;"	d
+PAGE_ALIGN	include/linux/page.h	9;"	d
+PAGE_MASK	include/linux/page.h	7;"	d
+PAGE_OFFSET	include/linux/page.h	13;"	d
+PAGE_SHIFT	include/linux/page.h	5;"	d
+PAGE_SIZE	include/linux/page.h	6;"	d
+PB_migrate	include/linux/pageblock-flags.h	/^	PB_migrate,$/;"	e	enum:pageblock_bits
+PB_migrate_end	include/linux/pageblock-flags.h	/^	PB_migrate_end = PB_migrate + 3 - 1,$/;"	e	enum:pageblock_bits
+PFN_ALIGN	include/linux/pfn.h	4;"	d
+PFN_DOWN	include/linux/page.h	11;"	d
+PFN_DOWN	include/linux/pfn.h	6;"	d
+PFN_PHYS	include/linux/pfn.h	7;"	d
+PFN_UP	include/linux/page.h	10;"	d
+PFN_UP	include/linux/pfn.h	5;"	d
+PGDIR_MASK	include/linux/pgtable.h	10;"	d
+PGDIR_SHIFT	include/linux/pgtable.h	8;"	d
+PGDIR_SIZE	include/linux/pgtable.h	9;"	d
+PG_active	include/linux/page-flags.h	/^	PG_active,$/;"	e	enum:pageflags
+PG_arch_1	include/linux/page-flags.h	/^	PG_arch_1,$/;"	e	enum:pageflags
+PG_comound_lock	include/linux/page-flags.h	/^	PG_comound_lock,$/;"	e	enum:pageflags
+PG_dirty	include/linux/page-flags.h	/^	PG_dirty,$/;"	e	enum:pageflags
+PG_error	include/linux/page-flags.h	/^	PG_error,$/;"	e	enum:pageflags
+PG_head	include/linux/page-flags.h	/^	PG_head,           \/* A head page *\/$/;"	e	enum:pageflags
+PG_hwpoison	include/linux/page-flags.h	/^	PG_hwpoison,       \/* Hardware poisoned page *\/   $/;"	e	enum:pageflags
+PG_locked	include/linux/page-flags.h	/^	PG_locked,         \/* Page is locked.Don't touch. *\/$/;"	e	enum:pageflags
+PG_lry	include/linux/page-flags.h	/^	PG_lry,$/;"	e	enum:pageflags
+PG_mappedtodisk	include/linux/page-flags.h	/^	PG_mappedtodisk,   \/* Has blocks allocated on-disk *\/$/;"	e	enum:pageflags
+PG_mlocked	include/linux/page-flags.h	/^	PG_mlocked,        \/* Page is vma mlocked *\/$/;"	e	enum:pageflags
+PG_owner_priv_1	include/linux/page-flags.h	/^	PG_owner_priv_1,   \/* Owner use.If pagecache,fs may use *\/$/;"	e	enum:pageflags
+PG_private	include/linux/page-flags.h	/^	PG_private,        \/* If pagecache,has fs-private data *\/$/;"	e	enum:pageflags
+PG_private_2	include/linux/page-flags.h	/^	PG_private_2,      \/* If pagecache,has fs aux data *\/$/;"	e	enum:pageflags
+PG_reclaim	include/linux/page-flags.h	/^	PG_reclaim,        \/* To be reclaimed asap *\/$/;"	e	enum:pageflags
+PG_referenced	include/linux/page-flags.h	/^	PG_referenced,$/;"	e	enum:pageflags
+PG_reserved	include/linux/page-flags.h	/^	PG_reserved,$/;"	e	enum:pageflags
+PG_slab	include/linux/page-flags.h	/^	PG_slab,$/;"	e	enum:pageflags
+PG_swapbacked	include/linux/page-flags.h	/^	PG_swapbacked,     \/* Page is backed by RAM \/swap *\/$/;"	e	enum:pageflags
+PG_swapcache	include/linux/page-flags.h	/^	PG_swapcache,      \/* Swap page:swp_entry_t in private *\/$/;"	e	enum:pageflags
+PG_tail	include/linux/page-flags.h	/^	PG_tail,           \/* A tail page *\/$/;"	e	enum:pageflags
+PG_uncached	include/linux/page-flags.h	/^	PG_uncached,       \/* Page has been mapped as uncached *\/$/;"	e	enum:pageflags
+PG_unevictable	include/linux/page-flags.h	/^	PG_unevictable,    \/* Page is "unevictable " *\/$/;"	e	enum:pageflags
+PG_uptodate	include/linux/page-flags.h	/^	PG_uptodate,$/;"	e	enum:pageflags
+PG_wirteback	include/linux/page-flags.h	/^	PG_wirteback,      \/* Page is under writeback *\/$/;"	e	enum:pageflags
+PHYS_OFFSET	include/linux/page.h	14;"	d
+PHYS_PFN_OFFSET	include/linux/page.h	15;"	d
+PKMAP_ADDR	include/linux/highmem.h	17;"	d
+PKMAP_BASE	include/linux/highmem.h	13;"	d
+PKMAP_NR	include/linux/highmem.h	16;"	d
+PMD_SHIFT	include/linux/pgtable.h	12;"	d
+PMD_SIZE	include/linux/pgtable.h	13;"	d
+PTE_HWTABLE_OFF	include/linux/pgtable.h	20;"	d
+PTE_HWTABLE_PTRS	include/linux/pgtable.h	19;"	d
+PTE_HWTABLE_SIZE	include/linux/pgtable.h	21;"	d
+PTRS_PER_PGD	include/linux/pgtable.h	15;"	d
+PTRS_PER_PMD	include/linux/pgtable.h	16;"	d
+PTRS_PER_PTE	include/linux/pgtable.h	17;"	d
+RED_ACTIVE	include/linux/memblock.h	24;"	d
+RED_INACTIVE	include/linux/memblock.h	23;"	d
 R_show	lib/debug.c	/^void R_show(char *s)$/;"	f
+SECTIONS_PGOFF	include/linux/mm.h	20;"	d
+SECTIONS_SHIFT	include/linux/mm.h	8;"	d
+SECTIONS_WIDTH	include/linux/mm.h	10;"	d
+SMP_CACHE_BYTES	include/asm/cache.h	10;"	d
 SRCS	init/Makefile	/^SRCS = main.c \\$/;"	m
-SZ_128K	include/linux/types.h	35;"	d
-SZ_128M	include/linux/types.h	19;"	d
-SZ_16K	include/linux/types.h	32;"	d
-SZ_16M	include/linux/types.h	16;"	d
-SZ_1G	include/linux/types.h	23;"	d
-SZ_1K	include/linux/types.h	28;"	d
-SZ_1M	include/linux/types.h	12;"	d
-SZ_256K	include/linux/types.h	36;"	d
-SZ_256M	include/linux/types.h	20;"	d
-SZ_2G	include/linux/types.h	24;"	d
-SZ_2K	include/linux/types.h	29;"	d
-SZ_2M	include/linux/types.h	13;"	d
-SZ_32K	include/linux/types.h	33;"	d
-SZ_32M	include/linux/types.h	17;"	d
-SZ_4G	include/linux/types.h	25;"	d
-SZ_4K	include/linux/types.h	30;"	d
-SZ_4M	include/linux/types.h	14;"	d
-SZ_512K	include/linux/types.h	37;"	d
-SZ_512M	include/linux/types.h	21;"	d
-SZ_64K	include/linux/types.h	34;"	d
-SZ_64M	include/linux/types.h	18;"	d
-SZ_8G	include/linux/types.h	26;"	d
-SZ_8K	include/linux/types.h	31;"	d
-SZ_8M	include/linux/types.h	15;"	d
+ST_bootmem_data	lib/debug.c	/^void ST_bootmem_data(struct bootmem_data *bdata)$/;"	f
+ST_node_zones	lib/debug.c	/^void ST_node_zones(struct zone *zone,int nr)$/;"	f
+ST_page	lib/debug.c	/^void ST_page(struct page *page)$/;"	f
+ST_pglist_data	lib/debug.c	/^void ST_pglist_data(void)$/;"	f
+ST_zone	lib/debug.c	/^void ST_zone(struct zone *zone)$/;"	f
+ST_zone_reclaim_stat	lib/debug.c	/^void ST_zone_reclaim_stat(struct zone_reclaim_stat *zr)$/;"	f
+ST_zonelist	lib/debug.c	/^void ST_zonelist(struct zonelist *zl)$/;"	f
+ST_zonelist_cache	lib/debug.c	/^void ST_zonelist_cache(struct zonelist_cache *zc)$/;"	f
+SYSTEM_BOOTING	include/linux/config.h	65;"	d
+SZ_128K	include/linux/types.h	49;"	d
+SZ_128M	include/linux/types.h	33;"	d
+SZ_16K	include/linux/types.h	46;"	d
+SZ_16M	include/linux/types.h	30;"	d
+SZ_1G	include/linux/types.h	37;"	d
+SZ_1K	include/linux/types.h	42;"	d
+SZ_1M	include/linux/types.h	26;"	d
+SZ_256K	include/linux/types.h	50;"	d
+SZ_256M	include/linux/types.h	34;"	d
+SZ_2G	include/linux/types.h	38;"	d
+SZ_2K	include/linux/types.h	43;"	d
+SZ_2M	include/linux/types.h	27;"	d
+SZ_32K	include/linux/types.h	47;"	d
+SZ_32M	include/linux/types.h	31;"	d
+SZ_4G	include/linux/types.h	39;"	d
+SZ_4K	include/linux/types.h	44;"	d
+SZ_4M	include/linux/types.h	28;"	d
+SZ_512K	include/linux/types.h	51;"	d
+SZ_512M	include/linux/types.h	35;"	d
+SZ_64K	include/linux/types.h	48;"	d
+SZ_64M	include/linux/types.h	32;"	d
+SZ_8G	include/linux/types.h	40;"	d
+SZ_8K	include/linux/types.h	45;"	d
+SZ_8M	include/linux/types.h	29;"	d
+SetPageReserved	include/linux/page-flags.h	/^static inline void SetPageReserved(struct page *page)$/;"	f
 TARGET	init/Makefile	/^TARGET=align$/;"	m
 VIRTUAL_MEMORY_SIZE	include/linux/config.h	18;"	d
 VMALLOC_END	include/linux/config.h	44;"	d
-WARN_ON	include/linux/debug.h	23;"	d
+VM_BUG_ON	include/linux/debug.h	29;"	d
+WARN_ON	include/linux/debug.h	28;"	d
+WMARK_HIGH	include/linux/mmzone.h	/^	WMARK_HIGH,$/;"	e	enum:zone_watermarks
+WMARK_LOW	include/linux/mmzone.h	/^	WMARK_LOW,$/;"	e	enum:zone_watermarks
+WMARK_MIN	include/linux/mmzone.h	/^	WMARK_MIN,$/;"	e	enum:zone_watermarks
+ZONEID_MASK	include/linux/mm.h	17;"	d
+ZONEID_SHIFT	include/linux/mm.h	13;"	d
+ZONELIST_ORDER_DEFAULT	lib/mm/page_alloc.c	29;"	d	file:
+ZONELIST_ORDER_NODE	lib/mm/page_alloc.c	30;"	d	file:
+ZONELIST_ORDER_ZONE	lib/mm/page_alloc.c	31;"	d	file:
+ZONES_MASK	include/linux/mm.h	15;"	d
+ZONES_PGOFF	include/linux/mm.h	22;"	d
+ZONES_PGSHIFT	include/linux/mm.h	25;"	d
+ZONES_SHIFT	include/linux/mmzone.h	38;"	d
+ZONES_SHIFT	include/linux/mmzone.h	40;"	d
+ZONES_SHIFT	include/linux/mmzone.h	42;"	d
+ZONES_SHIFT	include/linux/mmzone.h	44;"	d
+ZONES_WIDTH	include/linux/mm.h	11;"	d
+ZONE_DMA	include/linux/mmzone.h	/^	ZONE_DMA,$/;"	e	enum:zone_type
+ZONE_DMA32	include/linux/mmzone.h	/^	ZONE_DMA32,$/;"	e	enum:zone_type
+ZONE_HIGHMEM	include/linux/mmzone.h	/^	ZONE_HIGHMEM,$/;"	e	enum:zone_type
+ZONE_MOVABLE	include/linux/mmzone.h	/^	ZONE_MOVABLE,$/;"	e	enum:zone_type
+ZONE_NORMAL	include/linux/mmzone.h	/^	ZONE_NORMAL,$/;"	e	enum:zone_type
+_ATOMIC_H_	include/linux/atomic.h	2;"	d
 _BITMAP_H_	include/linux/bitmap.h	2;"	d
+_BITOPS_H_	include/linux/bitops.h	2;"	d
+_BOOTMEM_H_	include/linux/bootmem.h	2;"	d
 _BOOT_ARCH_H_	include/linux/boot_arch.h	2;"	d
+_CACHE_H_	include/asm/cache.h	2;"	d
 _CONFIG_H_	include/linux/config.h	2;"	d
 _DEBUG_H_	include/linux/debug.h	2;"	d
+_DMA_H_	include/asm/dma.h	2;"	d
+_ERROR_H_	include/linux/error.h	2;"	d
+_GFP_H_	include/linux/gfp.h	2;"	d
 _HIGHMEM_H_	include/linux/highmem.h	2;"	d
 _INIT_MM_H_	include/linux/init_mm.h	2;"	d
+_INIT_TASK_H_	include/linux/init_task.h	2;"	d
+_INTERNAL_H_	include/linux/internal.h	2;"	d
 _KERNEL_H_	include/linux/kernel.h	2;"	d
 _LIST_H_	include/linux/list.h	2;"	d
+_MAP_H_	include/linux/map.h	2;"	d
 _MEMBLOCK_H_	include/linux/memblock.h	2;"	d
+_MEMORY_H_	include/linux/memory.h	2;"	d
 _MMU_H_	include/linux/mmu.h	2;"	d
+_MMZONE_H_	include/linux/mmzone.h	2;"	d
+_MM_H_	include/linux/mm.h	2;"	d
 _MM_TYPE_H_	include/linux/mm_type.h	2;"	d
+_NODEMASK_H_	include/linux/nodemask.h	2;"	d
+_NOMMU_H_	include/linux/nommu.h	2;"	d
+_NUMA_H_	include/linux/numa.h	2;"	d
+_PAGEBLOCK_FLAGS_H_	include/linux/pageblock-flags.h	2;"	d
+_PAGE_FLAGS_H_	include/linux/page-flags.h	2;"	d
 _PAGE_H_	include/linux/page.h	2;"	d
+_PFN_H_	include/linux/pfn.h	2;"	d
+_PGALLOC_H_	include/linux/pgalloc.h	2;"	d
 _PGTABLE_H_	include/linux/pgtable.h	2;"	d
+_SCHED_H_	include/linux/sched.h	2;"	d
 _SETUP_H_	include/linux/setup.h	2;"	d
+_TRAPS_H_	include/linux/traps.h	2;"	d
 _TYPES_H_	include/linux/types.h	2;"	d
+_VMSCAN_H_	include/linux/vmscan.h	2;"	d
+_VMSTAT_H_	include/linux/vmstat.h	2;"	d
 __B_show	lib/debug.c	/^void __B_show(unsigned long *bitmap,char *s)$/;"	f
+__GFP_DMA	include/linux/gfp.h	42;"	d
+__GFP_DMA32	include/linux/gfp.h	44;"	d
+__GFP_FS	include/linux/gfp.h	36;"	d
+__GFP_HARDWALL	include/linux/gfp.h	38;"	d
+__GFP_HIGH	include/linux/gfp.h	34;"	d
+__GFP_HIGHMEM	include/linux/gfp.h	39;"	d
+__GFP_HIGHMEM	include/linux/gfp.h	43;"	d
+__GFP_IO	include/linux/gfp.h	35;"	d
+__GFP_MOVABLE	include/linux/gfp.h	40;"	d
+__GFP_MOVABLE	include/linux/gfp.h	45;"	d
+__GFP_THISNODE	include/linux/gfp.h	37;"	d
+__GFP_WAIT	include/linux/gfp.h	33;"	d
+__MAX_NR_ZONES	include/linux/mmzone.h	/^	__MAX_NR_ZONES$/;"	e	enum:zone_type
+__NR_PAGEFLAGS	include/linux/page-flags.h	/^	__NR_PAGEFLAGS,$/;"	e	enum:pageflags
 __R_show	lib/debug.c	/^void __R_show(struct memblock_type *type,char *type_name,char *s)$/;"	f
-__free	lib/mm/memblock.c	/^static void __free(struct bootmem_data *bdata,unsigned long sidx,$/;"	f	file:
+___GFP_COLD	include/linux/gfp.h	16;"	d
+___GFP_COMP	include/linux/gfp.h	21;"	d
+___GFP_DMA	include/linux/gfp.h	8;"	d
+___GFP_DMA32	include/linux/gfp.h	10;"	d
+___GFP_FS	include/linux/gfp.h	15;"	d
+___GFP_HARDWALL	include/linux/gfp.h	24;"	d
+___GFP_HIGH	include/linux/gfp.h	13;"	d
+___GFP_HIGHMEM	include/linux/gfp.h	9;"	d
+___GFP_IO	include/linux/gfp.h	14;"	d
+___GFP_MOVABLE	include/linux/gfp.h	11;"	d
+___GFP_NOFAIL	include/linux/gfp.h	19;"	d
+___GFP_NOMEMALLOC	include/linux/gfp.h	23;"	d
+___GFP_NORETRY	include/linux/gfp.h	20;"	d
+___GFP_NOTRACK	include/linux/gfp.h	27;"	d
+___GFP_NOWARN	include/linux/gfp.h	17;"	d
+___GFP_NO_KSWAPED	include/linux/gfp.h	28;"	d
+___GFP_RECLAIMABLE	include/linux/gfp.h	26;"	d
+___GFP_REPEAT	include/linux/gfp.h	18;"	d
+___GFP_THISNODE	include/linux/gfp.h	25;"	d
+___GFP_WAIT	include/linux/gfp.h	12;"	d
+___GFP_ZERO	include/linux/gfp.h	22;"	d
+___alloc_bootmem	lib/mm/bootmem.c	/^static void * __init ___alloc_bootmem(unsigned long size,unsigned long align,$/;"	f	file:
+___alloc_bootmem_node	lib/mm/bootmem.c	/^static void * __init ___alloc_bootmem_node(struct bootmem_data *bdata,$/;"	f	file:
+___alloc_bootmem_nopanic	lib/mm/bootmem.c	/^static void * __init ___alloc_bootmem_nopanic(unsigned long size,$/;"	f	file:
+__alloc_bootmem_node	lib/mm/bootmem.c	/^void * __init __alloc_bootmem_node(struct pglist_data *pgdat,$/;"	f
+__build_all_zonelist	lib/mm/page_alloc.c	/^static __init_refok int __build_all_zonelist(void *data)$/;"	f	file:
+__free	lib/mm/bootmem.c	/^static void __init __free(struct bootmem_data *bdata,$/;"	f	file:
 __init	include/linux/kernel.h	4;"	d
 __init_memblock	include/linux/kernel.h	5;"	d
+__init_refok	include/linux/kernel.h	10;"	d
 __initdata	include/linux/kernel.h	6;"	d
 __list_add	lib/list.c	/^inline void __list_add(struct list_head *new,$/;"	f
 __list_del	lib/list.c	/^inline void __list_del(struct list_head *prev,struct list_head *next)$/;"	f
-__memblock_alloc_base	lib/mm/memblock.c	/^static phys_addr_t __memblock_alloc_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+__memblock_alloc_base	lib/mm/memblock.c	/^phys_addr_t __init __memblock_alloc_base(phys_addr_t size,phys_addr_t align,$/;"	f
+__meminit	include/linux/kernel.h	8;"	d
+__meminitdata	include/linux/kernel.h	7;"	d
 __pa	include/linux/page.h	24;"	d
-__reserve	lib/mm/memblock.c	/^static int __reserve(struct bootmem_data *bdata,unsigned long sidx,$/;"	f	file:
+__paginginit	include/linux/kernel.h	9;"	d
+__pfn_to_phys	include/linux/page.h	26;"	d
+__pmd	include/linux/pgtable.h	43;"	d
+__pmd_populate	include/linux/pgalloc.h	/^static inline __pmd_populate(pmd_t *__pmd,phys_addr_t pte,$/;"	f
+__reserve	lib/mm/bootmem.c	/^static int __init __reserve(struct bootmem_data *bdata,unsigned long sidx,$/;"	f	file:
 __va	include/linux/page.h	25;"	d
-alloc_bootmem_core	lib/mm/memblock.c	/^static unsigned int *alloc_bootmem_core(struct bootmem_data *bdata,$/;"	f	file:
+_count	include/linux/mm_type.h	/^	atomic_t _count;     \/* Usage count *\/$/;"	m	struct:page
+_mapcount	include/linux/mm_type.h	/^		atomic_t _mapcount; \/* Count of ptes mapped in mms,$/;"	m	union:page::__anon1
+_zonerefs	include/linux/mmzone.h	/^	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];$/;"	m	struct:zonelist	typeref:struct:zonelist::zoneref
+align_idx	lib/mm/bootmem.c	/^static unsigned long __init align_idx(struct bootmem_data *bdata,$/;"	f	file:
+align_off	lib/mm/bootmem.c	/^static unsigned long __init align_off(struct bootmem_data *bdata,$/;"	f	file:
+alloc_arch_preferred_bootmem	lib/mm/bootmem.c	/^static void * __init alloc_arch_preferred_bootmem(struct bootmem_data *bdata,$/;"	f	file:
+alloc_bootmem_core	lib/mm/bootmem.c	/^static void * __init alloc_bootmem_core(struct bootmem_data *bdata,$/;"	f	file:
+alloc_bootmem_node	include/linux/bootmem.h	25;"	d
+alloc_init_pte	lib/mm/mmu.c	/^void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,$/;"	f
+alloc_init_section	lib/mm/mmu.c	/^void alloc_init_section(pgd_t *pgd,unsigned long addr,$/;"	f
+alloc_node_mem_map	lib/mm/memblock.c	/^static void alloc_node_mem_map(struct pglist_data *pgdat)$/;"	f	file:
+alloc_remap	lib/mm/memblock.c	/^static inline void *alloc_remap(int nid,unsigned long size)$/;"	f	file:
+arch_adjust_zones	include/linux/memory.h	5;"	d
 arm_bootmem_free	lib/mm/memblock.c	/^void arm_bootmem_free(unsigned long min,unsigned long max_low,$/;"	f
 arm_bootmem_init	lib/mm/memblock.c	/^void arm_bootmem_init(unsigned int start_pfn,$/;"	f
 arm_memblock_init	lib/mm/init.c	/^void __init arm_memblock_init(struct meminfo *mi)$/;"	f
 arm_mm_memblock_reserve	lib/mm/mmu.c	/^void arm_mm_memblock_reserve(void)$/;"	f
+atomic_long_t	include/linux/types.h	/^typedef atomic_t atomic_long_t;$/;"	t
+atomic_read	include/linux/atomic.h	5;"	d
+atomic_set	include/linux/atomic.h	6;"	d
+atomic_t	include/linux/types.h	/^} atomic_t;$/;"	t	typeref:struct:__anon7
 bank	include/linux/setup.h	/^	struct membank bank[NR_BANKS];$/;"	m	struct:meminfo	typeref:struct:meminfo::membank
-bank_pfn_end	include/linux/setup.h	30;"	d
-bank_pfn_size	include/linux/setup.h	31;"	d
-bank_pfn_start	include/linux/setup.h	29;"	d
-bank_phys_end	include/linux/setup.h	33;"	d
-bank_phys_size	include/linux/setup.h	34;"	d
-bank_phys_start	include/linux/setup.h	32;"	d
+bank_pfn_end	include/linux/setup.h	31;"	d
+bank_pfn_size	include/linux/setup.h	32;"	d
+bank_pfn_start	include/linux/setup.h	30;"	d
+bank_phys_end	include/linux/setup.h	34;"	d
+bank_phys_size	include/linux/setup.h	35;"	d
+bank_phys_start	include/linux/setup.h	33;"	d
 base	include/linux/memblock.h	/^	unsigned long base;$/;"	m	struct:memblock_region
-bdata	include/linux/memblock.h	/^	struct bootmem_data bdata;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::bootmem_data
+bdata	include/linux/mmzone.h	/^	struct bootmem_data *bdata;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::bootmem_data
 bdata_list	lib/mm/memblock.c	/^struct list_head bdata_list;$/;"	v	typeref:struct:list_head
+bdebug	include/linux/debug.h	15;"	d
 boot_init_meminfo	lib/boot_arch.c	/^static void boot_init_meminfo(void)$/;"	f	file:
-bootmem_bootmap_bytes	lib/mm/memblock.c	/^static unsigned long bootmem_bootmap_bytes(unsigned long pages)$/;"	f	file:
+bootmap_bytes	lib/mm/memblock.c	/^static unsigned long bootmap_bytes(unsigned long pages)$/;"	f	file:
+bootmem_arch_preferred_node	lib/mm/bootmem.c	17;"	d	file:
 bootmem_bootmap_pages	lib/mm/memblock.c	/^static unsigned long bootmem_bootmap_pages(unsigned long start_pfn,$/;"	f	file:
-bootmem_data	include/linux/memblock.h	/^struct bootmem_data {$/;"	s
+bootmem_data	include/linux/bootmem.h	/^typedef struct bootmem_data {$/;"	s
+bootmem_data_t	include/linux/bootmem.h	/^} bootmem_data_t;$/;"	t	typeref:struct:bootmem_data
 bootmem_init	lib/mm/init.c	/^void __init bootmem_init(void)$/;"	f
+bootmem_node_data	lib/mm/bootmem.c	/^struct bootmem_data bootmem_node_data[MAX_NUMNODES];$/;"	v	typeref:struct:bootmem_data
+build_all_zonelist	lib/mm/page_alloc.c	/^void build_all_zonelist(void *data)$/;"	f
 build_mem_type_table	lib/mm/mmu.c	/^static void __init build_mem_type_table(void)$/;"	f	file:
-calculate_node_pages	lib/mm/memblock.c	/^static void calculate_node_pages(struct pglist_data *pgdat,$/;"	f	file:
+build_zonelist_cache	lib/mm/page_alloc.c	/^static void build_zonelist_cache(struct pglist_data *pgdat)$/;"	f	file:
+build_zonelists	lib/mm/page_alloc.c	/^static void build_zonelists(struct pglist_data *pgdat)$/;"	f	file:
+build_zonelists_node	lib/mm/page_alloc.c	/^static int build_zonelists_node(struct pglist_data *pgdat,$/;"	f	file:
+calculate_node_totalpages	lib/mm/memblock.c	/^static void calculate_node_totalpages(struct pglist_data *pgdat,$/;"	f	file:
+check_highest_zone	lib/mm/page_alloc.c	/^static inline void check_highest_zone(int k)$/;"	f	file:
+clear_bit	lib/bitmap.c	/^void clear_bit(int nr,unsigned int *byte)$/;"	f
 cnt	include/linux/memblock.h	/^	unsigned long cnt;$/;"	m	struct:memblock_type
-container_of	include/linux/kernel.h	26;"	d
+container_of	include/linux/kernel.h	37;"	d
 contig_pglist_data	lib/mm/memblock.c	/^struct pglist_data contig_pglist_data;$/;"	v	typeref:struct:pglist_data
+counter	include/linux/types.h	/^	int counter;$/;"	m	struct:__anon7
+cpuset_init_current_mems_allowed	lib/mm/page_alloc.c	/^static inline void cpuset_init_current_mems_allowed(void) {}$/;"	f	file:
+cpuset_init_mems_allowed	lib/mm/page_alloc.c	/^static inline void cpuset_init_mems_allowed(void) {}$/;"	f	file:
+create_mapping	lib/mm/mmu.c	/^void create_mapping(struct map_desc *md)$/;"	f
 current_limit	include/linux/memblock.h	/^	unsigned long current_limit;$/;"	m	struct:memblock
+current_zonelist_order	lib/mm/page_alloc.c	/^static int current_zonelist_order = ZONELIST_ORDER_DEFAULT;$/;"	v	file:
 default_memory	lib/mm/memblock.c	/^struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];$/;"	v	typeref:struct:memblock_region
 default_reserved	lib/mm/memblock.c	/^struct memblock_region default_reserved[INIT_MEMBLOCK_REGIONS + 1];$/;"	v	typeref:struct:memblock_region
+devicemaps_init	lib/mm/mmu.c	/^static void __init devicemaps_init(void)$/;"	f	file:
+dma_reserve	lib/mm/page_alloc.c	/^static unsigned long __meminitdata dma_reserve;$/;"	v	file:
 early_alloc	lib/mm/mmu.c	/^void *early_alloc(unsigned long size)$/;"	f
 early_parment	lib/mm/init.c	/^void early_parment(void)$/;"	f
+early_pfn_in_nid	include/linux/mmzone.h	257;"	d
+early_pfn_valid	include/linux/mmzone.h	256;"	d
+early_pte_alloc	lib/mm/mmu.c	/^static pte_t * __init early_pte_alloc(pmd_t *pmd,unsigned long addr,$/;"	f	file:
 early_vmalloc	lib/mm/mmu.c	/^void early_vmalloc(void)$/;"	f
+empty_zero_page	lib/mm/mmu.c	/^struct page *empty_zero_page;$/;"	v	typeref:struct:page
+find_first_bit	include/linux/bitops.h	16;"	d
 find_limits	lib/mm/init.c	/^void __init find_limits(unsigned int *min,unsigned int *max_low,$/;"	f
-find_next_zero_bit	lib/bitmap.c	/^int find_next_zero_bit(unsigned int *byte,unsigned long size,unsigned long offset)$/;"	f
-for_each_bank	include/linux/setup.h	26;"	d
-for_each_memblock	include/linux/memblock.h	26;"	d
-free_area_init_node	lib/mm/memblock.c	/^static void free_area_init_node(unsigned long *zone_sizes,$/;"	f	file:
-free_bootmem	lib/mm/memblock.c	/^static void free_bootmem(phys_addr_t addr,phys_addr_t size)$/;"	f	file:
+find_next_bit	lib/bitmap.c	/^int find_next_bit(unsigned int *addr,unsigned long size,$/;"	f
+find_next_zero_bit	lib/bitmap.c	/^int find_next_zero_bit(unsigned int *byte,$/;"	f
+first_zones_zonelist	include/linux/nodemask.h	/^static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,$/;"	f
+flags	include/linux/mm_type.h	/^	unsigned long flags; \/* Atomic flags,some possibly $/;"	m	struct:page
+flags	include/linux/mmzone.h	/^	unsigned long flags;$/;"	m	struct:zone
+flush_cache_all	lib/mm/tlb.c	/^void flush_cache_all()$/;"	f
+for_each_bank	include/linux/setup.h	27;"	d
+for_each_lru	include/linux/mmzone.h	70;"	d
+for_each_memblock	include/linux/memblock.h	29;"	d
+for_each_migratetype_order	include/linux/mmzone.h	252;"	d
+for_each_node_state	include/linux/nodemask.h	28;"	d
+for_each_online_node	include/linux/nodemask.h	42;"	d
+for_each_set_bit	include/linux/bitops.h	18;"	d
+for_each_zone_zonelist	include/linux/mmzone.h	228;"	d
+for_each_zone_zonelist_nodemask	include/linux/nodemask.h	51;"	d
+free_area	include/linux/mmzone.h	/^	struct free_area free_area[MAX_ORDER];$/;"	m	struct:zone	typeref:struct:zone::free_area
+free_area	include/linux/mmzone.h	/^struct free_area {$/;"	s
+free_area_init_core	lib/mm/page_alloc.c	/^void __paginginit free_area_init_core(struct pglist_data *pgdat,$/;"	f
+free_area_init_node	lib/mm/memblock.c	/^static void free_area_init_node(int nid,unsigned long *zone_sizes,$/;"	f	file:
+free_bootmem	lib/mm/bootmem.c	/^void __init free_bootmem(unsigned long addr,unsigned long size)$/;"	f
+free_list	include/linux/mmzone.h	/^	struct list_head free_list[MIGRATE_TYPES];$/;"	m	struct:free_area	typeref:struct:free_area::list_head
+get_pageblock_bitmap	lib/mm/page_alloc.c	/^static inline unsigned long *get_pageblock_bitmap(struct zone *zone,$/;"	f	file:
+gfp_t	include/linux/types.h	/^typedef unsigned int gfp_t;$/;"	t
+gfp_zone	include/linux/gfp.h	/^static inline enum zone_type gfp_zone(gfp_t flags)$/;"	f
+gfp_zonelist	include/linux/gfp.h	/^static inline int gfp_zonelist(gfp_t flags)$/;"	f
+high_memory	lib/mm/memory.c	/^void *high_memory;$/;"	v
 high_to_low	lib/debug.c	/^unsigned int high_to_low(unsigned int old)$/;"	f
+high_wmark_pages	include/linux/mmzone.h	241;"	d
+highest_memmap_pfn	lib/mm/nommu.c	/^unsigned long highest_memmap_pfn;$/;"	v
 highmem	include/linux/setup.h	/^	unsigned int highmem;$/;"	m	struct:membank
-id	include/linux/page.h	/^	int id;$/;"	m	struct:page
-init_bootmem_core	lib/mm/memblock.c	/^static void init_bootmem_core(struct bootmem_data *bdata,unsigned long bitmap,$/;"	f	file:
-init_bootmem_node	lib/mm/memblock.c	/^static void init_bootmem_node(struct pglist_data *pgdat,unsigned long bitmap,$/;"	f	file:
+hint_idx	include/linux/bootmem.h	/^	unsigned long hint_idx;$/;"	m	struct:bootmem_data
+init_bootmem_core	lib/mm/memblock.c	/^static unsigned long __init init_bootmem_core(struct bootmem_data *bdata,$/;"	f	file:
+init_bootmem_node	lib/mm/memblock.c	/^static long __init init_bootmem_node(struct pglist_data *pgdat,$/;"	f	file:
+init_currently_empty_zone	lib/mm/page_alloc.c	/^__meminit int init_currently_empty_zone(struct zone *zone,$/;"	f
 init_mm	lib/mm/init-mm.c	/^struct mm_struct init_mm = {$/;"	v	typeref:struct:mm_struct
+init_page_count	include/linux/mm.h	/^static inline void init_page_count(struct page *page)$/;"	f
+init_task	lib/kernel/init_task.c	/^struct task_struct init_task = {$/;"	v	typeref:struct:task_struct
+init_waitqueue_head	lib/mm/page_alloc.c	/^static inline void init_waitqueue_head(struct pglist_data *pgdat) {}$/;"	f	file:
+inuse	include/linux/mm_type.h	/^			u16 inuse;$/;"	m	struct:page::__anon1::__anon2
+is_highmem_idx	include/linux/mmzone.h	/^static inline int is_highmem_idx(enum zone_type idx)$/;"	f
+is_normal_idx	include/linux/mmzone.h	/^static inline int is_normal_idx(enum zone_type idx)$/;"	f
+kmap_init	lib/mm/mmu.c	/^static void __init kmap_init(void)$/;"	f	file:
+kswapd_max_order	include/linux/mmzone.h	/^    int kswapd_max_order;$/;"	m	struct:pglist_data
+last_end_off	include/linux/bootmem.h	/^	unsigned long last_end_off;$/;"	m	struct:bootmem_data
+last_full_zap	include/linux/mmzone.h	/^	unsigned long last_full_zap; \/* when last zap'd(jiffies )*\/$/;"	m	struct:zonelist_cache
+length	include/linux/map.h	/^	unsigned long length;$/;"	m	struct:map_desc
+likely	include/linux/kernel.h	49;"	d
 link_bootmem	lib/mm/memblock.c	/^static void link_bootmem(struct bootmem_data *bdata)$/;"	f	file:
-list	include/linux/memblock.h	/^	struct list_head list;$/;"	m	struct:bootmem_data	typeref:struct:bootmem_data::list_head
+list	include/linux/bootmem.h	/^	struct list_head list;$/;"	m	struct:bootmem_data	typeref:struct:bootmem_data::list_head
+list	include/linux/mmzone.h	/^		struct list_head list;$/;"	m	struct:zone::zone_lru	typeref:struct:zone::zone_lru::list_head
 list_add	lib/list.c	/^inline void list_add(struct list_head *new,struct list_head *head)$/;"	f
 list_del	lib/list.c	/^inline void list_del(struct list_head *list)$/;"	f
 list_entry	include/linux/list.h	10;"	d
 list_for_each	include/linux/list.h	17;"	d
 list_for_each_entry	include/linux/list.h	12;"	d
 list_head	include/linux/list.h	/^struct list_head {$/;"	s
+local_flush_tlb_all	lib/mm/tlb.c	/^void local_flush_tlb_all(void)$/;"	f
 lowmem_limit	lib/mm/mmu.c	/^phys_addr_t lowmem_limit = 0;$/;"	v
+lru	include/linux/mm_type.h	/^	struct list_head lru;   \/* Pageout list,eg,active_list$/;"	m	struct:page	typeref:struct:page::list_head
+lru	include/linux/mmzone.h	/^	} lru[NR_LRU_LISTS];$/;"	m	struct:zone	typeref:struct:zone::zone_lru
+lru_list	include/linux/mmzone.h	/^enum lru_list {$/;"	g
 main	init/main.c	/^int main()$/;"	f
-mark_bootmem	lib/mm/memblock.c	/^static int mark_bootmem(unsigned long start,unsigned long end,$/;"	f	file:
-mark_bootmem_node	lib/mm/memblock.c	/^static int mark_bootmem_node(struct bootmem_data *bdata,$/;"	f	file:
-max	include/linux/kernel.h	8;"	d
+map_desc	include/linux/map.h	/^struct map_desc {$/;"	s
+map_lowmem	lib/mm/mmu.c	/^void __init map_lowmem(void)$/;"	f
+mark_bootmem	lib/mm/bootmem.c	/^static int __init mark_bootmem(unsigned long start,unsigned long end,$/;"	f	file:
+mark_bootmem_node	lib/mm/bootmem.c	/^static int __init mark_bootmem_node(bootmem_data_t *bdata,$/;"	f	file:
+max	include/linux/kernel.h	12;"	d
 max	include/linux/memblock.h	/^	unsigned long max;$/;"	m	struct:memblock_type
+max_low_pfn	lib/mm/bootmem.c	/^unsigned long max_low_pfn;$/;"	v
+max_pfn	lib/mm/bootmem.c	/^unsigned long max_pfn;$/;"	v
 mem_addr_t	include/linux/types.h	/^typedef unsigned int mem_addr_t;$/;"	t
-mem_map	lib/mm/memblock.c	/^struct page *mem_map;$/;"	v	typeref:struct:page
-mem_to_phys	lib/mm/memblock.c	/^phys_addr_t mem_to_phys(unsigned int addr)$/;"	f
+mem_map	lib/mm/memory.c	/^struct page *mem_map;$/;"	v	typeref:struct:page
+mem_to_phys	lib/boot_arch.c	/^phys_addr_t mem_to_phys(void *ad)$/;"	f
 membank	include/linux/setup.h	/^struct membank {$/;"	s
 memblock	include/linux/memblock.h	/^struct memblock {$/;"	s
 memblock	lib/mm/memblock.c	/^struct memblock memblock = {$/;"	v	typeref:struct:memblock
 memblock_add	lib/mm/memblock.c	/^long __init_memblock memblock_add(phys_addr_t base,phys_addr_t size)$/;"	f
 memblock_add_region	lib/mm/memblock.c	/^static int memblock_add_region(struct memblock_type *type,$/;"	f	file:
-memblock_adjacent_addr	lib/mm/memblock.c	/^static int memblock_adjacent_addr(phys_addr_t base1,phys_addr_t size1,$/;"	f	file:
+memblock_adjacent_addr	lib/mm/memblock.c	/^static long __init_memblock memblock_adjacent_addr(phys_addr_t base1,$/;"	f	file:
 memblock_align_down	lib/mm/memblock.c	/^static phys_addr_t memblock_align_down(phys_addr_t addr,$/;"	f	file:
 memblock_align_up	lib/mm/memblock.c	/^static phys_addr_t memblock_align_up(phys_addr_t addr,phys_addr_t align)$/;"	f	file:
 memblock_alloc	lib/mm/memblock.c	/^phys_addr_t memblock_alloc(phys_addr_t size,phys_addr_t align)$/;"	f
@@ -193,7 +532,7 @@ memblock_analyze	lib/mm/memblock.c	/^void __init memblock_analyze(void)$/;"	f
 memblock_coalesce_regions	lib/mm/memblock.c	/^static void memblock_coalesce_regions(struct memblock_type *type,$/;"	f	file:
 memblock_dump	lib/mm/memblock.c	/^static void __init_memblock memblock_dump(struct memblock_type *type,$/;"	f	file:
 memblock_dump_all	lib/mm/memblock.c	/^void __init_memblock memblock_dump_all(void)$/;"	f
-memblock_find_base	lib/mm/memblock.c	/^static phys_addr_t memblock_find_base(phys_addr_t size,phys_addr_t align,$/;"	f	file:
+memblock_find_base	lib/mm/memblock.c	/^static phys_addr_t __init_memblock memblock_find_base(phys_addr_t size,$/;"	f	file:
 memblock_find_region	lib/mm/memblock.c	/^static phys_addr_t memblock_find_region(phys_addr_t start,phys_addr_t end,$/;"	f	file:
 memblock_init	lib/mm/memblock.c	/^void __init memblock_init(void)$/;"	f
 memblock_memory_can_coalesce	lib/mm/memblock.c	/^static int memblock_memory_can_coalesce(phys_addr_t addr1,$/;"	f	file:
@@ -205,80 +544,201 @@ memblock_region_memory_end_pfn	lib/mm/memblock.c	/^static unsigned long memblock
 memblock_region_reserved_base_pfn	lib/mm/memblock.c	/^static unsigned long memblock_region_reserved_base_pfn(struct memblock_region *reg)$/;"	f	file:
 memblock_region_reserved_end_pfn	lib/mm/memblock.c	/^static unsigned long memblock_region_reserved_end_pfn(struct memblock_region *reg)$/;"	f	file:
 memblock_regions_adjacent	lib/mm/memblock.c	/^static long memblock_regions_adjacent(struct memblock_type *type,$/;"	f	file:
-memblock_remove_region	lib/mm/memblock.c	/^static void memblock_remove_region(struct memblock_type *type,unsigned long r)$/;"	f	file:
+memblock_remove_region	lib/mm/memblock.c	/^static void __init_memblock memblock_remove_region(struct memblock_type *type,$/;"	f	file:
 memblock_reserve	lib/mm/memblock.c	/^int memblock_reserve(phys_addr_t base,phys_addr_t size)$/;"	f
 memblock_set_current_limit	lib/mm/memblock.c	/^void memblock_set_current_limit(phys_addr_t limit)$/;"	f
 memblock_type	include/linux/memblock.h	/^struct memblock_type {$/;"	s
 meminfo	include/linux/setup.h	/^struct meminfo {$/;"	s
 meminfo	lib/boot_arch.c	/^struct meminfo meminfo = {$/;"	v	typeref:struct:meminfo
+memmap_context	include/linux/mmzone.h	/^enum memmap_context {$/;"	g
+memmap_init	lib/mm/page_alloc.c	193;"	d	file:
+memmap_init_zone	lib/mm/page_alloc.c	/^void __meminit memmap_init_zone(unsigned long size,int nid,unsigned long zone,$/;"	f
 memory	include/linux/memblock.h	/^	struct memblock_type memory;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
 memory_array0	lib/boot_arch.c	/^unsigned int memory_array0[CONFIG_BANK0_SIZE \/ BYTE_MODIFY];$/;"	v
 memory_array1	lib/boot_arch.c	/^unsigned int memory_array1[CONFIG_BANK1_SIZE \/ BYTE_MODIFY];	$/;"	v
 memory_size	include/linux/memblock.h	/^	unsigned long memory_size;$/;"	m	struct:memblock
-min	include/linux/kernel.h	14;"	d
+min	include/linux/kernel.h	18;"	d
+min_low_pfn	lib/mm/bootmem.c	/^unsigned long min_low_pfn;$/;"	v
 mm_debug	include/linux/debug.h	10;"	d
 mm_debug	include/linux/debug.h	12;"	d
-mm_err	include/linux/debug.h	15;"	d
+mm_err	include/linux/debug.h	16;"	d
+mm_init_owner	lib/mm/fork.c	/^void mm_init_owner(struct mm_struct *mm,struct task_struct *p)$/;"	f
 mm_struct	include/linux/mm_type.h	/^struct mm_struct {$/;"	s
+mminit_level	include/linux/internal.h	/^enum mminit_level {$/;"	g
+mminit_loglevel	lib/mm/mm_init.c	/^int mminit_loglevel;$/;"	v
+mminit_verify_page_links	lib/mm/mm_init.c	/^void __meminit mminit_verify_page_links(struct page *page,enum zone_type zone,$/;"	f
+mminit_verify_zonelist	lib/mm/mm_init.c	/^void mminit_verify_zonelist(void)$/;"	f
+name	include/linux/mmzone.h	/^	const char *name;$/;"	m	struct:zone
 next	include/linux/list.h	/^	struct list_head *next;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
-node_bootmem_map	include/linux/memblock.h	/^	unsigned long *node_bootmem_map;$/;"	m	struct:bootmem_data
-node_id	include/linux/memblock.h	/^	unsigned long node_id;$/;"	m	struct:pglist_data
-node_low_pfn	include/linux/memblock.h	/^	unsigned long node_low_pfn;$/;"	m	struct:bootmem_data
-node_mem_map	include/linux/memblock.h	/^	struct page *node_mem_map;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::page
-node_min_pfn	include/linux/memblock.h	/^	unsigned long node_min_pfn;$/;"	m	struct:bootmem_data
-node_present_pages	include/linux/memblock.h	/^	unsigned long node_present_pages;$/;"	m	struct:pglist_data
-node_spanned_pages	include/linux/memblock.h	/^	unsigned long node_spanned_pages;$/;"	m	struct:pglist_data
-node_start_pfn	include/linux/memblock.h	/^	unsigned long node_start_pfn;$/;"	m	struct:pglist_data
+next_zones_zonelist	lib/mm/mmzone.c	/^struct zoneref *next_zones_zonelist(struct zoneref *z,$/;"	f
+node_bootmem_map	include/linux/bootmem.h	/^	unsigned long *node_bootmem_map;$/;"	m	struct:bootmem_data
+node_id	include/linux/mmzone.h	/^    unsigned long node_id;$/;"	m	struct:pglist_data
+node_low_pfn	include/linux/bootmem.h	/^	unsigned long node_low_pfn;$/;"	m	struct:bootmem_data
+node_mem_map	include/linux/mmzone.h	/^    struct page *node_mem_map;$/;"	m	struct:pglist_data	typeref:struct:pglist_data::page
+node_min_pfn	include/linux/bootmem.h	/^	unsigned long node_min_pfn;$/;"	m	struct:bootmem_data
+node_online	include/linux/nodemask.h	39;"	d
+node_present_pages	include/linux/mmzone.h	/^    unsigned long node_present_pages;$/;"	m	struct:pglist_data
+node_set_online	include/linux/nodemask.h	40;"	d
+node_set_state	include/linux/nodemask.h	/^static inline void node_set_state(int node,enum node_states state)$/;"	f
+node_spanned_pages	include/linux/mmzone.h	/^    unsigned long node_spanned_pages;$/;"	m	struct:pglist_data
+node_start_pfn	include/linux/mmzone.h	/^    unsigned long node_start_pfn;$/;"	m	struct:pglist_data
+node_state	include/linux/nodemask.h	/^static inline int node_state(int node,enum node_states state)$/;"	f
+node_states	include/linux/nodemask.h	/^enum node_states {$/;"	g
+node_zonelist	include/linux/gfp.h	/^static inline struct zonelist *node_zonelist(int nid,gfp_t flags)$/;"	f
+node_zonelists	include/linux/mmzone.h	/^	struct zonelist node_zonelists[MAX_ZONELISTS];$/;"	m	struct:pglist_data	typeref:struct:pglist_data::zonelist
+node_zones	include/linux/mmzone.h	/^    struct zone node_zones[MAX_NR_ZONES];$/;"	m	struct:pglist_data	typeref:struct:pglist_data::zone
+nodemask_t	include/linux/nodemask.h	/^typedef struct {DECLARE_BITMAP(bits,MAX_NUMNODES);} nodemask_t;$/;"	t	typeref:struct:__anon6
+nr_all_pages	lib/mm/page_alloc.c	/^static unsigned long __meminitdata nr_all_pages;$/;"	v	file:
 nr_banks	include/linux/setup.h	/^	int nr_banks;$/;"	m	struct:meminfo
-offsetof	include/linux/kernel.h	24;"	d
-page	include/linux/page.h	/^struct page {$/;"	s
+nr_free	include/linux/mmzone.h	/^	unsigned long nr_free;$/;"	m	struct:free_area
+nr_free_pagecache_pages	lib/mm/page_alloc.c	/^unsigned int nr_free_pagecache_pages(void)$/;"	f
+nr_free_zone_pages	lib/mm/page_alloc.c	/^static unsigned int nr_free_zone_pages(int offset)$/;"	f	file:
+nr_kernel_pages	lib/mm/page_alloc.c	/^static unsigned long __meminitdata nr_kernel_pages;$/;"	v	file:
+nr_online_nodes	include/linux/nodemask.h	26;"	d
+nr_saved_scan	include/linux/mmzone.h	/^	unsigned long nr_saved_scan[NR_LRU_LISTS];$/;"	m	struct:zone_reclaim_stat
+nr_zones	include/linux/mmzone.h	/^    int nr_zones;$/;"	m	struct:pglist_data
+numa_node_id	lib/mm/page_alloc.c	/^static inline int numa_node_id(void)$/;"	f	file:
+objects	include/linux/mm_type.h	/^			u16 objects;$/;"	m	struct:page::__anon1::__anon2
+offsetof	include/linux/kernel.h	35;"	d
+owner	include/linux/mm_type.h	/^	struct task_struct *owner;$/;"	m	struct:mm_struct	typeref:struct:mm_struct::task_struct
+page	include/linux/mm_type.h	/^struct page {$/;"	s
+page_group_by_mobility_disabled	lib/mm/mmzone.c	/^int page_group_by_mobility_disabled;$/;"	v
+page_to_nid	include/linux/mm.h	/^static inline int page_to_nid(struct page *page)$/;"	f
+page_to_pfn	include/linux/page.h	44;"	d
+page_zone	lib/mm/page_alloc.c	/^static inline struct zone *page_zone(struct page *page)$/;"	f	file:
+page_zonenum	include/linux/mm.h	/^static inline enum zone_type page_zonenum(struct page *page)$/;"	f
+pageblock_bits	include/linux/pageblock-flags.h	/^enum pageblock_bits {$/;"	g
+pageblock_default_order	lib/mm/page_alloc.c	/^static inline int pageblock_default_order(unsigned int order)$/;"	f	file:
+pageblock_flags	include/linux/mmzone.h	/^	unsigned long *pageblock_flags;$/;"	m	struct:zone
+pageblock_nr_pages	include/linux/pageblock-flags.h	6;"	d
+pageblock_order	include/linux/pageblock-flags.h	5;"	d
+pageflags	include/linux/page-flags.h	/^enum pageflags {$/;"	g
 paging_init	lib/mm/mmu.c	/^void __init paging_init(void)$/;"	f
-panic	include/linux/debug.h	16;"	d
+panic	include/linux/debug.h	17;"	d
+pfn	include/linux/map.h	/^	unsigned long pfn;$/;"	m	struct:map_desc
+pfn_pte	include/linux/pgtable.h	57;"	d
+pfn_to_bitidx	lib/mm/page_alloc.c	/^static inline int pfn_to_bitidx(struct zone *zone,unsigned long pfn)$/;"	f	file:
 pfn_to_mem	lib/mm/memblock.c	/^void *pfn_to_mem(unsigned int idx)$/;"	f
+pfn_to_page	include/linux/page.h	36;"	d
 pfn_to_phys	include/linux/page.h	20;"	d
 pfn_to_virt	include/linux/page.h	23;"	d
+pg_data_t	include/linux/mmzone.h	/^} pg_data_t;$/;"	t	typeref:struct:pglist_data
 pgd	include/linux/mm_type.h	/^	pgd_t *pgd;$/;"	m	struct:mm_struct
-pgd	include/linux/pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	m	struct:__anon1
-pgd_bad	include/linux/pgtable.h	25;"	d
-pgd_clear	include/linux/pgtable.h	26;"	d
-pgd_index	include/linux/pgtable.h	15;"	d
-pgd_none	include/linux/pgtable.h	24;"	d
-pgd_offset	include/linux/pgtable.h	16;"	d
-pgd_offset_k	include/linux/pgtable.h	17;"	d
-pgd_t	include/linux/pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	t	typeref:struct:__anon1
-pgd_val	include/linux/pgtable.h	23;"	d
-pglist_data	include/linux/memblock.h	/^struct pglist_data {$/;"	s
+pgd	include/linux/pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	m	struct:__anon3
+pgd_addr_end	include/linux/pgtable.h	46;"	d
+pgd_bad	include/linux/pgtable.h	33;"	d
+pgd_clear	include/linux/pgtable.h	34;"	d
+pgd_index	include/linux/pgtable.h	23;"	d
+pgd_none	include/linux/pgtable.h	32;"	d
+pgd_offset	include/linux/pgtable.h	24;"	d
+pgd_offset_k	include/linux/pgtable.h	25;"	d
+pgd_t	include/linux/pgtable.h	/^typedef struct { unsigned int pgd[2];} pgd_t;$/;"	t	typeref:struct:__anon3
+pgd_val	include/linux/pgtable.h	31;"	d
+pgdat_page_cgroup_init	lib/mm/page_alloc.c	/^static inline void pgdat_page_cgroup_init(struct pglist_data *pgdat) {}$/;"	f	file:
+pgdat_resize_init	lib/mm/page_alloc.c	/^static inline void pgdat_resize_init(struct pglist_data *pgdat) {}$/;"	f	file:
+pglist_data	include/linux/mmzone.h	/^typedef struct pglist_data {$/;"	s
 phys_addr_t	include/linux/types.h	/^typedef unsigned int phys_addr_t;$/;"	t
 phys_to_mem	lib/boot_arch.c	/^void *phys_to_mem(phys_addr_t addr)$/;"	f
 phys_to_pfn	include/linux/page.h	21;"	d
 phys_to_virt	include/linux/page.h	19;"	d
-pmd	include/linux/pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	m	struct:__anon2
-pmd_bad	include/linux/pgtable.h	33;"	d
-pmd_clear	include/linux/pgtable.h	34;"	d
-pmd_none	include/linux/pgtable.h	32;"	d
-pmd_off_k	lib/mm/pgtable.c	/^inline pmd_t *pmd_off_k(unsigned int virt)$/;"	f
-pmd_offset	include/linux/pgtable.h	18;"	d
-pmd_t	include/linux/pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	t	typeref:struct:__anon2
-pmd_val	include/linux/pgtable.h	31;"	d
+pkmap_page_table	lib/mm/highmem.c	/^pte_t *pkmap_page_table;$/;"	v
+pmd	include/linux/pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	m	struct:__anon4
+pmd_bad	include/linux/pgtable.h	41;"	d
+pmd_clear	include/linux/pgtable.h	42;"	d
+pmd_none	include/linux/pgtable.h	40;"	d
+pmd_off_k	include/linux/pgtable.h	45;"	d
+pmd_offset	include/linux/pgtable.h	26;"	d
+pmd_page_vaddr	include/linux/pgtable.h	53;"	d
+pmd_t	include/linux/pgtable.h	/^typedef struct { unsigned int pmd;} pmd_t;$/;"	t	typeref:struct:__anon4
+pmd_val	include/linux/pgtable.h	39;"	d
+populated_zone	lib/mm/page_alloc.c	/^inline int populated_zone(struct zone *zone)$/;"	f
+prepare_page_table	lib/mm/mmu.c	/^static inline void prepare_page_table(void)$/;"	f	file:
+present_pages	include/linux/mmzone.h	/^	unsigned long present_pages;$/;"	m	struct:zone
 prev	include/linux/list.h	/^	struct list_head *prev;$/;"	m	struct:list_head	typeref:struct:list_head::list_head
-pte	include/linux/pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	m	struct:__anon3
-pte_t	include/linux/pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	t	typeref:struct:__anon3
+pte	include/linux/pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	m	struct:__anon5
+pte_index	include/linux/pgtable.h	54;"	d
+pte_offset_kernel	include/linux/pgtable.h	55;"	d
+pte_t	include/linux/pgtable.h	/^typedef struct { unsigned int pte;} pte_t;$/;"	t	typeref:struct:__anon5
+recent_rotated	include/linux/mmzone.h	/^	unsigned long recent_rotated[2];$/;"	m	struct:zone_reclaim_stat
+recent_scanned	include/linux/mmzone.h	/^	unsigned long recent_scanned[2];$/;"	m	struct:zone_reclaim_stat
+reclaim_stat	include/linux/mmzone.h	/^	struct zone_reclaim_stat reclaim_stat;$/;"	m	struct:zone	typeref:struct:zone::zone_reclaim_stat
 regions	include/linux/memblock.h	/^	struct memblock_region *regions;$/;"	m	struct:memblock_type	typeref:struct:memblock_type::memblock_region
-reserve_bootmem	lib/mm/memblock.c	/^static void reserve_bootmem(phys_addr_t addr,phys_addr_t size)$/;"	f	file:
+reserve_bootmem	lib/mm/bootmem.c	/^int __init reserve_bootmem(unsigned long addr,unsigned long size,$/;"	f
 reserved	include/linux/memblock.h	/^	struct memblock_type reserved;$/;"	m	struct:memblock	typeref:struct:memblock::memblock_type
+reset_page_mapcount	include/linux/mm.h	/^static inline void reset_page_mapcount(struct page *page)$/;"	f
+roundup	include/linux/kernel.h	28;"	d
+s16	include/linux/types.h	/^typedef short           s16;$/;"	t
+s32	include/linux/types.h	/^typedef int             s32;$/;"	t
+s8	include/linux/types.h	/^typedef signed char     s8;$/;"	t
 sanity_check_meminfo	lib/mm/mmu.c	/^static void __init sanity_check_meminfo(void)$/;"	f	file:
+set_bit	lib/bitmap.c	/^void set_bit(int nr,unsigned int *byte)$/;"	f
+set_page_links	include/linux/mm.h	/^static inline void set_page_links(struct page *page,$/;"	f
+set_page_node	include/linux/mm.h	/^static inline void set_page_node(struct page *page,unsigned long node)$/;"	f
+set_page_zone	include/linux/mm.h	/^static inline void set_page_zone(struct page *page,enum zone_type zone)$/;"	f
+set_pageblock_flags_group	lib/mm/page_alloc.c	/^void set_pageblock_flags_group(struct page *page,unsigned long flags,$/;"	f
+set_pageblock_migratetype	lib/mm/page_alloc.c	/^static void set_pageblock_migratetype(struct page *page,int migratetype)$/;"	f	file:
+set_pageblock_order	lib/mm/page_alloc.c	35;"	d	file:
+set_pte_ext	lib/mm/mmu.c	/^void set_pte_ext(phys_addr_t addr,unsigned long pte)$/;"	f
+set_zonelist_order	lib/mm/page_alloc.c	/^static void set_zonelist_order(void)$/;"	f	file:
+setup_arch	lib/kernel/setup.c	/^void __init setup_arch(void)$/;"	f
+setup_usemap	lib/mm/page_alloc.c	/^static void __init setup_usemap(struct pglist_data *pgdat,$/;"	f	file:
 size	include/linux/memblock.h	/^	unsigned long size;$/;"	m	struct:memblock_region
 size	include/linux/setup.h	/^	unsigned int size;$/;"	m	struct:membank
+spanned_pages	include/linux/mmzone.h	/^	unsigned long spanned_pages;$/;"	m	struct:zone
+spin_lock_init	lib/mm/page_alloc.c	/^static inline void spin_lock_init(struct zone *zone) {}$/;"	f	file:
 start	include/linux/setup.h	/^	unsigned int start;$/;"	m	struct:membank
 start_kernel	init/main.c	/^static void start_kernel(void)$/;"	f	file:
-swapper_pg_dir	include/linux/highmem.h	8;"	d
+state	include/linux/sched.h	/^	unsigned long state;$/;"	m	struct:task_struct
+swapper_pg_dir	include/linux/highmem.h	9;"	d
+system_state	include/linux/config.h	66;"	d
+task_struct	include/linux/sched.h	/^struct task_struct {$/;"	s
 test_and_clear_bit	lib/bitmap.c	/^int test_and_clear_bit(int nr,unsigned int *byte)$/;"	f
 test_and_set_bit	lib/bitmap.c	/^int test_and_set_bit(int nr,unsigned int *byte)$/;"	f
 test_bit	lib/bitmap.c	/^int test_bit(int nr,unsigned int *byte)$/;"	f
-top_mem	include/linux/memblock.h	66;"	d
+top_mem	include/linux/memblock.h	54;"	d
+top_pmd	lib/mm/mmu.c	/^pmd_t *top_pmd;$/;"	v
+type	include/linux/map.h	/^	unsigned int type;$/;"	m	struct:map_desc
+u16	include/linux/types.h	/^typedef unsigned short  u16;$/;"	t
+u32	include/linux/types.h	/^typedef unsigned int    u32;$/;"	t
+u8	include/linux/types.h	/^typedef unsigned char   u8;$/;"	t
+unlikely	include/linux/kernel.h	50;"	d
+usemap_size	lib/mm/page_alloc.c	/^static unsigned long __init usemap_size(unsigned long zonesize)$/;"	f	file:
+vectors_page	lib/mm/traps.c	/^void *vectors_page;$/;"	v
 virt_arch_init	lib/boot_arch.c	/^void virt_arch_init(void)$/;"	f
+virt_to_page	include/linux/memory.h	11;"	d
 virt_to_pfn	include/linux/page.h	22;"	d
 virt_to_phys	include/linux/page.h	18;"	d
+vm_stat	include/linux/mmzone.h	/^	atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];$/;"	m	struct:zone
+vm_total_pages	lib/mm/vmscan.c	/^long vm_total_pages; \/* The total number of pages which the VM controls*\/$/;"	v
 vmalloc_min	lib/mm/mmu.c	/^void *vmalloc_min = (void *)(VMALLOC_END - SZ_128M);$/;"	v
-zone_absent_pages_in_node	lib/mm/memblock.c	/^static unsigned long zone_absent_pages_in_node(int nid,$/;"	f	file:
-zone_spanned_pages_in_node	lib/mm/memblock.c	/^static unsigned long zone_spanned_pages_in_node(int nid,$/;"	f	file:
+watermark	include/linux/mmzone.h	/^	unsigned long watermark[NR_WMARK];$/;"	m	struct:zone
+z_to_n	include/linux/mmzone.h	/^	unsigned short z_to_n[MAX_ZONES_PER_ZONELIST]; \/* zone->nid *\/$/;"	m	struct:zonelist_cache
+zap_zone_vm_stats	include/linux/vmstat.h	/^static inline void zap_zone_vm_stats(struct zone *zone)$/;"	f
+zlcache_ptr	include/linux/mmzone.h	/^	struct zonelist_cache *zlcache_ptr; \/* NULL or &zlcache *\/$/;"	m	struct:zonelist	typeref:struct:zonelist::zonelist_cache
+zone	include/linux/mmzone.h	/^	struct zone *zone;$/;"	m	struct:zoneref	typeref:struct:zoneref::zone
+zone	include/linux/mmzone.h	/^struct zone {$/;"	s
+zone_absent_pages_in_node	lib/mm/page_alloc.c	/^inline unsigned long __meminit zone_absent_pages_in_node(int nid,$/;"	f
+zone_idx	include/linux/mmzone.h	/^	int zone_idx;$/;"	m	struct:zoneref
+zone_idx	include/linux/mmzone.h	226;"	d
+zone_init_free_lists	lib/mm/page_alloc.c	/^static void __meminit zone_init_free_lists(struct zone *zone)$/;"	f	file:
+zone_lru	include/linux/mmzone.h	/^	struct zone_lru {$/;"	s	struct:zone
+zone_movable_is_highmem	include/linux/mmzone.h	/^static inline int zone_movable_is_highmem(void)$/;"	f
+zone_names	lib/mm/page_alloc.c	/^static char *const zone_names[MAX_NR_ZONES] = {$/;"	v	file:
+zone_pcp_init	lib/mm/page_alloc.c	/^static inline void zone_pcp_init(struct zone *zone) {}$/;"	f	file:
+zone_pgdat	include/linux/mmzone.h	/^	struct pglist_data *zone_pgdat;$/;"	m	struct:zone	typeref:struct:zone::pglist_data
+zone_reclaim_stat	include/linux/mmzone.h	/^struct zone_reclaim_stat {$/;"	s
+zone_seqlock_init	lib/mm/page_alloc.c	/^static inline void zone_seqlock_init(struct zone *zone) {}$/;"	f	file:
+zone_spanned_pages_in_node	lib/mm/page_alloc.c	/^inline unsigned long __meminit zone_spanned_pages_in_node(int nid,$/;"	f
+zone_start_pfn	include/linux/mmzone.h	/^	unsigned long zone_start_pfn;$/;"	m	struct:zone
+zone_stat_item	include/linux/mmzone.h	/^enum zone_stat_item {$/;"	g
+zone_type	include/linux/mmzone.h	/^enum zone_type {$/;"	g
+zone_wait_table_init	lib/mm/page_alloc.c	/^static int zone_wait_table_init(struct zone *zone,$/;"	f	file:
+zone_watermarks	include/linux/mmzone.h	/^enum zone_watermarks {$/;"	g
+zonelist	include/linux/mmzone.h	/^struct zonelist {$/;"	s
+zonelist_cache	include/linux/mmzone.h	/^struct zonelist_cache {$/;"	s
+zonelist_order_name	lib/mm/page_alloc.c	/^static char zonelist_order_name[3][8] = {"Default","Node","Zone"};$/;"	v	file:
+zonelist_zone	include/linux/mmzone.h	/^static inline struct zone *zonelist_zone(struct zoneref *zoneref)$/;"	f
+zonelist_zone_idx	include/linux/mmzone.h	/^static inline int zonelist_zone_idx(struct zoneref *zoneref)$/;"	f
+zoneref	include/linux/mmzone.h	/^struct zoneref {$/;"	s
+zoneref_set_zone	lib/mm/page_alloc.c	/^static void zoneref_set_zone(struct zone *zone,struct zoneref *zoneref)$/;"	f	file:
+zref_in_nodemask	lib/mm/mmzone.c	/^static inline int zref_in_nodemask(struct zoneref *zref,nodemask_t *nodes)$/;"	f	file:

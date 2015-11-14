@@ -1,5 +1,6 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
+#include "config.h"
 
 #define __init
 #define __init_memblock

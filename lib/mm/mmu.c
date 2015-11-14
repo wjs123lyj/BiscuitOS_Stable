@@ -34,8 +34,16 @@ void *early_alloc(unsigned long size)
 {
 	phys_addr_t addr = memblock_alloc(size,1);
 	mem_addr_t *mem_addr = phys_to_mem(addr);
-    
+   
+	/*
+	 * In order to operation memory directly,we use Virtual Memory address
+	 * to simulate the physical address.
+	 */
 	memset(mem_addr,0xFF,size);
+	/*
+	 * Note,for ignoring the Virtual Memory address,we return an virtual address
+	 * to replace the virtual memory address.
+	 */
 	return (void *)phys_to_virt(addr);
 }
 /*
@@ -333,10 +341,9 @@ void __init paging_init(void)
 	 * Allocate the zero page.
 	 */
 	zero_page = early_alloc(PAGE_SIZE);
-
+	
 	bootmem_init();
 	empty_zero_page = virt_to_page(zero_page);
-	mm_debug("empty_zero_page %p\n",(void *)empty_zero_page);
 }
 
 

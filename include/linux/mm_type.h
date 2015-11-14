@@ -46,6 +46,11 @@ struct mm_struct {
 	 */
 	struct task_struct *owner;
 #endif
+	unsigned long total_vm,locked_vm,shared_vm,exec_vm;
+	unsigned long stack_vm,reserved_vm,def_flags,nr_ptes;
+	unsigned long start_code,end_code,start_data,end_data;
+	unsigned long start_brk,brk,start_stack;
+	unsigned long arg_start,arg_end,env_start,env_end;
 };
 
 #endif

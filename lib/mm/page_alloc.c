@@ -13,6 +13,7 @@
 #include "../../include/linux/atomic.h"
 #include "../../include/linux/nommu.h"
 #include "../../include/linux/page-flags.h"
+#include "../../include/linux/bootmem.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,6 +31,15 @@ static unsigned long __meminitdata nr_all_pages;
 #define ZONELIST_ORDER_ZONE      2
 static int current_zonelist_order = ZONELIST_ORDER_DEFAULT;
 static char zonelist_order_name[3][8] = {"Default","Node","Zone"};
+
+/*
+ * pglist_data 
+ */
+struct pglist_data contig_pglist_data = {
+#ifndef CONFIG_NO_BOOTMEM
+	.bdata = &bootmem_node_data[0]
+#endif
+};
 
 #define set_pageblock_order(x) do {} while(0)
 /*
@@ -77,7 +87,6 @@ static inline unsigned long *get_pageblock_bitmap(struct zone *zone,
  */
 static inline int pfn_to_bitidx(struct zone *zone,unsigned long pfn)
 {
-	mm_debug("pfddd %p\n",pfn);
 	pfn = pfn - zone->zone_start_pfn;
 	return (pfn >> pageblock_order) * NR_PAGEBLOCK_BITS;
 }
@@ -106,7 +115,6 @@ void set_pageblock_flags_group(struct page *page,unsigned long flags,
 	VM_BUG_ON(pfn < zone->zone_start_pfn);
 	VM_BUG_ON(pfn >= zone->zone_start_pfn + zone->spanned_pages);
 
-	mm_debug("start_bitidx %p\n",start_bitidx);
 	for(; start_bitidx <= end_bitidx ; start_bitidx++ , value <<= 1)
 	{
 		if(flags & value)
@@ -118,7 +126,6 @@ void set_pageblock_flags_group(struct page *page,unsigned long flags,
 			clear_bit(bitidx + start_bitidx,bitmap);
 		}
 	}
-	mm_debug("321\n");
 }
 /*
  * Set the migratetype of pageblcok
@@ -186,9 +193,7 @@ void __meminit memmap_init_zone(unsigned long size,int nid,unsigned long zone,
 				&& (pfn < z->zone_start_pfn + z->spanned_pages)
 				&& !(pfn & (pageblock_nr_pages - 1)))
 			set_pageblock_migratetype(page,MIGRATE_MOVABLE);
-		mm_debug("2\n");
 		INIT_LIST_HEAD(&page->lru);
-		mm_debug("3\n");
 	}
 }
 #ifndef __HAVE_ARCH_MEMMAP_INIT
@@ -286,20 +291,16 @@ static void __init setup_usemap(struct pglist_data *pgdat,
 		struct zone *zone,unsigned long zonesize)
 {
 	unsigned long usemapsize = usemap_size(zonesize);
-	unsigned int addr = alloc_bootmem_core(pgdat,usemapsize);
 
 	zone->pageblock_flags = NULL;
 
-	mm_debug("pageblock_flags %p\n",addr);
-	mm_debug("virt to phys %p\n",virt_to_phys((unsigned int)addr));
-	mm_debug("phys to mem %p\n",phys_to_mem((unsigned int)virt_to_phys((unsigned int)addr)));
 	if(usemapsize)
 		/*
 		 * In order to simulate physcail address and virtual address,we lead into
 		 * virtual memory address.we can use virtual memory address directly.
 		 */
-		zone->pageblock_flags = 
-			phys_to_mem(virt_to_phys(alloc_bootmem_core(pgdat,usemapsize)));
+		zone->pageblock_flags = (unsigned long *)(unsigned long)alloc_bootmem_node(
+				pgdat,usemapsize);
 }
 /*
  * The core of free and init area.
@@ -356,7 +357,6 @@ void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		if(!is_highmem_idx(j))
 			nr_kernel_pages += realsize;
 		nr_all_pages += realsize;
-		
 		/*
 		 * initialize the zone.
 		 */

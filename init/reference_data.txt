@@ -1,0 +1,133 @@
+
+2. Boot_arch.c
+meminfo.nr_banks = 2
+BANK[0] region[0x50000000 - 0x60000000]  size[0x10000000]
+BANK[1] region[0x60001000 - 0x8fc01000]  size[0x2fc00000]
+
+3. early_vmalloc()
+CONFIG_VMALLOC_RESERVE: 0x10000000
+vmalloc_reserve: 0x10000000
+VMALLOC_END: 0xe0800000
+vmalloc_min: 0xd0800000
+
+4. memblock_init()
+memblock.memory.regions[0][0 - 0]    cnt[0x1] max[0x80]
+memblock.reserved.regions[0][0 - 0]  cnt[0x1] max[0x80]
+memblock.current_limit: 0xffffffff
+
+5. memblock_add()
+memblock.memory.region[0][0x50000000 - 0x60000000] cnt[0x2] max[0x80]
+memblock.memory.region[1][0x60001000 - 0x8fc01000] cnt[0x2] max[0x80]
+memblock.reserved.region[0][nil - nil] cnt[0x1] max[0x80]
+memblock.current_limit: 0xffffffff
+
+6. arm_mm_memblock_reserve()
+swapper_pg_dir: 0xc00040000(va) 0x50004000(pa)
+memblock.memory.region[0][0x50000000 - 0x60000000]   cnt[0x2] max[0x80]
+memblock.memory.region[1][0x60001000 - 0x8fc01000]   cnt[0x2] max[0x80]
+memblock.reserved.region[0][0x50004000 - 0x50008000] cnt[0x2] max[0x80]
+
+7. memblock_analyze()
+memblock.memory_size: 0x3fc00000
+
+8. sanity_check_meminfo
+lowmem_limit: 0x60800000
+meminfo.nr_banks: 0x3
+BANK[0] region[0x50000000 - 0x60000000] size[0x10000000] 
+BANK[1] region[0x60001000 - 0x60800000] size[0x007ff000] 
+BANK[2] region[0x60800000 - 0x8fc01000] size[0x2f401000] highmem
+
+9. map_lowmem()
+memblock.memory,region[0]
+md.pfn:     0x50000
+md.virtual: 0xc0000000
+md.length:  0x10000000
+memblock.memory.region[1]
+md.pfn:     0x60001
+md.virtual: 0xd0001000
+md.length:  0x007ff000
+
+10. devicemaps_init()
+vectors_page
+md.pfn:     0x6077b
+md.virtual: 0xffff0000
+md.length:  0x1000
+
+11. paging_init()
+top_pmd:    0xc0007ff8
+zero_page:  0xd0778000
+
+12. find_limits()
+min:        0x50000
+max_low:    0x60800
+max_high:   0x8fc01
+
+13. arm_bootmem_init()
+boot_page:  0x3
+bitmap:     0x60775000
+reserved.region[0][0x50004000 - 0x50008000] cnt[0x2] max[0x80]
+reserved.region[1][0x60775000 - 0x60800000] cnt[0x2] max[0x80]
+
+14. init_bootmem_core()
+bdata->node_min_pfn:      0x50000
+bdata->node_low_pfn:      0x60800
+bdata->node_bootmem_map:  0x60775000
+mapsize:                  0x2100 Bytes    
+
+15. arm_bootmem_free()
+MAX_NR_ZONES: 0x3
+ZONE_HIGHMEM: 0x1
+min:          0x50000 
+max_low:      0x60800
+max_high:     0x8fc01
+zone_size[0]: 0x10800
+zone_size[1]: 0x2f401
+zhole_size[0]:0x01
+zhole_size[1]:0x00
+
+16. free_area_init_node()
+pgdat->node_id:                   0x0
+pgdat->node_start_pfn:            0x50000
+pgdat->node_spanned_pages:        0x3fc01
+pgdat->node_present_pages:        0x3fc00
+
+17. alloc_node_mem_map()
+map: 
+
+18. __alloc_bootmem_node()
+size:      0x7f8
+align:     0x20
+goal:      0x8fffffff
+
+19. alloc_bootmem_core()
+size:      0x7f8
+align:     0x20
+goal:      0x8fffffff
+limit:     0x00
+step:      0x01
+start:     0x50000
+sidx:      0x00
+midx:      0x10800
+bdata->hint_idx:   0x00
+
+20. free_area_init_core
+size:              0x10800
+memmap_pages:      0x210
+nr_kernel_pages:   0x105ef
+nr_all_pages:      0x105ef
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

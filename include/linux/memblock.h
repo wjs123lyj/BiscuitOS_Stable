@@ -7,6 +7,7 @@
 #include "kernel.h"
 #include "mmzone.h"
 #include "bootmem.h"
+#include "../asm/cache.h"
 /*
  * This is open source,you can modify it or copy it.
  */
@@ -14,6 +15,7 @@
 #define MAX_MEMBLOCK_TYPE 2
 #define MAX_MEMBLOCK 1UL
 #define INIT_MEMBLOCK_REGIONS 128
+#define MEMBLOCK_ERROR        0
 
 #define MM_NOREGION 22 /* No match region */
 #define MM_NOEXPAND 23 /* Can't expand array */
@@ -23,7 +25,6 @@
 
 #define MEMBLOCK_ALLOC_ANYWHERE   (~(phys_addr_t)0)
 #define MEMBLOCK_ALLOC_ACCESSIBLE 0
-#define L1_CACHE_BYTES 32
 
 #define for_each_memblock(x,reg) \
 	for(reg = x.regions; \
@@ -54,7 +55,6 @@ struct memblock {
 
 extern struct memblock memblock;
 extern struct list_head bdata_list;
-extern struct pglist_data contig_pglist_data;
 extern struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 extern struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 

@@ -32,16 +32,18 @@ void __R_show(struct memblock_type *type,char *type_name,char *s)
 
     for(i = type->cnt - 1 ; i >= 0 ; i--)
     {
-        mm_debug("%s.Region[%d][%p - %p][%s]\n",type_name,i,
+        mm_debug("%s.Region[%d][%p - %p]cnt[%p]max[%p][%s]\n",type_name,i,
                 (void *)type->regions[i].base,
                 (void *)(type->regions[i].base +
-                    type->regions[i].size),s);
+                    type->regions[i].size),
+				(void *)type->cnt,(void *)type->max,s);
     }
 }
 void R_show(char *s)
 {
 	__R_show(&memblock.memory,"Memory",s);
 	__R_show(&memblock.reserved,"Reserved",s);
+	mm_debug("Memblock.current_limit %p\n",(void *)memblock.current_limit);
 }
 /*
  * Show some memory segment of Memory_array.
@@ -51,11 +53,24 @@ void M_show(phys_addr_t start,phys_addr_t end)
     int i,j;
 	unsigned int *memory_array;
 	unsigned long phys_offset;
+	unsigned int t1,t2;
 
 #ifndef CONFIG_BOTH_BANKS
+	if(end > MAX_BANK0_PHYS_ADDR || 
+			start < CONFIG_BANK0_START)
+	{
+		mm_err("ERR:overflow!\n");
+		return;
+	}
 	memory_array = memory_array0;
     phys_offset =  CONFIG_BANK0_START;
 #else
+	if((end > MAX_BANK1_PHYS_ADDR) || 
+			(start < CONFIG_BANK0_START))
+	{
+		mm_err("ERR:overflow!\n");
+		return;
+	}
 	if(start >= CONFIG_BANK1_START)
 	{
 		memory_array = memory_array1;
@@ -136,7 +151,7 @@ void B_show(char *s)
 	struct pglist_data *pgdat;
 
 	pgdat = &contig_pglist_data;
-	__B_show(pgdat->bdata.node_bootmem_map,s);
+	__B_show(pgdat->bdata->node_bootmem_map,s);
 }
 /*
  * Show membank
@@ -148,10 +163,11 @@ void BK_show(char *s)
 	mm_debug("=================MemoryBank======================\n");
 	for(i = 0 ; i < meminfo.nr_banks ; i++)
 	{
-		mm_debug("BANK[%d]\tregion[%08x - %08x]\tsize[%08x][%s]\n",
+		mm_debug("BANK[%d]\tregion[%08x - %08x]\tsize[%08x]highmem[%u][%s]\n",
 				i,meminfo.bank[i].start,
 				meminfo.bank[i].start + meminfo.bank[i].size,
-				meminfo.bank[i].size,s);
+				meminfo.bank[i].size,
+				meminfo.bank[i].highmem,s);
 	}
 	mm_debug("=================================================\n");
 }
@@ -287,7 +303,7 @@ void ST_pglist_data(void)
 {
 	struct pglist_data *pgdat = NODE_DATA(0);
 
-	ST_bootmem_data(&pgdat->bdata);
+	ST_bootmem_data(pgdat->bdata);
 	ST_node_zones(pgdat->node_zones,MAX_NR_ZONES);
 	ST_zonelist(pgdat->node_zonelists);
 	mm_debug("pglist.node_id %ld\n",pgdat->node_id);
@@ -297,4 +313,24 @@ void ST_pglist_data(void)
 	mm_debug("pglist.node_present_pages %p\n",(void *)pgdat->node_present_pages);
 	mm_debug("pglist.nr_zones %d\n",pgdat->nr_zones);
 	ST_page(pgdat->node_mem_map);
+}
+/*
+ * Virtual area show.
+ */
+void V_show(void *addr,unsigned long size)
+{
+	unsigned int *start = (unsigned int *)addr;
+	unsigned long data  = (unsigned long)(unsigned int *)addr;
+	unsigned long bytes = (size + 7) / 8;
+	unsigned int i,j;
+
+	for(i = 0 ; i <= bytes / 6 ; i++)
+	{
+		mm_debug("[%p] ", (void *)(unsigned long)(i * 6 + data));
+		for(j = 0 ; j < 6 ; j++)
+		{
+			mm_debug(" %p ",(void *)(unsigned long)(start[i * 6 + j]));
+		}
+		mm_debug("\n");
+	}
 }

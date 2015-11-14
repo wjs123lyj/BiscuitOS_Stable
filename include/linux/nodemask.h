@@ -32,7 +32,12 @@ static inline int node_state(int node,enum node_states state)
 {
 	return node == 0;
 }
-#define node_online(node)  node_state((node),N_ONLINE)
+static inline void node_set_state(int node,enum node_states state)
+{
+}
+
+#define node_online(node)      node_state((node),N_ONLINE)
+#define node_set_online(node)  node_set_state((node),N_ONLINE)
 
 #define for_each_online_node(node) for_each_node_state(node,N_ONLINE)
 

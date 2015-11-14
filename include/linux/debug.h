@@ -12,6 +12,7 @@
 #define mm_debug
 #endif
 
+#define bdebug printf
 #define mm_err printf
 #define panic printf
 
@@ -26,6 +27,9 @@
 #define BUG_ON(x) (x)
 #define WARN_ON(x) BUG_ON(x)
 #define VM_BUG_ON(x) BUG_ON(x)
+
+#define BUG() \
+	mm_err("ERR:%s %d\n",__FUNCTION__,__LINE__)
 
 extern void B_show(char *s);
 extern void R_show(char *s);

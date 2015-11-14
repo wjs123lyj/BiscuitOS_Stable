@@ -6,9 +6,6 @@
 #define PAGE_SIZE (unsigned int)(1UL << PAGE_SHIFT)
 #define PAGE_MASK (unsigned int)(~(PAGE_SIZE - 1))
 
-#define L1_CACHE_SHIFT 8
-#define L1_CACHE_SIZE (1UL << L1_CACHE_SHIFT)
-#define L1_CACHE_ALIGN L1_CACHE_SIZE
 #define PAGE_ALIGN(x) (x & ~(PAGE_SIZE - 1))
 #define PFN_UP(x) (((x) + PAGE_SIZE - 1) >> PAGE_SHIFT)
 #define PFN_DOWN(x) ((x) >> PAGE_SHIFT)
@@ -26,6 +23,7 @@
 #define pfn_to_virt(x)  phys_to_virt(pfn_to_phys(x))
 #define __pa(x) virt_to_phys(x)
 #define __va(x) phys_to_virt(x)
+#define __pfn_to_phys(x) pfn_to_phys(x)
 /*
  * Note: In order to ignore the Virtual Memory layer we change the way
  * to get page via a pfn.Please mind the address of page is a Virtual
@@ -35,7 +33,8 @@
  * @mem_map uses a physical address.
  * @page uses a virtual memory address.
  */
-#define pfn_to_page(pfn)     phys_to_mem(((phys_addr_t)(unsigned long)(mem_map +  \
+#define pfn_to_page(pfn)     \
+	phys_to_mem(((phys_addr_t)(unsigned long)(mem_map +  \
 			((pfn) - PHYS_PFN_OFFSET))))
 /*
  * Note: In order to ignore the Virtual Memory layer,we use the Virtual

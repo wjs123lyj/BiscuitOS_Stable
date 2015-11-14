@@ -5,6 +5,7 @@
 #include "highmem.h"
 #include "bitops.h"
 #include "memblock.h"
+#include "numa.h"
 
 enum zone_type {
 
@@ -52,7 +53,7 @@ extern int page_group_by_mobility_disabled;
 #define MAX_ORDER 11
 #define MAX_ORDER_NR_PAGES (1 << (MAX_ORDER - 1))
 /* Maximum number of zones on a zonelist */
-#define MAX_NUMNODES 1
+
 #define MAX_ZONES_PER_ZONELIST (MAX_NUMNODES * MAX_NR_ZONES)
 
 #define LRU_BASE      0
@@ -177,8 +178,10 @@ struct zone {
 	unsigned long *pageblock_flags;
 };
 
-struct pglist_data {
-	struct bootmem_data bdata;
+typedef struct pglist_data {
+#ifndef CONFIG_NO_BOOTMEM
+	struct bootmem_data *bdata;
+#endif
     struct zone node_zones[MAX_NR_ZONES];
 	struct zonelist node_zonelists[MAX_ZONELISTS];
     unsigned long node_id;
@@ -188,7 +191,9 @@ struct pglist_data {
     int nr_zones;
     int kswapd_max_order;
     struct page *node_mem_map;
-};
+} pg_data_t;
+
+extern struct pglist_data contig_pglist_data;
 
 #define NODE_DATA(nide) (&(contig_pglist_data))
 static inline int zone_movable_is_highmem(void)

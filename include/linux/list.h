@@ -7,6 +7,8 @@ struct list_head {
 	struct list_head *next;
 };
 
+#define LIST_HEAD_INIT(name) { &(name),&(name)}
+
 #define list_entry(ptr,type,member) container_of(ptr,type,member)
 
 #define list_for_each_entry(pos,head,member)     \

@@ -8,6 +8,8 @@
 #include "../../include/linux/memory.h"
 #include "../../include/linux/highmem.h"
 #include "../../include/linux/mm_type.h"
+#include "../../include/linux/error.h"
+#include "../../include/linux/nodemask.h"
 #include <malloc.h>
 #include <string.h>
 
@@ -16,11 +18,6 @@ struct memblock_region default_reserved[INIT_MEMBLOCK_REGIONS + 1];
 struct memblock memblock = {
 	.current_limit = MAX_REGIONS,
 };
-
-
-struct list_head bdata_list;
-
-struct pglist_data contig_pglist_data;
 
 /*
  * pfn_to_mem
@@ -119,7 +116,7 @@ static phys_addr_t memblock_align_down(phys_addr_t addr,
 /*
  * Get bytes of bootmap
  */
-static unsigned long bootmem_bootmap_bytes(unsigned long pages)
+static unsigned long bootmap_bytes(unsigned long pages)
 {
 	return ((pages + 7) / 8);
 }
@@ -131,7 +128,7 @@ static unsigned long bootmem_bootmap_pages(unsigned long start_pfn,
 {
 	unsigned long bytes;
 
-	bytes = bootmem_bootmap_bytes(end_pfn - start_pfn);
+	bytes = bootmap_bytes(end_pfn - start_pfn);
 
 	return (bytes + PAGE_SIZE - 1) / PAGE_SIZE;
 }
@@ -141,7 +138,7 @@ static unsigned long bootmem_bootmap_pages(unsigned long start_pfn,
 static int memblock_overlaps_addr(phys_addr_t base1,phys_addr_t size1,
 		phys_addr_t base2,phys_addr_t size2)
 {
-	return (base1 < (base2 + size2) && base2 < (base1 + size1));
+	return ((base1 < (base2 + size2)) && (base2 < (base1 + size1)));
 }
 /*
  * Check whether the new regions has overlap with region that has existed.
@@ -151,19 +148,16 @@ static int memblock_overlaps_addr(phys_addr_t base1,phys_addr_t size1,
 static int memblock_overlaps_region(struct memblock_type *type,
 		phys_addr_t base,phys_addr_t size)
 {
-	int i;
+	unsigned long i;
 
-	for(i = type->cnt - 1 ; i >= 0 ; i--)
+	for(i = 0; i < type->cnt ; i++)
 	{
-		phys_addr_t rgbase;
-		phys_addr_t rgsize;
-		
-		rgbase = type->regions[i].base;
-		rgsize = type->regions[i].size;
-		if(memblock_overlaps_addr(rgbase,rgsize,base,size) != 0)
+		phys_addr_t rgbase = type->regions[i].base;
+		phys_addr_t rgsize = type->regions[i].size;
+		if(memblock_overlaps_addr(rgbase,rgsize,base,size))
 			break;
 	}
-	return i == -1 ? -8 : i;
+	return (i < type->cnt) ? i : -1;
 }
 /*
  * Find the region for allocation.
@@ -171,84 +165,83 @@ static int memblock_overlaps_region(struct memblock_type *type,
 static phys_addr_t memblock_find_region(phys_addr_t start,phys_addr_t end,
 		phys_addr_t size,phys_addr_t align)
 {
-	phys_addr_t base = end - size;
+	phys_addr_t base,res_base;
 	int j;
 	
-	base = memblock_align_down(base,align);
 	/* In case,huge size is requested */
 	if(end < size)
-		return MM_NOREGION;
+		return MEMBLOCK_ERROR;
+
+	base = memblock_align_down((end - size),align);
+	/*
+	 * Prevent allocateions returning 0 as it's also used to
+	 * indicate an allocation failure.
+	 */
+	if(start == 0)
+		start = PAGE_SIZE;
+
 	while(start <= base)
 	{
 		j = memblock_overlaps_region(&memblock.reserved,base,size);
-		if(j == -8)
+		if(j < 0)
 			return base;
-		base = memblock.reserved.regions[j].base;
-		if(base < size)
+		res_base = memblock.reserved.regions[j].base;
+		if(res_base < size)
 			break;
-		base = memblock_align_down(base - size,align);
+		base = memblock_align_down(res_base - size,align);
 	}
-	return MM_NOREGION;
+	return MEMBLOCK_ERROR;
 }
 /*
  * find the base address for region.
  */
-static phys_addr_t memblock_find_base(phys_addr_t size,phys_addr_t align,
-		phys_addr_t start,phys_addr_t max)
+static phys_addr_t __init_memblock memblock_find_base(phys_addr_t size,
+		phys_addr_t align,phys_addr_t start,phys_addr_t end)
 {
-	struct memblock_type *type = &memblock.memory;
-	int i;
+	long i;
 
-	BUG_ON(size == 0);
+	BUG_ON(0 == size);
 
-	if(max == MEMBLOCK_ALLOC_ACCESSIBLE)
-		max = memblock.current_limit;
+	/* Pump up max_addr */
+	if(end == MEMBLOCK_ALLOC_ACCESSIBLE)
+		end = memblock.current_limit;
 	
 	/*
 	 * We do a top-down search,this tends to limit memory
 	 * fragmentation by keeping early boot allocs near the 
 	 * top of memory.
 	 */
-	for(i = type->cnt - 1; i >= 0 ; i--)
+	for(i = memblock.memory.cnt - 1; i >= 0 ; i--)
 	{
-		phys_addr_t rgnbase = type->regions[i].base;
-		phys_addr_t rgnsize = type->regions[i].size;
-		phys_addr_t end,found,base;
-
-		/*
-		 * The require size is bigger than current size,we
-		 * search next regions.
-		 */
-		if(size > rgnsize)
+		phys_addr_t memblockbase = memblock.memory.regions[i].base;
+		phys_addr_t memblocksize = memblock.memory.regions[i].size;
+		phys_addr_t bottom,top,found;
+		
+		if(memblocksize < size)
 			continue;
-		/*
-		 * Because the region is sorted in address that the address of
-		 * next regions is bigger than the address of current regions.
-		 * And we search from the biggest address of regions,if start address
-		 * is bigger than address of current region that means we 
-		 * can't get the bigger more than the address of current regions,
-		 * and return directly.
-		 */
-		if((rgnbase + rgnsize) <= start)
+		
+		if((memblockbase + memblocksize) <= start)
 			break;
-		base = max(start,rgnbase);
-		end = min(max,rgnsize + rgnbase);
-	
-		found = memblock_find_region(base,end,size,align);
-		if(found != MM_NOREGION)
+		bottom = max(memblockbase,start);
+		top = min(memblockbase + memblocksize,end);
+		if(bottom >= top)
+			continue;
+
+		found = memblock_find_region(bottom,top,size,align);
+		if(found != MEMBLOCK_ERROR)
 			return found;
 	}
-	return MM_NOREGION;
+	return MEMBLOCK_ERROR;
 }
 /*
  * Check whether the address is adjacent.
  */
-static int memblock_adjacent_addr(phys_addr_t base1,phys_addr_t size1,
-		phys_addr_t base2,phys_addr_t size2)
+static long __init_memblock memblock_adjacent_addr(phys_addr_t base1,
+		phys_addr_t size1,phys_addr_t base2,phys_addr_t size2)
 {
-	if(base1 == base2 + size2)
+	if(base2 == base1 + size1)
 		return 1;
-	else if(base2 == base1 + size1)
+	else if(base1 == base2 + size2)
 		return -1;
 	else
 		return 0;
@@ -271,7 +264,8 @@ static long memblock_regions_adjacent(struct memblock_type *type,
 /*
  * Remvoe a region from regions of memory or reserved.
  */
-static void memblock_remove_region(struct memblock_type *type,unsigned long r)
+static void __init_memblock memblock_remove_region(struct memblock_type *type,
+						unsigned long r)
 {
 	unsigned long i;
 
@@ -297,23 +291,19 @@ static void memblock_coalesce_regions(struct memblock_type *type,
 static int memblock_add_region(struct memblock_type *type,
 		phys_addr_t base,phys_addr_t size)
 {
-	int i;
-	int adjacent = 0;
 	unsigned long coalesced = 0;
-
-	/*
-	 * First add region.
-	 */
-	if(type->cnt == 1 && type->regions[0].size == 0)
+	long adjacent,i;
+	
+	if((type->cnt == 1) && (type->regions[0].size == 0))
 	{
 		type->regions[0].base = base;
 		type->regions[0].size = size;
-		return 1;
+		return 0;
 	}
 	/*
-	 * If the regions is adjacent,we coalesces both.
+	 * First try and coalesce this MEMBLOCK with another.
 	 */
-	for(i = type->cnt -1 ; i >= 0 ; i--)
+	for(i = 0 ; i < type->cnt ; i++)
 	{
 		phys_addr_t rgbase,rgsize;
 
@@ -326,19 +316,20 @@ static int memblock_add_region(struct memblock_type *type,
 		 */
 		if((rgbase == base) && (rgsize == size))
 			return 0;
+
 		adjacent = memblock_adjacent_addr(base,size,rgbase,rgsize);
 		/* Check if arch allows coalescing */
 		if(adjacent != 0 && type == &memblock.memory &&
 				!memblock_memory_can_coalesce(base,size,rgbase,rgsize))
 			break;
-		if(adjacent < 0)
+		if(adjacent > 0)
 		{
 			type->regions[i].base -= size;
 			type->regions[i].size += size;
 			coalesced++;
 			break;
 		}
-		else if(adjacent > 0)
+		else if(adjacent < 0)
 		{
 			type->regions[i].size += size;
 			coalesced++;
@@ -370,7 +361,7 @@ static int memblock_add_region(struct memblock_type *type,
 	 * but then this shouldn't have happened in the first place.
 	 */
 	if(WARN_ON(type->cnt >= type->max))
-		return 0;
+		return -1;
 	/*
 	 * Could't coalesce the MEMBLOCK,so add it to the sorted table.
 	 */
@@ -387,13 +378,14 @@ static int memblock_add_region(struct memblock_type *type,
 			break;
 		}
 	}
+
 	if(base < type->regions[0].base)
 	{
 		type->regions[0].base = base;
 		type->regions[0].size = size;
 	}
 	type->cnt++;
-	return 1;
+	return 0;
 }
 /*
  * Add memblock region that from membank to memblock.memory.
@@ -414,17 +406,22 @@ int memblock_reserve(phys_addr_t base,phys_addr_t size)
 /*
  * Underlying function of memblock_alloc_bsae
  */
-static phys_addr_t __memblock_alloc_base(phys_addr_t size,phys_addr_t align,
+phys_addr_t __init __memblock_alloc_base(phys_addr_t size,phys_addr_t align,
 		phys_addr_t max)
 {
 	phys_addr_t found;
 
+	/*
+	 * We align the size to limit fragmentation.Without this.a lot of
+	 * small allocs quickly eat up the whole reserved array on sparc.
+	 */
 	size = memblock_align_up(size,align);
+
 	found = memblock_find_base(size,align,0,max);
-	if(found != MM_NOREGION &&
-		memblock_add_region(&memblock.reserved,found,size))
+	if(found != MEMBLOCK_ERROR &&
+		memblock_add_region(&memblock.reserved,found,size) >= 0)
 		return found;
-	mm_err("can't alloc size %08x\n",size);
+	
 	return 0;
 }
 /*
@@ -437,7 +434,8 @@ static phys_addr_t memblock_alloc_base(phys_addr_t size,phys_addr_t align,
 
 	alloc = __memblock_alloc_base(size,align,max);
 	if(alloc == 0)
-		panic("PANIC:Can't find address\n ");
+		panic("ERROR:Failed to allocate %u bytes below %u\n",
+				size,max);
 	return alloc;
 }
 /*
@@ -465,136 +463,33 @@ static void link_bootmem(struct bootmem_data *bdata)
 /*
  * Init bootmem in core
  */
-static void init_bootmem_core(struct bootmem_data *bdata,unsigned long bitmap,
-		unsigned long start_pfn,unsigned long end_pfn)
+static unsigned long __init init_bootmem_core(struct bootmem_data *bdata,
+		unsigned long mapstart,unsigned long start,unsigned long end)
 {
 	unsigned long mapsize;
 
-	bdata->node_min_pfn = start_pfn;
-	bdata->node_low_pfn = end_pfn;
-	bdata->node_bootmem_map = phys_to_mem(bitmap);
+	bdata->node_min_pfn = start;
+	bdata->node_low_pfn = end;
+	bdata->node_bootmem_map = phys_to_mem(mapstart);
 	link_bootmem(bdata);
-	mapsize = bootmem_bootmap_bytes(end_pfn - start_pfn);
+
+	mapsize = bootmap_bytes(end - start);
 	memset(bdata->node_bootmem_map,0xFF,mapsize);
+
+	bdebug("nid=%d start=%p map=%p end=%p mapsize=%p\n",
+			(unsigned int)(bdata - bootmem_node_data),
+			(void *)start,(void *)mapstart,
+			(void *)end,(void *)mapsize);
+
+	return mapsize;
 }
 /*
  * Init bootmem in node
  */
-static void init_bootmem_node(struct pglist_data *pgdat,unsigned long bitmap,
-		unsigned long start_pfn,unsigned long end_pfn)
+static long __init init_bootmem_node(struct pglist_data *pgdat,
+		unsigned long bitmap,unsigned long start_pfn,unsigned long end_pfn)
 {
-	init_bootmem_core(&pgdat->bdata,bitmap,start_pfn,end_pfn);
-}
-/*
- * free bootmem regions.
- */
-static void __free(struct bootmem_data *bdata,unsigned long sidx,
-		unsigned long eidx)
-{
-	unsigned long *bitmap = (unsigned long *)bdata->node_bootmem_map;
-	unsigned long idx;
-
-	for(idx = 0 ; idx < eidx ; idx++)
-	{
-		test_and_clear_bit(idx,bitmap);
-	}
-}
-/*
- * reserve bootmem regions.
- */
-static int __reserve(struct bootmem_data *bdata,unsigned long sidx,
-		unsigned long eidx,unsigned long flags)
-{
-	unsigned long *bitmap = (unsigned long *)bdata->node_bootmem_map;
-	unsigned long idx;
-	unsigned long set_flags = flags & 0x01;
-
-	for(idx = sidx ; idx < eidx ; idx++)
-	{
-		if(test_and_set_bit(idx,bitmap))
-		{
-			if(set_flags)
-			{
-				__free(bdata,sidx,idx);
-				return MM_NOREGION;
-			}
-		}
-	}
-	return 0;
-}
-/*
- * Mark bootmem node
- */
-static int mark_bootmem_node(struct bootmem_data *bdata,
-		unsigned long start,unsigned long end,
-		unsigned long reserve,unsigned long flags)
-{
-	unsigned long sidx,eidx;
-
-	sidx = start - bdata->node_min_pfn;
-	eidx = end - bdata->node_min_pfn;
-
-	if(reserve)
-		return __reserve(bdata,sidx,eidx,flags);
-	else
-		__free(bdata,sidx,eidx);
-	return 0;
-}
-/*
- * Mark memblock
- */
-static int mark_bootmem(unsigned long start,unsigned long end,
-		unsigned long reserve,unsigned long flags)
-{
-	unsigned long pos;
-	struct bootmem_data *bdata;
-
-	pos = start;
-	list_for_each_entry(bdata,&bdata_list,list)
-	{
-		int err;
-		unsigned long max;
-
-		if(pos < bdata->node_min_pfn ||
-				pos >= bdata->node_low_pfn)
-			continue;
-		
-		max = min(end,bdata->node_low_pfn);
-		err = mark_bootmem_node(bdata,start,end,reserve,flags);
-		if(err && reserve)
-		{
-			mark_bootmem(start,end,0,0);
-			return err;
-		}
-		if(max == end)
-			return 0;
-		pos = bdata->node_min_pfn;
-	}
-	mm_err("%s err\n",__FUNCTION__);
-}
-/*
- * Free bit
- */
-static void free_bootmem(phys_addr_t addr,phys_addr_t size)
-{
-	unsigned long start,end;
-
-	start = PFN_UP(addr);
-	end = PFN_DOWN(addr + size);
-
-	mark_bootmem(start,end,0,0);
-}
-/*
- * Reserved bit
- */
-static void reserve_bootmem(phys_addr_t addr,phys_addr_t size)
-{
-	unsigned long start,end;
-
-	start = PFN_UP(addr);
-	end   = PFN_DOWN(addr + size);
-	/* Note for debug and we set flags as 1.*/
-	mark_bootmem(start,end,1,1);
+	return init_bootmem_core(pgdat->bdata,bitmap,start_pfn,end_pfn);
 }
 /*
  * The start pfn of memory region.
@@ -630,20 +525,29 @@ static unsigned long memblock_region_reserved_end_pfn(struct memblock_region *re
 void arm_bootmem_init(unsigned int start_pfn,
 		unsigned int end_pfn)
 {
-	phys_addr_t bitmap;
 	struct memblock_region *reg;
-	unsigned int pages_alloc;
-	struct pglist_data *pgdat;
-	int i;
-	struct bootmem_data *bd;
+	unsigned int boot_pages;
+	phys_addr_t bitmap;
+	pg_data_t *pgdat;
 
-	pages_alloc = bootmem_bootmap_pages(start_pfn,end_pfn);
-	bitmap = memblock_alloc_base(pages_alloc << PAGE_SHIFT,L1_CACHE_BYTES,
-			pfn_to_phys(end_pfn));
+	/*
+	 * Allocate the bootmem bitmap page.This must be in a region
+	 * of memory which has already mapped.
+	 */
+	boot_pages = bootmem_bootmap_pages(start_pfn,end_pfn);
+	bitmap = memblock_alloc_base(boot_pages << PAGE_SHIFT,L1_CACHE_BYTES,
+			__pfn_to_phys(end_pfn));
+	
+	/*
+	 * Initialise the bootmem allocator,handing the 
+	 * memory banks over to bootmem.
+	 */
+	node_set_online(0);
 	pgdat = NODE_DATA(0);
 	init_bootmem_node(pgdat,bitmap,start_pfn,end_pfn);
+
 	/*
-	 * Clear bit that contain in useful physical memory.
+	 * Free the lowmem regions from memblock into bootmem.
 	 */
 	for_each_memblock(memblock.memory,reg)
 	{
@@ -670,7 +574,8 @@ void arm_bootmem_init(unsigned int start_pfn,
 		if(start > end)
 			break;
 		
-		reserve_bootmem(pfn_to_phys(start),(end - start) << PAGE_SHIFT);	
+		reserve_bootmem(pfn_to_phys(start),(end - start) << PAGE_SHIFT,
+				BOOTMEM_DEFAULT);	
 	}
 }
 /*
@@ -695,35 +600,6 @@ static void calculate_node_totalpages(struct pglist_data *pgdat,
 	}
 	pgdat->node_spanned_pages = totalpages;
 	pgdat->node_present_pages = realpages;
-}
-/*
- * Alloc bootmem_core
- */
-unsigned int *alloc_bootmem_core(struct bootmem_data *bdata,
-		unsigned long size)
-{
-	unsigned long sidx = 0;
-	long idx;
-	unsigned long eidx;
-	void *region;
-
-Again:
-	sidx = find_next_zero_bit(bdata->node_bootmem_map,size,sidx);
-	eidx = sidx + size;
-	for(idx = sidx ; idx < eidx ; idx++)
-	{
-		if(test_bit(idx,bdata->node_bootmem_map))
-		{
-			sidx++;
-			goto Again;
-		}
-	}
-	if(__reserve(bdata,sidx,eidx,0) != MM_NOREGION)
-	{
-		region = (void *)phys_to_virt(pfn_to_phys(bdata->node_min_pfn + sidx));
-		return region;
-	}
-	return 0;
 }
 /*
  * Alloc remap in bootmem.
@@ -759,15 +635,15 @@ static void alloc_node_mem_map(struct pglist_data *pgdat)
 		size  = (end - start) * sizeof(struct page);
 		map   = alloc_remap(pgdat->node_id,size);
 		if(!map)
-			map = (struct page*)alloc_bootmem_core(&pgdat->bdata,size >> PAGE_SHIFT);
+			map = (struct page *)(unsigned long)alloc_bootmem_node(pgdat,
+					size >> PAGE_SHIFT);
 		/*
-		 * In order to use node_mem_map directly,we use virtual memory address to 
-		 * replace the physcial address.Note,all address which allocate from virtual 
-		 * memory use virtual memory address.
+		 * In order to use node_mem_map directly,we use virtual memory address 
+		 * to replace the physcial address.Note,all address which allocate from
+		 * virtual memory use virtual memory address.
 		 */
-		pgdat->node_mem_map = 
-			phys_to_mem(virt_to_phys(((unsigned long)(struct page *)map + 
-				(pgdat->node_start_pfn - start))));
+		pgdat->node_mem_map =  (struct page *)map + 
+				(pgdat->node_start_pfn - start);
 	}
 #ifndef CONFIG_NEED_MULTIPLE_NODES
 	if(pgdat == NODE_DATA(0))
@@ -785,11 +661,9 @@ static void free_area_init_node(int nid,unsigned long *zone_sizes,
 		unsigned long start_pfn,unsigned long *zhole_size)
 {
 	struct pglist_data *pgdat = NODE_DATA(nid);
-	unsigned long size;
 
 	pgdat->node_id = nid;
 	pgdat->node_start_pfn = start_pfn;
-
 	calculate_node_totalpages(pgdat,zone_sizes,zhole_size);
 
 	alloc_node_mem_map(pgdat);
