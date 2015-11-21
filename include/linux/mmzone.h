@@ -1,11 +1,13 @@
 #ifndef _MMZONE_H_
 #define _MMZONE_H_
+#include "kernel.h"
 #include "config.h"
 #include "bootmem.h"
 #include "highmem.h"
 #include "bitops.h"
 #include "memblock.h"
 #include "numa.h"
+#include "pageblock-flags.h"
 
 enum zone_type {
 
@@ -45,8 +47,16 @@ enum zone_watermarks {
 #define ZONES_SHIFT 9
 #endif
 
-#define MIGRATE_TYPES   5
-#define MAX_ZONELISTS   1
+
+#define MIGRATE_UNMOVABLE     0
+#define MIGRATE_RECLAIMABLE   1
+#define MIGRATE_MOVABLE       2
+#define MIGRATE_PCPTYPES      3 /* The number of types on the pcp lists */
+#define MIGRATE_RESERVE       3
+#define MIGRATE_ISOLATE       4 /* can't allocate from here */
+#define MIGRATE_TYPES         5
+
+#define MAX_ZONELISTS         1
 extern int page_group_by_mobility_disabled;
 #define MAX_ZONELISTS 1
 
@@ -149,6 +159,21 @@ struct zonelist {
 	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];
 };
 
+/*
+ * Per cpu struct. 
+ */
+struct per_cpu_pages {
+	int count;    /* number of pages in the list */
+	int high;     /* high watermark,emptying needed */
+	int batch;    /* chunk size for buddy add/remove */
+	/* List of pages,one per migrate type stored on the pcp-lists */
+	struct list_head lists[MIGRATE_PCPTYPES];
+};
+struct per_cpu_pageset {
+	struct per_cpu_pages pcp;
+#define __per_cpu
+};
+
 struct zone {
 	unsigned long watermark[NR_WMARK];
 	struct zone_reclaim_stat reclaim_stat;
@@ -176,6 +201,20 @@ struct zone {
 	 * Flags for a pageblock_nr_pages block.See pageblock-flags.h
 	 */
 	unsigned long *pageblock_flags;
+
+	struct per_cpu_pageset __percpu *pageset;
+
+	unsigned long pages_scanned;   /* Since last reclaim */
+	int all_unreclaimable;         /* All pages pinned */
+};
+
+struct per_cpu_page {
+	int count;    /* number of page in the list */
+	int high;     /* high watermark,emptying needed */
+	int batch;    /* chunk size for buddy add/remove */
+	
+	/* Lists of pages,one per migrate type stored on the pcp-lists */
+	struct list_head lists[MIGRATE_PCPTYPES];
 };
 
 typedef struct pglist_data {
@@ -191,6 +230,10 @@ typedef struct pglist_data {
     int nr_zones;
     int kswapd_max_order;
     struct page *node_mem_map;
+#ifndef CONFIG_NO_CGROUP_MEM_RES_CTLR
+	struct page_cgroup *node_page_cgroup;
+#endif
+
 } pg_data_t;
 
 extern struct pglist_data contig_pglist_data;
@@ -212,6 +255,23 @@ static inline int is_highmem_idx(enum zone_type idx)
 #ifdef CONFIG_HIGHMEM
 	return (idx == ZONE_HIGHMEM ||
 			(idx == ZONE_MOVABLE && zone_movable_is_highmem()));
+#else
+	return 0;
+#endif
+}
+/*
+ * helper function to quickly check if a struct zone is a
+ * highmem zone or not.This is an attempt to keep references
+ * to ZONE_{DMA/NORMAL/HIGHMEM/etc} in general code to a minimum.
+ */
+static inline int is_highmem(struct zone *zone)
+{
+#ifndef CONFIG_HIGHMEM
+	int zone_off = (char *)zone - (char *)zone->zone_pgdata->node_zones;
+
+	return zone_off == ZONE_HIGHMEM * sizeof(*zone) ||
+		   (zone_off == ZONE_MOVABLE * sizeof(*zone) &&
+			zone_movable_is_highmem());
 #else
 	return 0;
 #endif
@@ -258,4 +318,19 @@ static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 
 #define early_pfn_valid(pfn) (1)
 #define early_pfn_in_nid(pfn,nid) (1)
+unsigned long get_pageblock_flags_group(struct page *page,
+		int start_bitidx,int end_bitidx);
+static inline unsigned long get_pageblock_migratetype(struct page *page)
+{
+	return get_pageblock_flags_group(page,PB_migrate,PB_migrate_end);
+}
+/*
+ * If it is possible to have holes within a MAX_ORDER_NR_PAGES,then
+ * need to check pfn validility within that MAX_ORDER_NR_PAGES block.
+ * pfn_valid_within() should be used in this case;we optimise this away
+ * when we have no holes within a MAX_ORDER_NR_PAGES block.
+ */
+#define pfn_valid(x) (1)
+#define pfn_valid_within(pfn) pfn_valid(pfn)
+
 #endif

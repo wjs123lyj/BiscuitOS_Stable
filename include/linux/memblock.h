@@ -26,10 +26,11 @@
 #define MEMBLOCK_ALLOC_ANYWHERE   (~(phys_addr_t)0)
 #define MEMBLOCK_ALLOC_ACCESSIBLE 0
 
-#define for_each_memblock(x,reg) \
-	for(reg = x.regions; \
-			reg < x.regions + x.cnt; \
-			reg++)
+#define for_each_memblock(memblock_type,region) \
+	for(region = memblock.memblock_type.regions; \
+			region < (memblock.memblock_type.regions + \
+				memblock.memblock_type.cnt); \
+			region++)
 /*
  * Manange an region.
  */
@@ -60,4 +61,43 @@ extern struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 
 extern void arm_bootmem_init(unsigned int start_pfn,
 		unsigned int end_pfn);
+/*
+ * pfn conversion functions.
+ * 
+ * While the memory MEMBLOCKs should always be page align,the reserved
+ * MEMBLOCKs may not be.This accessor attempt to provide a very clear
+ * idea of what they return for such non aligned MEMBLOCKs.
+ */
+/*
+ * Return the lowest pfn interestiong with the memory region.
+ */
+static inline unsigned long memblock_region_memory_base_pfn(
+		const struct memblock_region *reg)
+{
+	return PFN_UP(reg->base);
+}
+/*
+ * Retrun the end_pfn this region.
+ */
+static inline unsigned long memblock_region_memory_end_pfn(
+		const struct memblock_region *reg)
+{
+	return PFN_DOWN(reg->base + reg->size);
+}
+/*
+ * Retrun the lowest pfn interesting with the reserved region.
+ */
+static inline unsigned long memblock_region_reserved_base_pfn(
+		const struct memblock_region *reg)
+{
+	return PFN_DOWN(reg->base);
+}
+/*
+ * Return the end_pfn this region.
+ */
+static inline unsigned long memblock_region_reserved_end_pfn(
+		const struct memblock_region *reg)
+{
+	return PFN_UP(reg->base + reg->size);
+}
 #endif

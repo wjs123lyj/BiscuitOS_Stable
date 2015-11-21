@@ -1,6 +1,6 @@
 #ifndef _HIGHMEM_H_
 #define _HIGHMEM_H_
-
+#include "page.h"
 #include "pgtable.h"
 /*
  * This is virtual address that used in hihgmem.
@@ -21,6 +21,7 @@
 #else
 #define MAX_NR_ZONES  3
 #endif
+
 
 extern pte_t *pkmap_page_table;
 #endif

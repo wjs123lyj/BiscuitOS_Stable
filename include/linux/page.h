@@ -2,6 +2,23 @@
 #define _PAGE_H_
 #include "memory.h"
 
+
+typedef unsigned long pteval_t;
+/*
+ * These are used to make use of C type-checking...
+ */
+typedef struct { pteval_t pte; }           pte_t;
+typedef struct { unsigned long pmd; }      pmd_t;
+typedef struct { unsigned long pgd[2]; }   pgd_t;
+typedef struct { unsigned long pgprot; }   pgprot_t;
+
+#define pte_val(x)    ((x).pte)
+#define pgprot_val(x) ((x).pgprot)
+
+#define __pte(x)      ((pte_t){(x)})
+#define __pgprot(x)   ((pgprot_t){(x)})
+
+
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (unsigned int)(1UL << PAGE_SHIFT)
 #define PAGE_MASK (unsigned int)(~(PAGE_SIZE - 1))
@@ -41,7 +58,7 @@
  * Memory address for page structure.Please mind the address of mem_map
  * is a physical address when you use this value.
  */
-#define page_to_pfn(page)   \
-	 (unsigned long)(((struct page *)(unsigned long)(phys_addr_t)mem_to_phys(page) - \
+#define page_to_pfn(x)   \
+	 (unsigned long)(((struct page *)(unsigned long)(phys_addr_t)mem_to_phys(x) - \
 				 mem_map) + PHYS_PFN_OFFSET)
 #endif

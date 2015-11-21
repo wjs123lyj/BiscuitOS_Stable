@@ -123,7 +123,7 @@ static unsigned long bootmap_bytes(unsigned long pages)
 /*
  * Get page of bootmap.
  */
-static unsigned long bootmem_bootmap_pages(unsigned long start_pfn,
+unsigned long bootmem_bootmap_pages(unsigned long start_pfn,
 		unsigned long end_pfn)
 {
 	unsigned long bytes;
@@ -492,34 +492,6 @@ static long __init init_bootmem_node(struct pglist_data *pgdat,
 	return init_bootmem_core(pgdat->bdata,bitmap,start_pfn,end_pfn);
 }
 /*
- * The start pfn of memory region.
- */
-static unsigned long memblock_region_memory_base_pfn(struct memblock_region *reg)
-{
-	return PFN_UP(reg->base);
-}
-/*
- * The end pfn of memory region.
- */
-static unsigned long memblock_region_memory_end_pfn(struct memblock_region *reg)
-{
-	return PFN_DOWN(reg->base + reg->size);
-}
-/*
- * The start pfn of reserved region
- */
-static unsigned long memblock_region_reserved_base_pfn(struct memblock_region *reg)
-{
-	return PFN_UP(reg->base);
-}
-/*
- * The end pfn of reserved region.
- */
-static unsigned long memblock_region_reserved_end_pfn(struct memblock_region *reg)
-{
-	return PFN_DOWN(reg->base + reg->size);
-}
-/*
  * Initialize the arm bootmem
  */
 void arm_bootmem_init(unsigned int start_pfn,
@@ -549,7 +521,7 @@ void arm_bootmem_init(unsigned int start_pfn,
 	/*
 	 * Free the lowmem regions from memblock into bootmem.
 	 */
-	for_each_memblock(memblock.memory,reg)
+	for_each_memblock(memory,reg)
 	{
 		unsigned long start = memblock_region_memory_base_pfn(reg);
 		unsigned long end   = memblock_region_memory_end_pfn(reg);
@@ -564,7 +536,7 @@ void arm_bootmem_init(unsigned int start_pfn,
 	/*
 	 * Set bit that reserved.
 	 */
-	for_each_memblock(memblock.reserved,reg)
+	for_each_memblock(reserved,reg)
 	{
 		unsigned long start = memblock_region_reserved_base_pfn(reg);
 		unsigned long end = memblock_region_reserved_end_pfn(reg);
@@ -702,7 +674,7 @@ void arm_bootmem_free(unsigned long min,unsigned long max_low,
 	 * holes = node_size - sum(bank_size).
 	 */
 	memcpy(zhole_size,zone_sizes,sizeof(zone_sizes));
-	for_each_memblock(memblock.memory,reg)
+	for_each_memblock(memory,reg)
 	{
 		unsigned long start = memblock_region_memory_base_pfn(reg);
 		unsigned long end   = memblock_region_memory_end_pfn(reg);

@@ -1,6 +1,9 @@
 #ifndef _PAGE_FLAGS_H_
 #define _PAGE_FLAGS_H_
 
+#include "config.h"
+#include "bounds.h"
+#include "mmzone.h"
 /*
  * Various page->flags bits:
  * PG_reserved is set for special pages,which can never be swapped out.Some
@@ -46,7 +49,7 @@ enum pageflags {
 	PG_referenced,
 	PG_uptodate,
 	PG_dirty,
-	PG_lry,
+	PG_lru,
 	PG_active,
 	PG_slab,
 	PG_owner_priv_1,   /* Owner use.If pagecache,fs may use */
@@ -54,7 +57,7 @@ enum pageflags {
 	PG_reserved,
 	PG_private,        /* If pagecache,has fs-private data */
 	PG_private_2,      /* If pagecache,has fs aux data */
-	PG_wirteback,      /* Page is under writeback */
+	PG_writeback,      /* Page is under writeback */
 #ifdef CONFIG_PAGEFLAGS_EXTENDED
 	PG_head,           /* A head page */
 	PG_tail,           /* A tail page */
@@ -81,6 +84,50 @@ enum pageflags {
 	__NR_PAGEFLAGS,
 };
 
+#ifdef CONFIG_MMU
+#define __PG_MLOCKED         (1 << PG_mlocked)
+#else
+#define __PG_MLOCKED         0
+#endif
+
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+#define __PG_COMPOUND_LOCK   (1 << PG_compound_lock)
+#else
+#define __PG_COMPOUND_LOCK   0
+#endif
+
+#define __PG_HWPOISON        0
+/*
+ * Flags checked when a page is freed.Pages being freed should not have
+ * these flags set.It they are,there is a problem.
+ */
+#define PAGE_FLAGS_CHECK_AT_FREE      \
+	(1 << PG_lru          | 1 << PG_locked       | \
+	 1 << PG_private      | 1 << PG_private_2    | \
+	 1 << PG_writeback    | 1 << PG_reserved     | \
+	 1 << PG_slab         | 1 << PG_swapcache    | \
+	 1 << PG_active       | 1 << PG_unevictable  | \
+	 __PG_MLOCKED         | __PG_HWPOISON        | \
+	 __PG_COMPOUND_LOCK)
+
+
+/*
+ * PG_reclaim is used in combination with PG_compound to mark the
+ * head and tail of a compound page.This saves one page flag
+ * but makes it impossible to use compound pages for the page cache.
+ * The PG_reclaim bit would have to be used for relaim or readahead
+ * if compound pages enter the page cache.
+ *
+ * PG_compound & PG_reclaim     ==> Tail page
+ * PG_compound & ~PG_reclaim    ==> Head page
+ */
+#define PG_head_tail_mask    ((1L << PG_compound) | (1L << PG_reclaim))
+/*
+ * Flags checked when a page is prepped for return by the page allocator.
+ * Pages being prepped should not have any flags set.It they are set,
+ * there has been a kernel bug or struct page corruption.
+ */
+#define PAGE_FLAGS_CHECK_AT_PREP     ((1 << NR_PAGEFLAGS) - 1)
 /*
  * Set the reserved_bit of page flags.
  */
@@ -88,81 +135,26 @@ static inline void SetPageReserved(struct page *page)
 {
 	set_bit(PG_reserved,&page->flags);
 }
-#if 0
+static inline void __ClearPageTail(struct page *page)
+{
+	page->flags &= ~PG_head_tail_mask;
+}
+
 /*
- * Macros to create function definitions for page flags.
+ * Mlocked.
  */
-/* Test flags */
-#define TESTPAGEFLAG(uname,lname)      \
-static inline int Page##uname(struct page *page)     \
-{	return test_bit(PG_##lname,&page->flags);}
-/* Set flags */
-#define SETPAGEFLAG(uname,lname)       \
-static inline void SetPage##uname(struct page *page)  \
-{	set_bit(PG_##lname,&page->flags);}
-/* Clear flags */
-#define CLEARPAGEFLAG(uname,lname)     \
-static inline void ClearPage##uname(struct page *page) \
-{	clear_bit(PG_##lname,&page->flags);}
-/* __Set bit */
-#define __SETPAGEFLAG(uname,lname)      \
-static inline void __SetPage##uname(struct page *page)    \
-{	set_bit(PG_##lname,&page->flags);}
-/* __Clear bit */
-#define __CLEARPAGEFLAG(uname,lname)       \
-static inline void __ClearPage##uname(struct page *page)     \
-{	clear_bit(PG_##lname,&page->flags);}
-/* Test and clear flags */
-#define TESTCLEARFLAGE(uname,lname)     \
-static inline int TestClearPage##uname(struct page *page)    \
-{	return test_and_clear_bit(PG_##lname,&page->flags);}
-/* Test and set flags */
-#define TESTSETFLAG(uname,lname)       \
-static inline int TestSetPage##uname(struct page *page)   \
-{	return test_and_set_bit(PG_##lname,&page->flags);}
-/* __Test and clear flags */
-#define __TESTCLEARFLAG(uname,lname)       \
-static inline int __TestClearPage##uname(struct page *page)   \
-{	return test_and_clear_bit(PG_##lname,&page->flags);}
+static inline void __ClearPageMlocked(struct page *page)
+{
+	clear_bit(PG_mlocked,&page->flags);
+}
+static inline int __TestClearPageMlocked(struct page *page)
+{
+	test_and_clear_bit(PG_mlocked,&page->flags);
+}
 
-/* Create page flags quickly */
-#define PAGEFLAG(uname,lname)	TESTPAGEFLAG(uname,lname)     \
-	SETPAGEFLAG(uname,lname)    CLEARPAGEFLAG(uname,lname)
-/* Create page underlying flags quickly */
-#define __PAGEFLAG(uname,lname) TESTPAGEFLAG(uname,lname)     \
-	__SETPAGEFLAG(uname,lname)  __CLEARPAGEFLAG(uname,lname)
-/* Test and clear flags */
-#define TESTSCFLAG(uname,lname)      \
-	TESTSETFLAG(uname,lname)  TESTCLEARFLAG(uname,lname)
-
-struct page;  /* forward declaction */
-
-/* Flags: Locked*/
-TESTPAGEFLAG(Locked,locked) 
-TESTSETFLAG(Locked,locked)
-/* Flags: Error */
-PAGEFLAG(Error,error)		
-TESTCLEARFLAG(Error,error);
-/* Flags: Referenced */
-PAGEFLAG(Referenced,referenced)  TESTCLEARFLAG(Referenced,referenced)
-/* Flags: Dirty */
-PAGEFLAG(Dirty,dirty)       TESTCLEARFLAG(Dirty,dirty) 
-/* Flags: LRU */
-PAGEFLAG(LRU,lru)           __CLEARPAGEFLAG(LRU,lru)
-/* Flags: Active */
-PAGEFLAG(Active,active)     __CLEARPAGEFLAG(Active,active)  
-	TESTCLEARFLAG(Active,active)
-/* Flags: Slab */
-__PAGEFLAG(Slab,slab)
-/* Flags: Ckecked */
-PAGEFLAG(Checked,checked)    /* Used by some filesystems */
-/* Flags: Pinned */
-PAGEFLAG(Pinned,pinned)      TESTSCFLAG(Pinned,pinned) /* Xen */
-/* Flags: SavePinned */
-PAGEFLAG(SavePinned,savepinned);
-/* Flags: Reserved */
-PAGEFLAG(Reserved,reserved)  __CLEARPAGEFLAG(Reserved,reserved)
-/* Flags: SwapBacked */
-PAGEFLAG(SwapBacked,swapbacked) __CLEARPAGEFLAGE(SwapBacked,swapbacked)
-#endif
+/*
+ * Must use a macro here due to header dependency issues.page_zone() is not
+ * available at this point.
+ */
+#define PageHighMem(p) is_highmem(page_zone(p))
 #endif

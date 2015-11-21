@@ -68,4 +68,24 @@
  * Configure the size of CACHE_L1.
  */
 #define CONFIG_ARM_L1_CACHE_SHIFT 5
+/*
+ * Support memcheck
+ */
+#define CONFIG_KMEMCHECK
+/*
+ * Support page alloc debug.
+ */
+#define CONFIG_DEBUG_PAGEALLOC
+/*
+ * Support page flags debug.
+ */
+#define CONFIG_WANT_PAGE_DEBUG_FLAGS
+/*
+ * Configure the address of vectors
+ */
+#define CONFIG_VECTORS_BASE     0xffff0000
+/*
+ * Configure to support MMU
+ */
+#define CONFIG_MMU
 #endif

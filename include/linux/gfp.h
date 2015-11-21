@@ -133,4 +133,9 @@ static inline struct zonelist *node_zonelist(int nid,gfp_t flags)
 	return ((struct pglist_data *)NODE_DATA(nid))->node_zonelists + 
 		gfp_zonelist(flags);
 }
+
+#define __free_page(page)  __free_pages((page),0)
+#ifndef HAVE_ARCH_FREE_PAGE
+static inline void arch_free_page(struct page *page,int order) {}
+#endif
 #endif

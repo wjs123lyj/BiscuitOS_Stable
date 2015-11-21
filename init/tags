@@ -5,12 +5,15 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 CC	Makefile	/^CC=gcc$/;"	m
-DEBUG_FLAGS	Makefile	/^DEBUG_FLAGS=-C -E -g $/;"	m
+DEBUG_FLAGS	Makefile	/^DEBUG_FLAGS=-C -E -g -Wfatal-errors $/;"	m
 FLAGS	Makefile	/^FLAGS=-g -pg$/;"	m
 INC	Makefile	/^INC= -I.\/$/;"	m
 LOG_FILE	Makefile	/^LOG_FILE=debug.log$/;"	m
 OBJS	Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
 SRCS	Makefile	/^SRCS = main.c \\$/;"	m
 TARGET	Makefile	/^TARGET=align$/;"	m
+debug_pagealloc_enabled	main.c	/^int debug_pagealloc_enabled = 0;$/;"	v
 main	main.c	/^int main()$/;"	f
+main	test.c	/^int main()$/;"	f
+mm_init	main.c	/^static void __init mm_init(void)$/;"	f	file:
 start_kernel	main.c	/^static void start_kernel(void)$/;"	f	file:

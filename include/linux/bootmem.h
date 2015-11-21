@@ -28,4 +28,7 @@ extern unsigned long max_pfn;
 #define alloc_bootmem_node(pgdat,x) \
 	__alloc_bootmem_node((pgdat),(x),SMP_CACHE_BYTES,__pa(MAX_DMA_ADDRESS))
 
+#define alloc_bootmem_low(x)  \
+	__alloc_bootmem_low(x,SMP_CACHE_BYTES,0)
+
 #endif

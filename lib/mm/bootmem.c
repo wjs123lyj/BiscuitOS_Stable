@@ -6,6 +6,8 @@
 #include "../../include/linux/pfn.h"
 #include "../../include/linux/error.h"
 #include "../../include/linux/list.h"
+#include "../../include/linux/mm_type.h"
+#include "../../include/linux/bitops.h"
 
 #include "../../include/asm/dma.h"
 
@@ -25,10 +27,15 @@ unsigned long max_pfn;
 #ifndef CONFIG_NO_BOOTMEM
 struct bootmem_data bootmem_node_data[MAX_NUMNODES];
 #endif
+#ifndef ARCH_LOW_ADDRESS_LIMIT
+#define ARCH_LOW_ADDRESS_LIMIT  0xffffffffUL
+#endif
 /*
  * The list of bootmem_data.
  */
 struct list_head bdata_list = LIST_HEAD_INIT(bdata_list);
+
+
 
 static unsigned long __init align_idx(struct bootmem_data *bdata,
 		unsigned long idx,unsigned long step)
@@ -370,4 +377,132 @@ void * __init __alloc_bootmem_node(struct pglist_data *pgdat,
 	ptr = ___alloc_bootmem_node(pgdat->bdata,size,align,goal,0);
 
 	return ptr;
+}
+/*
+ * Allocate low boot memory.
+ * The goal is dropped if it can not be satisified and the allocation will
+ * fall back to memory below @goal.
+ * Allocation may happed on any node in the system.
+ */
+void * __init __alloc_bootmem_low(unsigned long size,unsigned long align,
+		unsigned long goal)
+{
+	return ___alloc_bootmem(size,align,goal,ARCH_LOW_ADDRESS_LIMIT);
+}
+/*
+ * Allocator boot memory without pancking.
+ */
+void * __init _alloc_bootmem_nopanic(unsigned long size,unsigned long align,
+		unsigned long goal)
+{
+	unsigned long limit = 0;
+
+	return ___alloc_bootmem_nopanic(size,align,goal,limit);
+}
+void * __init __alloc_bootmem_nopanic(unsigned long size,unsigned long align,
+		unsigned long goal)
+{
+	unsigned long limit = 0;
+
+	return ___alloc_bootmem_nopanic(size,align,goal,limit);
+}
+
+void * __init __alloc_bootmem_node_nopanic(struct pglist_data *pgdat,
+		unsigned long size,unsigned long align,unsigned long goal)
+{
+	void *ptr;
+
+	ptr = alloc_arch_preferred_bootmem(pgdat->bdata,size,align,goal,0);
+	if(ptr)
+		return ptr;
+
+	ptr = alloc_bootmem_core(pgdat->bdata,size,align,goal,0);
+	if(ptr)
+		return ptr;
+
+	return __alloc_bootmem_nopanic(size,align,goal);
+}
+/*
+ * Free core.
+ */
+static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
+{
+	int aligned;
+	struct page *page;
+	unsigned long start,end,pages,count = 0;
+
+	if(!bdata->node_bootmem_map)
+		return 0;
+
+	start = bdata->node_min_pfn;
+	end   = bdata->node_low_pfn;
+
+	/*
+	 * If the start is aligned to the machines wordsize,we might
+	 * be able to free pages in bulls of that order.
+	 */
+	aligned = !(start & (BITS_PER_LONG - 1));
+
+	bdebug("nid=%p start=%p end=%p aligned=%p\n",
+			(void *)(bdata - bootmem_node_data),
+			(void *)start,(void *)end,
+			(void *)aligned);
+
+	while(start < end)
+	{
+		unsigned long *map,idx,vec;
+
+		map = bdata->node_bootmem_map;
+		idx = start - bdata->node_min_pfn;
+		vec = ~map[idx / BITS_PER_LONG];
+
+		if(aligned && vec == ~0UL && start + BITS_PER_LONG < end)
+		{
+			int order = 0;//ilog2(BITS_PER_LONG);
+
+			__free_pages_bootmem(pfn_to_page(start),order);
+			count += BITS_PER_LONG;
+		} else
+		{
+			unsigned long off = 0;
+
+			while(vec && off < BITS_PER_LONG)
+			{
+				if(vec & 1)
+				{
+					page = pfn_to_page(start + off);
+					__free_pages_bootmem(page,0);
+				}
+				vec >>= 1;
+				off++;
+			}
+		} 
+		start += BITS_PER_LONG;
+	}
+	page = virt_to_page(bdata->node_bootmem_map);
+	pages = bdata->node_low_pfn - bdata->node_min_pfn;
+	pages = bootmem_bootmap_pages(pages);
+	count += pages;
+	while(pages--)
+		__free_pages_bootmem(page++,0);
+	
+	bdebug("nid=%p released=%p\n",
+			(void *)(bdata - bootmem_node_data),(void *)count);
+
+	return count;
+}
+/*
+ * Release free pages to the buddy allocator.
+ *
+ * Return the number of pages actually released.
+ */
+unsigned long __init free_all_bootmem(void)
+{
+	unsigned long total_pages = 0;
+	struct bootmem_data *bdata;
+
+	list_for_each_entry(bdata,&bdata_list,list)
+		total_pages += free_all_bootmem_core(bdata);
+
+	return total_pages;
 }

@@ -18,6 +18,9 @@ typedef struct {
 } atomic_t;
 typedef atomic_t atomic_long_t;
 
+#define pgoff_t unsigned long
+
+typedef phys_addr_t resource_size_t;
 /*
  * Use unsigned int to act physical memory.
  */

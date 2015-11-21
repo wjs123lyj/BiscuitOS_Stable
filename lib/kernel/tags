@@ -1,0 +1,27 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+__request_resource	resource.c	/^static struct resource * __request_resource(struct resource *root,$/;"	f	file:
+buddy_machine	setup.c	/^struct machine_desc buddy_machine = {$/;"	v	typeref:struct:machine_desc
+init_task	init_task.c	/^struct task_struct init_task = {$/;"	v	typeref:struct:task_struct
+io_res	setup.c	/^static struct resource io_res[] = {$/;"	v	typeref:struct:resource	file:
+iomem_resource	resource.c	/^struct resource iomem_resource = {$/;"	v	typeref:struct:resource
+ioport_resource	resource.c	/^struct resource ioport_resource = {$/;"	v	typeref:struct:resource
+kernel_code	setup.c	49;"	d	file:
+kernel_data	setup.c	50;"	d	file:
+lookup_machine_type	setup.c	/^struct machine_desc *lookup_machine_type(unsigned int nr)$/;"	f
+lp0	setup.c	73;"	d	file:
+lp1	setup.c	74;"	d	file:
+lp2	setup.c	75;"	d	file:
+machine_arch_type	setup.c	81;"	d	file:
+mem_res	setup.c	/^static struct resource mem_res[] = {$/;"	v	typeref:struct:resource	file:
+request_resource	resource.c	/^int request_resource(struct resource *root,struct resource *new)$/;"	f
+request_resource_conflict	resource.c	/^struct resource *request_resource_conflict(struct resource *root,struct resource *new)$/;"	f
+request_standard_resource	setup.c	/^static void __init request_standard_resource(struct machine_desc *mdesc)$/;"	f	file:
+reserve_crashkernel	setup.c	/^static inline void reserve_crashkernel(void) {}$/;"	f	file:
+setup_arch	setup.c	/^void __init setup_arch(void)$/;"	f
+setup_machine	setup.c	/^static struct machine_desc * __init setup_machine(unsigned int nr)$/;"	f	file:
+video_ram	setup.c	48;"	d	file:

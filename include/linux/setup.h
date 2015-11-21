@@ -25,7 +25,7 @@ struct meminfo {
 extern struct meminfo meminfo;
 
 #define for_each_bank(iter,mi) \
-	for(iter = 0 ; iter < mi->nr_banks ; iter++)
+	for(iter = 0 ; iter < (mi)->nr_banks ; iter++)
 
 #define bank_pfn_start(bank) phys_to_pfn((bank)->start)
 #define bank_pfn_end(bank)   phys_to_pfn((bank)->start + (bank)->size)

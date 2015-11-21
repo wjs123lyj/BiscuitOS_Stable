@@ -4,6 +4,12 @@
 #include "../../include/linux/debug.h"
 #include "../../include/linux/memory.h"
 #include "../../include/linux/bootmem.h"
+#include "../../include/linux/mman.h"
+#include "../../include/linux/pgtable.h"
+#include "../../include/linux/fixmap.h"
+#include "../../include/linux/highmem.h"
+#include "../../include/linux/memblock.h"
+#include "../../include/linux/mm_type.h"
 /*
  * Initialize memblock of ARM
  */
@@ -107,7 +113,276 @@ void __init bootmem_init(void)
 	max_low_pfn = max_low - PHYS_PFN_OFFSET;
 	max_pfn     = max_high - PHYS_PFN_OFFSET;
 }
+/*
+ * Free memmap.
+ */
+static inline void free_memmap(unsigned long start_pfn,unsigned long end_pfn)
+{
+	struct page *start_pg,*end_pg;
+	unsigned long pg,pgend;
 
+	/*
+	 * Convert start_pfn/end_pfn to a struct page pointer.
+	 */
+	start_pg = pfn_to_page(start_pfn - 1) + 1;
+	end_pg   = pfn_to_page(end_pfn);
+
+	/*
+	 * Convert to physical addresses,and
+	 * round start upwards and end downwards.
+	 */
+	pg = PAGE_ALIGN(__pa(start_pg));
+	pgend = __pa(end_pg) & PAGE_MASK;
+
+	/*
+	 * If there are free pages between these,
+	 * free the section of the memmap array.
+	 */
+	if(pg < pgend)
+		free_bootmem(pg,pgend - pg);
+}
+/*
+ * The mem_map array can get very big.Free the unused area of the memory map.
+ */
+static void __init free_unused_memmap(struct meminfo *mi)
+{
+	unsigned long bank_start,prev_bank_end = 0;
+	unsigned int i;
+
+	/*
+	 * This relies on each bank being in address order.
+	 * The banks are sorted previously in bootmem_init().
+	 */
+	for_each_bank(i,mi)
+	{
+		struct membank *bank = &mi->bank[i];
+
+		bank_start = bank_pfn_start(bank);
+
+		/*
+		 * If we had a previous bank,and there is a space
+		 * between the current bank and the previous.free it.
+		 */
+		if(prev_bank_end && prev_bank_end < bank_start)
+			free_memmap(prev_bank_end,bank_start);
+
+		/*
+		 * Align up here since the VM subsystem insists that the 
+		 * memmap entries are valid from the bank end aligned to 
+		 * MAX_ORDER_NR_PAGES.
+		 */
+		prev_bank_end = ALIGN(bank_pfn_end(bank),MAX_ORDER_NR_PAGES);
+	}
+}
+static inline int free_area(unsigned long pfn,unsigned long end,char *s)
+{
+	unsigned int pages = 0,size = (end - pfn) << (PAGE_SHIFT - 10);
+
+	for(; pfn < end ; pfn++)
+	{
+		struct page *page = pfn_to_page(pfn);
+		
+		ClearPageReserved(page);
+		init_page_count(page);
+		__free_page(page);
+		page++;
+	}
+	if(size && s)
+		mm_debug("Freeing %s memory %dK\n",s,size);
+	
+	return pages;
+}
+/*
+ * Free highpage in initialition.
+ */
+static void __init free_highpages(void)
+{
+#ifdef CONFIG_HIGHMEM
+	unsigned long max_low = max_low_pfn + PHYS_PFN_OFFSET;
+	struct memblock_region *mem,*res;
+
+	/* Set highmem page free */
+	for_each_memblock(memory,mem)
+	{
+		unsigned long start = memblock_region_memory_base_pfn(mem);
+		unsigned long end   = memblock_region_memory_end_pfn(mem);
+
+		/* Ignore complete lowmem entries */
+		if(end <= max_low)
+			continue;
+
+		/* Truncate partial highmem entries */
+		if(start < max_low)
+			start = max_low;
+
+		/* Find and exclude any reserved regions */
+		for_each_memblock(reserved,res)
+		{
+			unsigned long res_start,res_end;
+
+			res_start = memblock_region_reserved_base_pfn(res);
+			res_end   = memblock_region_reserved_end_pfn(res);
+
+			if(res_end < start)
+				continue;
+			if(res_start < start)
+				res_start = start;
+			if(res_start > end)
+				res_start = end;
+			if(res_end > end)
+				res_end = end;
+			if(res_start != start)
+				totalhigh_pages += free_area(start,res_start,NULL);
+
+			start = res_end;
+			if(start == end)
+				break;
+		}
+		/*
+		 * And now free anything which remains.
+		 */
+		if(start < end)
+			totalhigh_pages += free_area(start,end,NULL);
+	}
+	totalram_pages += totalhigh_pages;
+#endif
+}
+/*
+ * mem_init() marks the free areas in the mem_map and tells us how much
+ * memory is free.This is done after various parts of the system have
+ * claimed their memory after the kernel image.
+ */
+void __init mem_init(void)
+{
+	unsigned long reserved_pages,free_pages;
+	struct memblock_region *reg;
+	int i;
+
+	max_mapnr = (struct page *)(unsigned long)mem_to_phys(pfn_to_page(max_pfn 
+				+ PHYS_PFN_OFFSET)) - mem_map;
+
+	/* This will put all unused low memory onto the freelists. */
+	free_unused_memmap(&meminfo);
+
+	totalram_pages += free_all_bootmem();
+#ifdef CONFIG_SA1111
+	/* Intel StrongARM not support */
+	total_pages += free_area(PHYS_PFN_OFFSET,
+			__phys_to_pfn(__pa(swapper_pg_dir)),NULL);
+#endif
+	free_highpage();
+
+	reserved_pages = free_pages = 0;
+
+	for_each_bank(i,&meminfo)
+	{
+		struct membank *bank = &meminfo.bank[i];
+		unsigned int pfn1,pfn2;
+		struct page *page,*end;
+
+		pfn1 = bank_pfn_start(bank);
+		pfn2 = bank_pfn_end(bank);
+
+		page = pfn_to_page(pfn1);
+		end  = pfn_to_page(pfn2 - 1) + 1;
+
+		do {
+			if(PageReserved(page))
+				reserved_pages++;
+			else if(!page_count(page))
+				free_pages++;
+		} while(page < end);
+	}
+
+	/*
+	 * Since our memory may not be contiguous,calculate the 
+	 * real number of pages we have in this system.
+	 */
+	mm_debug("Memory:");
+	num_physpages = 0;
+	for_each_memblock(memory,reg)
+	{
+		unsigned long pages = memblock_region_memory_end_pfn(reg) - 
+			memblock_region_memory_base_pfn(reg);
+		num_physpages += pages;
+		mm_debug("%ldMB",pages >> (20 - PAGE_SHIFT));
+	}
+	mm_debug(" = %luMB total\n",num_physpages >> (20 - PAGE_SHIFT));
+
+	mm_debug("Memory: %luK/ %luK available,%luk reserved,%luK highmem\n",
+			nr_free_pages() << (PAGE_SHIFT - 10),
+			free_pages << (PAGE_SHIFT - 10),
+			reserved_pages << (PAGE_SHIFT - 10),
+			totalhigh_pages << (PAGE_SHIFT - 10));
+
+#define MLK(b,t) b,t,((t) - (b) >> 10)
+#define MLM(b,t) b,t,((t) - (b) >> 20)
+#define MLK_ROUNDUP(b,t) b,t,DIV_ROUND_UP(((t) - (b)),SZ_1K)
+	mm_debug("Vitual kernel memory layout:\n"
+			"   vector : 0x%08lx - 0x%08lx (%4ld kB)\n"
+			"   fixmap : 0x%08lx - 0x%08lx (%4ld kB)\n"
+#ifdef CONFIG_MMU
+			"   DMA    : 0x%08lx - 0x%08lx (%4ld MB)\n"
+#endif
+			"   vmalloc: 0x%08lx - 0x%08lx (%4ld MB)\n"
+			"   lowmem : 0x%08lx - 0x%08lx (%4ld MB)\n"
+#ifdef CONFIG_HIGHMEM
+			"   pkmap  : 0x%08lx - 0x%08lx (%4ld MB)\n"
+#endif
+			"   modules: 0x%08lx - 08%08lx (%4ld MB)\n"
+			"   .init  : 0x%p - 0x%p (%4d kB)\n"
+			"   .text  : 0x%p - 0x%p (%4d kB)\n"
+			"   .data  : 0x%p - 0x%p (%4d kB)\n",
+			MLK(UL(CONFIG_VECTORS_BASE),UL(CONFIG_VECTORS_BASE) +
+				(PAGE_SIZE)),
+			MLK(FIXADDR_START,FIXADDR_TOP),
+#ifdef CONFIG_MMU
+			MLM(CONSISTENT_BASE,CONSISTENT_END),
+#endif
+			MLM(VMALLOC_START,VMALLOC_END),
+			MLM(PAGE_OFFSET,(unsigned long)high_memory),
+#ifdef CONFIG_HIGHMEM
+			MLM(PKMAP_BASE,(PKMAP_BASE) + (LAST_PKMAP) *
+					(PAGE_SIZE)),
+#endif
+			MLM(MODULES_VADDR,MODULES_END),
+
+			MLK_ROUNDUP(0,0),
+			MLK_ROUNDUP(0,0),
+			MLK_ROUNDUP(0,0));
+#undef MLK
+#undef MLM
+#undef MLK_ROUNDUP
+
+	/*
+	 * Check boundaries twice:Some fundamental inconsistencies can
+	 * be detected at build time already.
+	 */
+#ifdef CONFIG_MMU
+	BUILD_BUG_ON(VMALLOC_END      > CONSISTENT_BASE);
+	BUILD_ON(VMALLOC_END          > CONSISTENT_BASE);
+
+	BUILD_BUG_ON(TASK_SIZE        > MODULES_VADDR);
+	BUG_ON(TASK_SIZE              > MODULES_VADDR);
+#endif
+
+#ifdef CONFIG_HIGHMEM
+	BUILD_BUG_ON(PKMAP_BASE + LAST_PKMAP * PAGE_SIZE > PAGE_OFFSET);
+	BUG_ON(PKMAP_BASE + LAST_PKMAP * PAGE_SIZE  > PAGE_OFFSET);
+#endif
+
+	if(PAGE_SIZE >= 16384 && num_physpages <= 128)
+	{
+		extern int sysctl_overcommit_memory;
+
+		/*
+		 * On a machine this small we won't get 
+		 * anywhere without overcommit,so turn
+		 * it on by default.
+		 */
+		sysctl_overcommit_memory = OVERCOMMIT_ALWAYS;
+	}
+}
 
 
 

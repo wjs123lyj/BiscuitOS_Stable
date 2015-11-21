@@ -27,6 +27,36 @@ struct page {
 	struct list_head lru;   /* Pageout list,eg,active_list
 							 * protected by zone->lru_lock !
 							 */
+	union {
+		struct {
+			unsigned long private;
+			                      /*
+								   * Mapping-private opaque data.
+								   * usually used for buffer_heads
+								   * if PagePrivate set;used for
+								   * swp_entry_t if PageSwapCache;
+								   * indicates order in the buddy
+								   * system if PG_buddy is set.
+								   */
+			struct address_space *mapping;
+								  /*
+								   * If low bit clear,points to inode 
+								   * address_space,or NULL.
+								   * If page mapped as anonymous
+								   * memory,low bit is set,and
+								   * it points to anon_vma object:
+								   * set PAGE_MAPPING_ANON below,
+								   */
+		};
+		struct page *first_page;  /* Compound tail pages */
+	};
+#ifdef CONFIG_WANT_PAGE_DEBUG_FLAGS
+	unsigned long debug_flags;   /* Use atomic bitops on this */
+#endif
+	union {
+		pgoff_t index;    /* Our offset within mapping */
+		void *freelist;   /* SLUB:freelist req.slab lock */
+	};
 };
 /*
  * mm_struct 

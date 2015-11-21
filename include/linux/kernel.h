@@ -1,5 +1,7 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
+#include <stdio.h>
+#include <stdlib.h>
 #include "config.h"
 
 #define __init
@@ -9,6 +11,11 @@
 #define __meminit
 #define __paginginit
 #define __init_refok
+#define __percpu
+
+#define true  1
+#define false 0
+#define bool
 
 #define max(x,y) ({ \
 		typeof(x) __x = x; \
@@ -49,4 +56,6 @@
 
 #define likely(x)   (x)
 #define unlikely(x)   (x)
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #endif

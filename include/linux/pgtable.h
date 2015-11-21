@@ -1,9 +1,8 @@
 #ifndef _PGTABLE_H_
 #define _PGTABLE_H_
 
-typedef struct { unsigned int pgd[2];} pgd_t;
-typedef struct { unsigned int pmd;} pmd_t;
-typedef struct { unsigned int pte;} pte_t;
+#include "pgtable_types.h"
+#include "page.h"
 
 #define PGDIR_SHIFT 21
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)
@@ -18,7 +17,64 @@ typedef struct { unsigned int pte;} pte_t;
 
 #define PTE_HWTABLE_PTRS   (unsigned long)(PTRS_PER_PTE)
 #define PTE_HWTABLE_OFF    (unsigned long)(PTE_HWTABLE_PTRS * sizeof(pte_t))
-#define PTE_HWTABLE_SIZE   (unsigned long)(PTRS_PTER_PTE * 4)
+#define PTE_HWTABLE_SIZE   (unsigned long)(PTRS_PER_PTE * 4)
+
+/*
+ * Linux PTE definitions.
+ *
+ * We keep two sets of PTEs - the hardware and the linux version.
+ * This allows greater flexibility in the way we map the Linux bits
+ * onto the hardware tables,and allows us to have YOUNG and DIRTY bits.
+ *
+ * The PTE table pointer refers to the hardware entries;the "Linux"
+ * entries are stored 1024 bytes below.
+ */
+#define L_PTE_PRESENT        (_AT(pteval_t,1) << 0)
+#define L_PTE_YOUNG          (_AT(pteval_t,1) << 1)
+#define L_PTE_FILE           (_AT(pteval_t,1) << 2) /* only when !PRESENT */
+#define L_PTE_DIRTY          (_AT(pteval_t,1) << 6)
+#define L_PTE_RDONLY         (_AT(pteval_t,1) << 7)
+#define L_PTE_USER           (_AT(pteval_t,1) << 8)
+#define L_PTE_XN             (_AT(pteval_t,1) << 9)
+#define L_PTE_SHARED         (_AT(pteval_t,1) << 10) /* shared(v6) */
+
+/*
+ * These are the memory types,defined to be compatible with
+ * pre-ARMv6 CPUs cacheable and bufferable bits: XXCB
+ */
+#define L_PTE_MT_UNCACHED      (_AT(pteval_t,0x00) << 2)  /* 0000 */
+#define L_PTE_MT_BUFFERABLE    (_AT(pteval_t,0x01) << 2)  /* 0001 */
+#define L_PTE_MT_WRITETHROUGH  (_AT(pteval_t,0x02) << 2)  /* 0010 */
+#define L_PTE_MT_WRITEBACK     (_AT(pteval_t,0x03) << 2)  /* 0011 */
+#define L_PTE_MT_MINICACHE     (_AT(pteval_t,0x06) << 2)  /* 0110 */
+#define L_PTE_MT_WRITEALLOC    (_AT(pteval_t,0x07) << 2)  /* 0111 */
+#define L_PTE_MT_DEV_SHARED    (_AT(pteval_t,0x04) << 2)  /* 0100 */
+#define L_PTE_MT_DEV_NONSHARED (_AT(pteval_t,0x0c) << 2)  /* 1100 */
+#define L_PTE_MT_DEV_WC        (_AT(pteval_t,0x09) << 2)  /* 1001 */
+#define L_PTE_MT_DEV_CACHED    (_AT(pteval_t,0x0b) << 2)  /* 1011 */
+#define L_PTE_MT_MASK          (_AT(pteval_t,0x0f) << 2)
+
+/*
+ * The pgprot_* and protection _map entries will be fixed up in runtime
+ * to include the cacheable and bufferable bits based on memory policy,
+ * as well as any architecture dependent bits like global/ASID and SMP
+ * shared mapping bits.
+ */
+#define _L_PTE_DEFAULT L_PTE_PRESENT | L_PTE_YOUNG
+
+extern pgprot_t pgprot_user;
+extern pgprot_t pgprot_kernel;
+
+#define __PAGE_NONE        __pgprot(_L_PTE_DEFAULT | L_PTE_RDONLY | L_PTE_XN)
+#define __PAGE_SHARED      __pgprot(_L_PTE_DEFAULT | L_PTE_USER | L_PTE_XN)
+#define __PAGE_SHARED_EXEC __pgprot(_L_PTE_DEFAULT | L_PTE_USER)
+#define __PAGE_COPY        __pgprot(_L_PTE_DEFAULT | L_PTE_USER | L_PTE_RDONLY \
+												   | L_PTE_XN)
+#define __PAGE_COPY_EXEC   __pgprot(_L_PTE_DEFAULT | L_PTE_USER | L_PTE_RDONLY)
+#define __PAGE_READONLY    __pgprot(_L_PTE_DEFAULT | L_PTE_USER | L_PTE_RDONLY \
+												   | L_PTE_XN)
+#define __PAGE_READONLY_EXEC \
+						   __pgprot(_L_PTE_DEFAULT | L_PTE_USER | L_PTE_RDONLY)
 
 #define pgd_index(addr) (unsigned long)(addr >> PGDIR_SHIFT)
 #define pgd_offset(mm,addr) ((mm)->pgd + pgd_index(addr))
@@ -60,4 +116,17 @@ typedef struct { unsigned int pte;} pte_t;
  * The virtuall address of KERNEL MODULE.
  */
 #define MODULES_VADDR (unsigned long)(PAGE_OFFSET - SZ_32M)
+
+/*
+ * VMALLOC AREA
+ */
+#ifndef VMALLOC_START
+#define VMALLOC_OFFSET  (8 * 1024 * 1024)
+#define VMALLOC_START   (((unsigned long)high_memory + VMALLOC_OFFSET))
+#endif
+
+static inline int pte_hidden(pte_t pte)
+{
+	return pte_flags(pte) & _PAGE_HIDDEN;
+}
 #endif
