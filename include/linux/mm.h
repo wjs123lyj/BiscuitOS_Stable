@@ -1,1 +1,143 @@
+#ifndef _MM_H_
+#define _MM_H_
+
+/* to align the pointer to the page boundary */
+#define PAGE_ALIGN(addr) ALIGN(addr,PAGE_SIZE)
+
+#define SECTIONS_WIDTH      0
+#define ZONES_WIDTH         ZONES_SHIFT
+#define NODES_WIDTH         NODES_SHIFT
+
+#define SECTIONS_PGOFF      ((sizeof(unsigned long) *8) - SECTIONS_WIDTH)
+#define NODES_PGOFF         (SECTIONS_PGOFF - NODES_WIDTH)
+#define ZONES_PGOFF         (NODES_PGOFF - ZONES_WIDTH)
+
+/*
+ * Define the bit shift to access each section.For non-existant
+ * sections we define the shift as 0;that plus a 0 mask ensures
+ * the compiler will optimise away reference to them.
+ */
+#define SECTIONS_PGSHIFT   (SECTIONS_PGOFF * (SECTIONS_WIDTH != 0))
+#define NODES_PGSHIFT      (NODES_PGOFF * (NODES_WIDTH != 0))
+#define ZONES_PGSHIFT      (ZONES_PGOFF * (ZONES_WIDTH != 0))
+
+/*
+ * NODE:ZONE or SECTION:ZONE is used to ID a zone for the buddy allocator.
+ */
+#define ZONEID_SHIFT    (NODES_SHIFT + ZONES_SHIFT)
+#define ZONEID_PGOFF    ((NODES_PGOFF < ZONES_PGOFF) ? \
+						NODES_PGOFF : ZONES_PGOFF)
+#define ZONEID_PGSHIFT  (ZONEID_PGOFF * (ZONEID_SHIFT != 0))
+
+#define ZONES_MASK      ((1UL << ZONES_WIDTH) - 1)
+#define NODES_MASK      ((1UL << NODES_WIDTH) - 1)
+#define SECTIONS_MASK   ((1UL << SECTION_WIDTH) - 1)
+#define ZONEID_MASK     ((1UL << ZONEID_SHIFT) - 1)
+
+static inline enum zone_type page_zonenum(struct page *page)
+{
+	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;
+}
+/*
+ * The identification function is only used by the buddy allocator for 
+ * determining if two pages could be buddies.We are not really
+ * identifying a zone since we could be using a the section number
+ * id if we have not node id available in page flags.
+ * We guarantee only that it will reture the same value for two
+ * combinable page in zone.
+ */
+static inline int page_zone_id(struct page *page)
+{
 	return (page->flags >> ZONEID_PGSHIFT) & ZONEID_MASK;
+}
+static inline int zone_to_nid(struct zone *zone)
+{
+	return 0;
+}
+static inline int page_to_nid(struct page *page)
+{
+	return (page->flags >> NODES_PGSHIFT) & NODES_MASK;
+}
+static inline struct zone *page_zone(struct page *page)
+{
+	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
+}
+static inline unsigned long page_to_section(struct page *page)
+{
+	return (page->flags >> SECTIONS_PGSHIFT) & SECTION_MASK;
+}
+static inline void set_page_zone(struct page *page,enum zone_type zone)
+{
+	page->flags &= ~(ZONES_MASK << ZONES_PGSHIFT);
+	page->flags |= (zone & ZONES_MASK) << ZONES_PGSHIFT;
+}
+static inline void set_page_node(struct page *page,unsigned long node)
+{
+	page->flags &= ~(NODES_MASK << NODES_PGSHIFT);
+	page->flags |= (node & NODES_MASK) << NODES_PGSHIFT;
+}
+static inline void set_page_section(struct page *page,unsigned long section)
+{
+	page->flags &= ~(SECTION_MASK << SECTION_PGSHIFT);
+	page->flags |= (section & SECTIONS_MASK) << SECTIONS_PGSHIFT;
+}
+
+static inline void set_page_links(struct page *page,enum zone_type zone,
+		unsigned long node,unsigned long pfn)
+{
+	set_page_zone(page,zone);
+	set_page_node(page,zone);
+	set_page_section(page,pfn,pfn_to_section_nr(pfn));
+}
+/*
+ * On an anonymous page mapped into a user virtual memory area,
+ * page->mapping pointer to its anon_vma,not to a struct address_space;
+ * with the PAGE_MAPPING_ANON bit set to distinguish it.
+ */
+#define PAGE_MAPPING_ANON   1
+#define PAGE_MAPPING_KSM    2
+#define PAGE_MAPPING_FLAGS  (PAGE_MAPPING_ANON | PAGE_MAPPING_KSM)
+/*
+ * Neutral page->mapping pointer to address_space or anon_vma or other.
+ */
+static inline void *page_mapping(struct page *page)
+{
+	return (void *)((unsigned long)page->mapping & ~PAGE_MAPPING_FLAGS);
+}
+static inline int PageAnon(struct page *page)
+{
+	return ((unsigned long)page->mapping & PAGE_MAPPING_ANON) != 0;
+}
+/*
+ * Return the pagecache index of the passed page.Return pagecache pages
+ * use->index whereas swapcache page use->private
+ */
+#define page_private(page)        ((page)->private)
+#define set_page_private(page,v)  ((page)->private = (v))
+static inline pgoff_t page_index(struct page *page)
+{
+	if(unlikely(PageSwapCache(page)))
+		return page_private(page);
+	return page->index;
+}
+/*
+ * The atomic page->_mapcount,like _count,start from -1:
+ * so that transitions both from it and to it can be tracked,
+ * using atomic_inc_and_test and atomic_add_negative(-1)
+ */
+static inline void reset_page_mapcount(struct page *page)
+{
+	atomic_set(&(page)->_mapcount,-1);
+}
+static inline int page_mapcount(struct page *page)
+{
+	return atomic_read(&(page)->_mapcount) + 1;
+}
+/*
+ * Return true if this page is mapped into pagetables.
+ */
+static inline int page_mapped(struct page *page)
+{
+	return atomic_read(&(page)->_mapcount) >= 0;
+}
+#endif

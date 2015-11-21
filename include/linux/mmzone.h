@@ -333,4 +333,12 @@ static inline unsigned long get_pageblock_migratetype(struct page *page)
 #define pfn_valid(x) (1)
 #define pfn_valid_within(pfn) pfn_valid(pfn)
 
+/*
+ * Section
+ */
+#define SECTION_SIZE_BITS   28
+#define PFN_SECTION_SHIFT   (SECTION_SIZE_BITS - PAGE_SHIFT)
+
+#define pfn_to_section_nr(pfn) ((pfn) >> PFN_SECTION_SHIFT)
+#define section_nr_to_pfn(sec) ((sec) << PFN_SECTION_SHIFT)
 #endif
