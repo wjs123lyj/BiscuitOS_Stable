@@ -9,4 +9,6 @@
 #define L1_CACHE_ALIGN  L1_CACHE_SIZE
 #define SMP_CACHE_BYTES L1_CACHE_BYTES
 
+#define cache_line_size()  L1_CACHE_BYTES
+
 #endif

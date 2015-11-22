@@ -16,4 +16,5 @@ debug_pagealloc_enabled	main.c	/^int debug_pagealloc_enabled = 0;$/;"	v
 main	main.c	/^int main()$/;"	f
 main	test.c	/^int main()$/;"	f
 mm_init	main.c	/^static void __init mm_init(void)$/;"	f	file:
+smp_setup_processor_id	main.c	/^void __init smp_setup_processor_id(void)$/;"	f
 start_kernel	main.c	/^static void start_kernel(void)$/;"	f	file:

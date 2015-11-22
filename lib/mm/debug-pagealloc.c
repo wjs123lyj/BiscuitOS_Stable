@@ -8,6 +8,10 @@
 #include "../../include/linux/debug.h"
 #include "../../include/linux/traps.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 extern int debug_pagealloc_enabled;
 
 static inline set_page_poison(struct page *page)
@@ -73,7 +77,7 @@ static void poison_page(struct page *page)
 		return;
 	}
 	set_page_poison(page);
-	addr = page_address(page);
+	addr = (void *)(unsigned long)page_address(page);
 	memset(addr,PAGE_POISON,PAGE_SIZE);
 }
 static void poison_pages(struct page *page,int n)
@@ -95,7 +99,7 @@ static void unpoison_page(struct page *page)
 	}
 	if(page_poison(page))
 	{
-		void *addr = page_address(page);
+		void *addr = (void *)(unsigned long)page_address(page);
 
 		check_poison_mem(addr,PAGE_SIZE);
 		clear_page_poison(page);

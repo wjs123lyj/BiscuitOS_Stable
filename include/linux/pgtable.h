@@ -129,4 +129,6 @@ static inline int pte_hidden(pte_t pte)
 {
 	return pte_flags(pte) & _PAGE_HIDDEN;
 }
+
+#define mk_pte(page,prot)  pfn_pte(page_to_pfn(page),prot)
 #endif

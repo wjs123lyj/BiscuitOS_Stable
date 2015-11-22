@@ -37,7 +37,8 @@
 #define __GFP_THISNODE ((gfp_t)___GFP_THISNODE) /* No fallback,no policies */
 #define __GFP_HARDWALL ((gfp_t)___GFP_HARDWALL) /* Enforce hardwall cpuset*/
 #define __GFP_HIGHMEM  ((gfp_t)___GFP_HIGHMEM)
-#define __GFP_MOVABLE  ((gfp_t)___GFP_MOVABLE)
+#define __GFP_RECLAIMABLE \
+	                   ((gfp_t)___GFP_RECLAIMABLE) /* Page is reclaimable */
 
 #define __GFP_DMA  ((gfp_t)___GFP_DMA)
 #define __GFP_HIGHMEM ((gfp_t)___GFP_HIGHMEM)
@@ -108,6 +109,10 @@
 		| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_HIGHMEM) * ZONES_SHIFT) \
 		| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * ZONES_SHIFT) \
 		) 
+/*
+ * This mask makes up all the page movable related flags.
+ */
+#define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE | __GFP_MOVABLE)
 
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
@@ -133,9 +138,46 @@ static inline struct zonelist *node_zonelist(int nid,gfp_t flags)
 	return ((struct pglist_data *)NODE_DATA(nid))->node_zonelists + 
 		gfp_zonelist(flags);
 }
+/*
+ * Convert GFP flags to their corresponding migrate type.
+ */
+static inline int allocflags_to_migratetype(gfp_t gfp_flags)
+{
+	WARN_ON((gfp_flags & GFP_MOVABLE_MASK) == GFP_MOVABLE_MASK);
+
+	if(unlikely(page_group_by_mobility_disabled))
+		return MIGRATE_UNMOVABLE;
+	/* Group based on mobility */
+	return (((gfp_flags & __GFP_MOVABLE) != 0) << 1) |
+		((gfp_flags & __GFP_RECLAIMABLE) != 0)
+}
 
 #define __free_page(page)  __free_pages((page),0)
 #ifndef HAVE_ARCH_FREE_PAGE
 static inline void arch_free_page(struct page *page,int order) {}
+#endif
+
+#define numa_node_id() 0
+
+static inline struct page * __alloc_pages(gfp_t gfp_mask,unsigned int order,
+		struct zonelist *zonelist)
+{
+	return __alloc_pages_nodemask(gfp_mask,order,zonelist,NULL);
+}
+
+static inline struct page *alloc_pages_node(int nid,gfp_t gfp_mask,
+		unsigned int order)
+{
+	/* Unknown node is current node */
+	if(nid < 0)
+		node = numa_node_id();
+	
+	return __alloc_pages(gfp_mask,order,node_zonelist(nid,gfp_mask));
+}
+
+#define alloc_pages(gfp_mask,order)  \
+	alloc_pages_node(numa_node_id(),gfp_mask,order)
+#ifndef HAVE_ARCH_ALLOC_PAGE
+static inline void arch_alloc_page(struct page *page,int order) {}
 #endif
 #endif

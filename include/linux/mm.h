@@ -196,7 +196,7 @@ static inline void init_page_count(struct page *page)
 
 static inline void *lowmem_page_address(struct page *page)
 {
-	return __va(PFN_PHYS(page_to_pfn(page)));
+	return (void *)(unsigned long)__va(PFN_PHYS(page_to_pfn(page)));
 }
 
 struct mem_type {
@@ -205,4 +205,10 @@ struct mem_type {
 	unsigned int prot_sect;
 	unsigned int domain;
 };
+/*
+ * The upper-most page table pointer.
+ */
+extern pmd_t *top_pmd;
+
+#define TOP_PTE(x)  pte_offset_kernel(top_pmd,x)
 #endif

@@ -58,4 +58,9 @@
 #define unlikely(x)   (x)
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+#define might_sleep_if(cond) do {   \
+	if(cond) \
+		mm_debug("[Sleep]\n");}   \
+		while(0)
 #endif

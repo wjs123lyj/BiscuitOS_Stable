@@ -46,4 +46,5 @@ static inline unsigned long global_page_state(enum zone_stat_item item)
 
 	return x;
 }
+#define zone_statistics(_zl,z) do{} while(0)
 #endif

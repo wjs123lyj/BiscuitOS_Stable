@@ -41,16 +41,11 @@ static inline void node_set_state(int node,enum node_states state)
 
 #define for_each_online_node(node) for_each_node_state(node,N_ONLINE)
 
-static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
-		enum zone_type highest_zoneidx,
-		nodemask_t *nodes,struct zone **zone)
-{
-	return next_zones_zonelist(zonelist->_zonerefs,highest_zoneidx,nodes,zone);
-}
-
 #define for_each_zone_zonelist_nodemask(zone,z,zlist,highidx,nodemask) \
 	for(z = first_zones_zonelist(zlist,highidx,nodemask,&zone);  \
 			zone;     \
 			z = next_zones_zonelist(++z,highidx,nodemask,&zone))
 
+
+#define nr_node_ids 1
 #endif

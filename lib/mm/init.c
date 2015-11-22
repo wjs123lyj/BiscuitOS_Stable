@@ -319,24 +319,24 @@ void __init mem_init(void)
 			reserved_pages << (PAGE_SHIFT - 10),
 			totalhigh_pages << (PAGE_SHIFT - 10));
 
-#define MLK(b,t) b,t,((t) - (b) >> 10)
-#define MLM(b,t) b,t,((t) - (b) >> 20)
-#define MLK_ROUNDUP(b,t) b,t,DIV_ROUND_UP(((t) - (b)),SZ_1K)
+#define MLK(b,t) (void *)b,(void *)t,(void *)((t) - (b) >> 10)
+#define MLM(b,t) (void *)b,(void *)t,(void *)((t) - (b) >> 20)
+#define MLK_ROUNDUP(b,t) (void *)b,(void *)t,(void *)DIV_ROUND_UP(((t) - (b)),SZ_1K)
 	mm_debug("Vitual kernel memory layout:\n"
-			"   vector : 0x%08lx - 0x%08lx (%4ld kB)\n"
-			"   fixmap : 0x%08lx - 0x%08lx (%4ld kB)\n"
+			"   vector : 0x%p - 0x%p (%p kB)\n"
+			"   fixmap : 0x%p - 0x%p (%p kB)\n"
 #ifdef CONFIG_MMU
-			"   DMA    : 0x%08lx - 0x%08lx (%4ld MB)\n"
+			"   DMA    : 0x%p - 0x%p (%p MB)\n"
 #endif
-			"   vmalloc: 0x%08lx - 0x%08lx (%4ld MB)\n"
-			"   lowmem : 0x%08lx - 0x%08lx (%4ld MB)\n"
+			"   vmalloc: 0x%p - 0x%p (%p MB)\n"
+			"   lowmem : 0x%p - 0x%p (%p MB)\n"
 #ifdef CONFIG_HIGHMEM
-			"   pkmap  : 0x%08lx - 0x%08lx (%4ld MB)\n"
+			"   pkmap  : 0x%p - 0x%p (%p MB)\n"
 #endif
-			"   modules: 0x%08lx - 08%08lx (%4ld MB)\n"
-			"   .init  : 0x%p - 0x%p (%4d kB)\n"
-			"   .text  : 0x%p - 0x%p (%4d kB)\n"
-			"   .data  : 0x%p - 0x%p (%4d kB)\n",
+			"   modules: 0x%p - 08%p (%p MB)\n"
+			"   .init  : 0x%p - 0x%p (%p kB)\n"
+			"   .text  : 0x%p - 0x%p (%p kB)\n"
+			"   .data  : 0x%p - 0x%p (%p kB)\n",
 			MLK(UL(CONFIG_VECTORS_BASE),UL(CONFIG_VECTORS_BASE) +
 				(PAGE_SIZE)),
 			MLK(FIXADDR_START,FIXADDR_TOP),

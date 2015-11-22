@@ -446,7 +446,7 @@ static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
 	bdebug("nid=%p start=%p end=%p aligned=%p\n",
 			(void *)(bdata - bootmem_node_data),
 			(void *)start,(void *)end,
-			(void *)aligned);
+			(void *)(unsigned long)aligned);
 
 	while(start < end)
 	{

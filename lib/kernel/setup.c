@@ -160,7 +160,9 @@ void __init setup_arch(void)
 {
 
 	struct machine_desc *mdesc;
-	
+
+	unwind_init();
+
 	mdesc = setup_machine(machine_arch_type);
 
 	init_mm.start_code  = (unsigned long)__executable_start;

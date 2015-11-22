@@ -208,15 +208,6 @@ struct zone {
 	int all_unreclaimable;         /* All pages pinned */
 };
 
-struct per_cpu_page {
-	int count;    /* number of page in the list */
-	int high;     /* high watermark,emptying needed */
-	int batch;    /* chunk size for buddy add/remove */
-	
-	/* Lists of pages,one per migrate type stored on the pcp-lists */
-	struct list_head lists[MIGRATE_PCPTYPES];
-};
-
 typedef struct pglist_data {
 #ifndef CONFIG_NO_BOOTMEM
 	struct bootmem_data *bdata;
@@ -341,4 +332,24 @@ static inline unsigned long get_pageblock_migratetype(struct page *page)
 
 #define pfn_to_section_nr(pfn) ((pfn) >> PFN_SECTION_SHIFT)
 #define section_nr_to_pfn(sec) ((sec) << PFN_SECTION_SHIFT)
+/*
+ * Returns the first zone at or below highest_zoneidx within the allowed.
+ *
+ * This fucntion return the first zone at or below a given zone index that is 
+ * within the allowed nodemask.The zoneref returned is a cursor that can be
+ * used to iterate the zonelist with next_zones_zonelist by advancing it by
+ * one before calling.
+ */
+static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
+		enum zone_type highest_zoneidx,
+		nodemask_t *nodes,
+		struct zone **zone)
+{
+	return next_zones_zonelist(zonelist->_zonerefs,highest_zoneidx,nodes,
+			zone);
+}
+
+
+
+
 #endif

@@ -24,9 +24,16 @@ static void __init mm_init(void)
 	page_cgroup_init_flatmem();
 	mem_init();
 }
+void __init smp_setup_processor_id(void)
+{
+}
 
 static void start_kernel(void)
 {
+	char *command_line;
+
+	smp_setup_processor_id();
+
 	setup_arch();
 	mm_init_owner(&init_mm,&init_task);
 	build_all_zonelist(NULL);
@@ -36,6 +43,7 @@ static void start_kernel(void)
 
 int main()
 {
+
 	start_kernel();
 
 	printf("Hello World\n");
