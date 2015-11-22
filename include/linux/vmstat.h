@@ -40,4 +40,10 @@ static inline void __mod_zone_page_state(struct zone *zone,
 {
 	zone_page_state_add(delta,zone,item);
 }
+static inline unsigned long global_page_state(enum zone_stat_item item)
+{
+	long x = atomic_long_read(&vm_stat[item]);
+
+	return x;
+}
 #endif

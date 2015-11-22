@@ -129,17 +129,24 @@ enum pageflags {
  */
 #define PAGE_FLAGS_CHECK_AT_PREP     ((1 << NR_PAGEFLAGS) - 1)
 /*
- * Set the reserved_bit of page flags.
+ * Reserved.
  */
 static inline void SetPageReserved(struct page *page)
 {
 	set_bit(PG_reserved,&page->flags);
 }
-static inline void __ClearPageTail(struct page *page)
+static inline int PageReserved(struct page *page)
 {
-	page->flags &= ~PG_head_tail_mask;
+	return test_bit(PG_reserved,&page->flags);
 }
-
+static inline void __ClearPageReserved(struct page *page)
+{
+	clear_bit(PG_reserved,&page->flags);
+}
+static inline void ClearPageReserved(struct page *page)
+{
+	clear_bit(PG_reserved,&page->flags);
+}
 /*
  * Mlocked.
  */
@@ -157,4 +164,15 @@ static inline int __TestClearPageMlocked(struct page *page)
  * available at this point.
  */
 #define PageHighMem(p) is_highmem(page_zone(p))
+/*
+ * HWPoison
+ */
+static inline int PageHWPoison(struct page *page)
+{
+	return test_bit(PG_hwpoison,&page->flags);
+}
+static inline void __ClearPageTail(struct page *page)
+{
+	page->flags &= ~PG_head_tail_mask;
+}
 #endif

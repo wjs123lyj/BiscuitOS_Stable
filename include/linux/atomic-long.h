@@ -26,4 +26,10 @@ static inline void atomic_long_add(long i,atomic_long_t *l)
 
 	atomic_add(i,v);
 }
+static inline long atomic_long_read(atomic_long_t *l)
+{
+	atomic_t *v = (atomic_t *)l;
+
+	return (long)atomic_read(v);
+}
 #endif

@@ -24,9 +24,11 @@
 		; \
 		})
 #endif
-#define BUG_ON(x) (x)
+#define BUG_ON(x)  (x)
 #define WARN_ON(x) BUG_ON(x)
 #define VM_BUG_ON(x) BUG_ON(x)
+#define BUILD_BUG_ON(x) BUG_ON(x)
+#define BUILD_ON(x)     BUG_ON(x)
 
 #define BUG() \
 	mm_err("ERR:%s %d\n",__FUNCTION__,__LINE__)

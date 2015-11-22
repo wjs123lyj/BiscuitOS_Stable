@@ -88,4 +88,8 @@
  * Configure to support MMU
  */
 #define CONFIG_MMU
+/*
+ * Support hardware-poison
+ */
+#define CONFIG_MEMORY_FAILURE
 #endif

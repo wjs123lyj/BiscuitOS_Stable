@@ -19,6 +19,8 @@
 #include "../../include/linux/ftree_event.h"
 #include "../../include/linux/list.h"
 #include "../../include/linux/internal.h"
+#include "../../include/linux/memory_hotplug.h"
+#include "../../include/linux/debug_locks.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -802,7 +804,7 @@ static inline void free_page_mlock(struct page *page)
 }
 static int page_is_consistent(struct zone *zone,struct page *page)
 {
-	if(!pfn_vaild_within(page_to_pfn(page)))
+	if(!pfn_valid_within(page_to_pfn(page)))
 		return 0;
 	if(zone != page_zone(page))
 		return 0;

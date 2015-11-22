@@ -1,8 +1,10 @@
 #ifndef _MM_H_
 #define _MM_H_
-
-/* to align the pointer to the page boundary */
-#define PAGE_ALIGN(addr) ALIGN(addr,PAGE_SIZE)
+#include "mm_type.h"
+#include "page.h"
+#include "atomic.h"
+#include "mmzone.h"
+#include "pfn.h"
 
 #define SECTIONS_WIDTH      0
 #define ZONES_WIDTH         ZONES_SHIFT
@@ -12,6 +14,8 @@
 #define NODES_PGOFF         (SECTIONS_PGOFF - NODES_WIDTH)
 #define ZONES_PGOFF         (NODES_PGOFF - ZONES_WIDTH)
 
+#define PageTail(x) (x)
+#define PageHead(x) (1)
 /*
  * Define the bit shift to access each section.For non-existant
  * sections we define the shift as 0;that plus a 0 mask ensures
@@ -31,7 +35,7 @@
 
 #define ZONES_MASK      ((1UL << ZONES_WIDTH) - 1)
 #define NODES_MASK      ((1UL << NODES_WIDTH) - 1)
-#define SECTIONS_MASK   ((1UL << SECTION_WIDTH) - 1)
+#define SECTIONS_MASK   ((1UL << SECTIONS_WIDTH) - 1)
 #define ZONEID_MASK     ((1UL << ZONEID_SHIFT) - 1)
 
 static inline enum zone_type page_zonenum(struct page *page)
@@ -64,7 +68,7 @@ static inline struct zone *page_zone(struct page *page)
 }
 static inline unsigned long page_to_section(struct page *page)
 {
-	return (page->flags >> SECTIONS_PGSHIFT) & SECTION_MASK;
+	return (page->flags >> SECTIONS_PGSHIFT) & SECTIONS_MASK;
 }
 static inline void set_page_zone(struct page *page,enum zone_type zone)
 {
@@ -78,7 +82,7 @@ static inline void set_page_node(struct page *page,unsigned long node)
 }
 static inline void set_page_section(struct page *page,unsigned long section)
 {
-	page->flags &= ~(SECTION_MASK << SECTION_PGSHIFT);
+	page->flags &= ~(SECTIONS_MASK << SECTIONS_PGSHIFT);
 	page->flags |= (section & SECTIONS_MASK) << SECTIONS_PGSHIFT;
 }
 
@@ -87,7 +91,7 @@ static inline void set_page_links(struct page *page,enum zone_type zone,
 {
 	set_page_zone(page,zone);
 	set_page_node(page,zone);
-	set_page_section(page,pfn,pfn_to_section_nr(pfn));
+	set_page_section(page,pfn_to_section_nr(pfn));
 }
 /*
  * On an anonymous page mapped into a user virtual memory area,
@@ -121,6 +125,14 @@ static inline pgoff_t page_index(struct page *page)
 	return page->index;
 }
 /*
+ * Drop a ref,return true if the refcount fell to zero(the page has no users)
+ */
+static inline int put_page_testzero(struct page *page)
+{
+	VM_BUG_ON(atomic_read(&page->_count) == 0);
+	return atomic_dec_and_test(&page->_count);
+}
+/*
  * The atomic page->_mapcount,like _count,start from -1:
  * so that transitions both from it and to it can be tracked,
  * using atomic_inc_and_test and atomic_add_negative(-1)
@@ -140,4 +152,57 @@ static inline int page_mapped(struct page *page)
 {
 	return atomic_read(&(page)->_mapcount) >= 0;
 }
+static inline struct page *compound_head(struct page *page)
+{
+	if(unlikely(PageTail(page)))
+		return page->first_page;
+	return page;
+}
+static inline int page_count(struct page *page)
+{
+	return atomic_read(&compound_head(page)->_count);
+}
+/*
+ * PageBuddy() indicate that the page is free and in the buddy system.
+ */
+static inline int PageBuddy(struct page *page)
+{
+	return atomic_read(&page->_mapcount) == -2;
+}
+static inline int compound_order(struct page *page)
+{
+	if(!PageHead(page))
+		return 0;
+	return (unsigned long)page[1].lru.prev;
+}
+static inline void __ClearPageBuddy(struct page *page)
+{
+	VM_BUG_ON(!PageBuddy(page));
+	atomic_set(&page->_mapcount,-1);
+}
+static inline void __SetPageBuddy(struct page *page)
+{
+	VM_BUG_ON(atomic_read(&page->_mapcount) != -1);
+	atomic_set(&page->_mapcount,-2);
+}
+/*
+ * Setup the page count before being freed into the page allocator for
+ * the first time(boot or memory hotplug)
+ */
+static inline void init_page_count(struct page *page)
+{
+	atomic_set(&page->_count,1);
+}
+
+static inline void *lowmem_page_address(struct page *page)
+{
+	return __va(PFN_PHYS(page_to_pfn(page)));
+}
+
+struct mem_type {
+	pteval_t prot_pte;
+	unsigned int prot_l1;
+	unsigned int prot_sect;
+	unsigned int domain;
+};
 #endif

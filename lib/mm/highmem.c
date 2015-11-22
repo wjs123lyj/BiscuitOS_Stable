@@ -1,5 +1,8 @@
 #include "../../include/linux/highmem.h"
 #include "../../include/linux/list.h"
+#include "../../include/linux/mm.h"
+#include "../../include/linux/page-flags.h"
+#include "../../include/linux/hash.h"
 
 pte_t *pkmap_page_table;
 

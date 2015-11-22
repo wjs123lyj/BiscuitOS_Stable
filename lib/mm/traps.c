@@ -1,3 +1,5 @@
+#include "../../include/linux/debug.h"
+
 void *vectors_page;
 
 /*

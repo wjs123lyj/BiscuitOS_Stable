@@ -2,6 +2,7 @@
 #define _MEMORY_H_
 #include "config.h"
 #include "types.h"
+#include "const.h"
 
 #ifndef arch_adjust_zones
 #define arch_adjust_zones(size,holes) do {} while(0)
@@ -31,4 +32,10 @@ extern unsigned long max_mapnr;
 extern unsigned long totalhigh_pages;
 
 #define virt_to_page(x) (pfn_to_page(__pa(x) >> PAGE_SHIFT))
+/*
+ * Allow for constants defined here to be used from assembly code
+ * by prepending the UL suffix only with actual C code compilation
+ */
+#define UL(x) _AC(x,UL)
+#define arch_is_coherent()      0
 #endif

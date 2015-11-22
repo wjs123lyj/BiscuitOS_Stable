@@ -10,6 +10,10 @@
 #include "../../include/linux/highmem.h"
 #include "../../include/linux/memblock.h"
 #include "../../include/linux/mm_type.h"
+#include "../../include/linux/swap.h"
+#include "../../include/linux/mm.h"
+#include "../../include/linux/page-flags.h"
+#include "../../include/linux/gfp.h"
 /*
  * Initialize memblock of ARM
  */
@@ -270,7 +274,7 @@ void __init mem_init(void)
 	total_pages += free_area(PHYS_PFN_OFFSET,
 			__phys_to_pfn(__pa(swapper_pg_dir)),NULL);
 #endif
-	free_highpage();
+	free_highpages();
 
 	reserved_pages = free_pages = 0;
 

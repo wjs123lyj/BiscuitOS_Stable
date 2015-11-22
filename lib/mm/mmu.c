@@ -18,6 +18,8 @@
 #include "../../include/linux/map.h"
 #include "../../include/linux/io.h"
 #include "../../include/linux/domain.h"
+#include "../../include/asm/smp_plat.h"
+#include "../../include/linux/cputype.h"
 
 #include "../../include/asm/system.h"
 
@@ -269,7 +271,7 @@ static void __init build_mem_type_table(void)
 	 * "update-able on write" bit on ARM6 10).However,Xscale and
 	 * Xscale3 require this bit to be cleared.
 	 */
-	if(cpu_is_xsclae() || cpu_is_xsc3())
+	if(cpu_is_xscale() || cpu_is_xsc3())
 	{
 		for(i = 0 ; i < ARRAY_SIZE(mem_types) ; i++)
 		{

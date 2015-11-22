@@ -5,5 +5,6 @@
 #define cpu_is_xsc3()      0
 #define cpu_is_xscale()    0
 #endif
+#define cpu_is_xscale()    0
 
 #endif

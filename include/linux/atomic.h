@@ -25,6 +25,8 @@ static inline int atomic_sub_return(int i,atomic_t *v)
 #define atomic_add(i,v)   ((void)atomic_add_return((i),(v)))
 #define atomic_sub(i,v)   ((void)atomic_sub_return((i),(v)))
 
+#define atomic_dec_and_test(v)  (atomic_sub_return(1,(v)) == 0)
+
 #define atomic_inc(v)     atomic_add(1,v)
 #define atomic_dec(v)     atomic_sub(1,v)
 #endif
