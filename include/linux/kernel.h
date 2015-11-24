@@ -63,4 +63,6 @@
 	if(cond) \
 		mm_debug("[Sleep]\n");}   \
 		while(0)
+
+#define _RET_IP     (unsigned long)__builtin_return_address(0)
 #endif

@@ -71,7 +71,50 @@ done:
 	//spin_unlock_irqrestore(&pas->lock,flags);
 	return ret;
 }
+/*
+ * Map a highmem page into memory.
+ */
+void kunmap_high(struct page *page)
+{
+	unsigned long vaddr;
+	unsigned long nr;
+	unsigned long flags;
+	int need_wakeup;
 
+//	lock_kmap_any(flags);
+	vaddr = (unsigned long)page_address(page);
+	BUG_ON(!vaddr);
+	nr = PKMAP_NR(vaddr);
+
+	/*
+	 * A count must never go down to zero
+	 * without a TLB flush!
+	 */
+	need_wakeup = 0;
+	switch(__pkmap_count[nr])
+	{
+		case 0:
+			BUG();
+		case 1:
+			/*
+			 * Avoid an unnecessary wake_up() function call.
+			 * The common case is pkmap_count[] == 1,but
+			 * no waiters.
+			 * The tasks queued in the wait-queue are guarded
+			 * by both the lock in the wait-queue-head and by
+			 * the kmap_lock.As the kmap_lock is held here,
+			 * no need for the wait-queue-head's lock.Simply
+			 * test if the queue is empty.
+			 */
+//			need_wakeup = waitqueue_active(&pkmap_map_wait);
+	}
+	unlock_kmap_any(flags);
+
+	/* do wake-up,if needed,race-free outside of the spin lock */
+	if(need_wakeup)
+//		wake_up(&pkmap_map_wait);
+		;
+}
 void __kunmap_atomic(void *kvaddr)
 {
 	unsigned long vaddr = (unsigned long)kvaddr & PAGE_MASK;

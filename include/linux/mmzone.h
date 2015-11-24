@@ -294,6 +294,13 @@ static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 
 #define high_wmark_pages(z)   (z->watermark[WMARK_HIGH])
 
+/*
+ * PAGE_ALLOC_COSTLY_ORDER is the order at which allocations are deemed
+ * costly to service.That is between allocation orders which should
+ * coelesce naturally under reasonable reclaim pressure and those which
+ * will not
+ */
+#define PAGE_ALLOC_COSTLY_ORDER    3
 
 #define MIGRATE_UNMOVABLE        0
 #define MIGRATE_RECLAIMABLE      1
@@ -349,7 +356,13 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 			zone);
 }
 
-
+#define for_each_populated_zone(zone)                         \
+	for(zone = (first_online_pgdat())->node_zones;            \
+			zone;               \
+			zone = next_zone(zone))        \
+		if(!populated_zone(zone))         \
+			; /* do nothing */         \
+		else
 
 
 #endif

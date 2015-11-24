@@ -98,4 +98,14 @@ static inline int kmap_atomic_idx_push(void)
 
 	return idx;
 }
+static inline void kmap_atomic_idx_pop(void)
+{
+#ifdef CONFIG_DEBUG_HIGHMEM
+	int idx = __this_cpu_dec_return(__kmap_atomic_idx);
+
+	BUG_ON(idx < 0);
+#else
+	__this_cpu_dec(__kmap_atomic_idx);
+#endif
+}
 #endif

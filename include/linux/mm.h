@@ -211,4 +211,13 @@ struct mem_type {
 extern pmd_t *top_pmd;
 
 #define TOP_PTE(x)  pte_offset_kernel(top_pmd,x)
+
+typedef void compound_page_dtor(struct page *);
+
+static inline void set_compound_page_dtor(struct page *page,
+		compound_page_dtor *dtor)
+{
+	page[1].lru.next = (void *)dtor;
+}
+
 #endif

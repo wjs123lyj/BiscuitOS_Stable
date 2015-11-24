@@ -388,6 +388,59 @@ void __init mem_init(void)
 	}
 }
 
+/*
+ * show memory.
+ */
+void show_mem(void)
+{
+	int free = 0,total = 0,reserved = 0;
+	int shared = 0,cached = 0,slab = 0,i;
+	struct meminfo *mi = &meminfo;
+
+	mm_debug("Mem-info:\n");
+	show_free_areas();
+
+	for_each_bank(i,mi)
+	{
+		struct membank *bank = &mi->bank[i];
+		unsigned int pfn1,pfn2;
+		struct page *page,*end;
+
+		pfn1 = bank_pfn_start(bank);
+		pfn2 = bank_pfn_end(bank);
+
+		page = pfn_to_page(pfn1);
+		end  = pfn_to_page(pfn2 - 1) + 1;
+
+		page = pfn_to_page(pfn1);
+		end  = pfn_to_page(pfn2 - 1) + 1;
+
+		do {
+			total++;
+			if(PageReserved(page))
+				reserved++;
+			else if(PageSwapCache(page))
+				cached++;
+			else if(PageSlab(page))
+				free++;
+			else
+				shared += page_count(page) - 1;
+			page++;
+		} while(page < end);
+	}
+	mm_debug("%p pages of RAM\n",(void *)total);
+	mm_debug("%p free pages\n",(void *)free);
+	mm_debug("%p reserved pages\n",(void *)reserved);
+	mm_debug("%p slab pages\n",(void *)slab);
+	mm_debug("%p pages shared\n",(void *)shared);
+	mm_debug("%p pages swap cached\n",(void *)cached);
+}
+
+
+
+
+
+
 
 
 

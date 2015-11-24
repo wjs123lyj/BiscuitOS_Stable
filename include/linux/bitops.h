@@ -22,4 +22,9 @@ extern int find_next_bit(unsigned int *addr,unsigned long size,
 
 #define DECLARE_BITMAP(name,bits) \
 	unsigned int name[BITS_TO_LONGS(bits)]
+
+static inline int fls(int x)
+{
+	return (sizeof(int) * 8) - __builtin_clz(x);
+}
 #endif

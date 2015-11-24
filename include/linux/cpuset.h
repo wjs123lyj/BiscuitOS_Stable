@@ -17,4 +17,5 @@ static inline int cpuset_zone_allowed_hardwall(struct zone *z,gfp_t gfp_mask)
 {
 	return 1;
 }
+static inline void cpuset_memory_pressure_bump(void) {}
 #endif
