@@ -22,4 +22,8 @@ static inline void kmemcheck_mark_unallocated_pages(struct page *page,
 		unsigned int n)
 {
 }
+static inline void kmemcheck_slab_allc(struct kmem_cache *s,gfp_t gfpflags,
+		void *object,size_t size)
+{
+}
 #endif

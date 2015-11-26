@@ -219,5 +219,9 @@ static inline void set_compound_page_dtor(struct page *page,
 {
 	page[1].lru.next = (void *)dtor;
 }
-
+static inline struct page *virt_to_head_page(const void *x)
+{
+	struct page *page = virt_to_page(x);
+	return compound_head(page);
+}
 #endif
