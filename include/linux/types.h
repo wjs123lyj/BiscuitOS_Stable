@@ -23,6 +23,11 @@ typedef atomic_t atomic_long_t;
 #define pgoff_t unsigned long
 
 typedef phys_addr_t resource_size_t;
+
+typedef unsigned long __kernel_size_t;
+
+typedef __kernel_size_t size_t;
+
 /*
  * Use unsigned int to act physical memory.
  */

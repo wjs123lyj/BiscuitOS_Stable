@@ -24,6 +24,11 @@ enum stat_item {
 	NR_SLUB_STAT_ITEMS
 };
 
+#define KMALLOC_MIN_SIZE 8
+#define KMALLOC_SHIFT_LOW  ilog2(KMALLOC_MIN_SIZE)
+
+#define SLUB_PAGE_SHIFT  (PAGE_SHIFT + 2)
+
 struct kmem_cache_cpu {
 	void **freelist;    /* Pointer to first free per cpu object */
 	struct page *page;  /* The slab from which we are allocating */
@@ -77,4 +82,138 @@ struct kmem_cache {
 	struct kmem_cache_node *node[MAX_NUMNODES];
 }
 
+static inline void *kmem_cache_alloc_trace(size_t size,
+		struct kmem_cache *cachep,gfp_t flags)
+{
+	return kmem_cache_alloc(cachep,flags);
+}
+static inline void *kmalloc_order(size_t size,gfp_t flags,unsigned int order)
+{
+	void *ret = (void *)(unsigned long)__get_free_pages(flags | 
+			__GFP_COMP,order);
+	kmemleak_alloc(ret,size,1,flags);
+	return ret;
+}
+static inline void *kmalloc_order_trace(size_t size,gfp_t flags,
+		unsigned int order)
+{
+	return kmalloc_order(size,flags,order);
+}
+static inline void *kmalloc_large(size_t size,gfp_t flags)
+{
+	unsigned int order = get_order(size);
+	return kmalloc_order_trace(size,flags,order);
+}
+/*
+ * Sorry that the following has to be that ugly but some versions of GCC
+ * have trouble with constant propagetion and loops.
+ */
+static inline int kmalloc_index(size_t size)
+{
+	if(!size)
+		return 0;
+
+	if(!size)
+		return 0;
+
+	if(size <= KMALLOC_MIN_SIZE)
+		return KMALLOC_SHIFT_LOW;
+
+	if(KMALLOC_MIN_SIZE <= 32 && size > 64 && size <= 96)
+		return 1;
+	if(KMALLOC_MIN_SIZE <= 64 && size > 128 && size <= 192)
+		return 2;
+	if(size <=          8) return 3;
+	if(size <=         16) return 4;
+	if(size <=         32) return 5;
+	if(size <=         64) return 6;
+	if(size <=        128) return 7;
+	if(size <=        256) return 8;
+	if(size <=        512) return 9;
+	if(size <=       1024) return 10;
+	if(size <=   2 * 1024) return 11;
+	if(size <=   4 * 1024) return 12;
+
+	/*
+	 * The following is only needed to support architechtures with a large page 
+	 * size than 4K.
+	 */
+	if(size <=      8 * 1024) return 13;
+	if(size <=     16 * 1024) return 14;
+	if(size <=     32 * 1024) return 15;
+	if(size <=     64 * 1024) return 16;
+	if(size <=    128 * 1024) return 17;
+	if(size <=    256 * 1024) return 18;
+	if(size <=    512 * 1024) return 19;
+	if(size <=   1024 * 1024) return 20;
+	if(size <=   2048 * 1024) return 21;
+	return -1;
+
+	/*
+	 * What we really wanted to do and cannot do because of compiler issure
+	 * is :
+	 * int i;
+	 * for(i = KMALLOC_SHIFT_LOW ; i <= KMALLOC_SHIFT_HIGH ; i++)
+	 *		if(size <= (1 << i))
+	 *			return i;
+	 */
+}
+/*
+ * Find the slab cache for a given combination of allocation flags and size.
+ *
+ * This ought to end up with a global pointer to the right cache
+ * in kmalloc_caches.
+ */
+static inline kmem_cache *kmalloc_slab(size_t size)
+{
+	int index = kmalloc_index(size);
+
+	if(index == 0)
+		return NULL;
+
+	return kmalloc_caches[index];
+}
+/*
+ * kmalloc!!!!
+ */
+static inline void *kmalloc(size_t size,gfp_t flags)
+{
+	if(__builtin_constant_p(size))
+	{
+		if(size > SLUB_MAX_SIZE)
+			return kmalloc_large(size,flags);
+
+		if(!(flags & SLUB_DMA))
+		{
+			struct kmem_cache *s = kmalloc_slab(size);
+
+			if(!s)
+				return ZERO_SIZE_PTR;
+
+			return kmem_cache_alloc_trace(s,flags,size);
+		}
+	}
+	return __kmalloc(size,flags);
+
+}
+static inline void *kmem_cache_alloc_node_trace(
+		struct kmem_cache *s,gfp_t gfp_t gfpflags,
+		int node,size_t size)
+{
+	return kmem_cache_alloc_node(s,gfpflags,node);
+}
+static inline void *kmalloc_node(size_t size,gfp_t flags,int node)
+{
+	if(__builtin_constant_p(size) &&
+			size <= SLUB_MAX_SIZE && !(flags & SLUB_DMA))
+	{
+		struct kmem_cache *s = kmalloc_slab(size);
+
+		if(!s)
+			return ZERO_SIZE_PTR;
+
+		return kmem_cache_alloc_node_trace(s,flags,node,size);
+	}
+	return __kmalloc_node(size,flags,node);
+}
 #endif

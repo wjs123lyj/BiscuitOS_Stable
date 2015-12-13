@@ -1,0 +1,11 @@
+#ifndef _CACHEFLUSH_H_
+#define _CACHEFLUSH_H_
+
+#define flush_cache_vunmap(x) do {} while(0)
+#define flush_cache_vmap(x,y) do {} while(0)
+/*
+ * Perform necessary cache operations to ensure that the TLB will 
+ * see data written in the specified area.
+ */
+#define clean_dcache_area(start,size) do {} while(0)
+#endif

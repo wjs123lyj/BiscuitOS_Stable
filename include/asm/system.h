@@ -52,5 +52,6 @@ static inline unsigned int get_cr(void)
 	return val;
 }
 
-
+#define smp_rmb() do {} while(0)
+#define smp_wmb() do {} while(0)
 #endif

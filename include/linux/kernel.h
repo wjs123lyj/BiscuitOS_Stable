@@ -12,10 +12,17 @@
 #define __paginginit
 #define __init_refok
 #define __percpu
+#define __force 
+#define __read_mostly
+#define __maybe_unused
+
 
 #define true  1
 #define false 0
-#define bool
+#define bool   int
+
+#define ULONG_MAX (~0UL)
+
 
 #define max(x,y) ({ \
 		typeof(x) __x = x; \
@@ -32,6 +39,9 @@
 #define ALIGN(x,align) ({ \
 		((x) & ~((align) - 1)); \
 		})
+#define PTR_ALIGN(p,a)   ((typeof(p))ALIGN((unsigned long)(p),(a)))
+#define IS_ALIGNED(x,a)  (((x) & ((typeof(x))(a) - 1)) == 0)
+
 
 #define roundup(x,y)  (            \
 		{                          \
@@ -81,4 +91,7 @@
 		type __max1 = (x);     \
 		type __max2 = (y);     \
 		__max1 > __max2 ? __max1 : __max2;})
+/* is x a power of 2 */
+#define is_power_of_2(x)   ((x) != 0 && (((x) & ((x) - 1)) == 0))
+
 #endif

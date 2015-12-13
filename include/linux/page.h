@@ -1,7 +1,7 @@
 #ifndef _PAGE_H_
 #define _PAGE_H_
 #include "memory.h"
-
+#include "mm_type.h"
 
 typedef unsigned long pteval_t;
 /*
@@ -15,8 +15,8 @@ typedef struct { unsigned long pgprot; }   pgprot_t;
 #define pte_val(x)    ((x).pte)
 #define pgprot_val(x) ((x).pgprot)
 
-#define __pte(x)      ((pte_t){(x)})
-#define __pgprot(x)   ((pgprot_t){(x)})
+#define __pte(x)      ((pte_t) {(x)})
+#define __pgprot(x)   ((pgprot_t) {(x)})
 
 
 #define PAGE_SHIFT 12
@@ -59,8 +59,9 @@ typedef struct { unsigned long pgprot; }   pgprot_t;
  * is a physical address when you use this value.
  */
 #define page_to_pfn(x)   \
-	 (unsigned long)(((struct page *)(unsigned long)(phys_addr_t)mem_to_phys(x) - \
-				 mem_map) + PHYS_PFN_OFFSET)
+	 (unsigned long)(     \
+	(unsigned long)((struct page *)(unsigned long)(phys_addr_t)mem_to_phys(x) \
+		- mem_map) + PHYS_PFN_OFFSET)
 
 
 /* Pure 2^n version of get_order */
@@ -78,6 +79,6 @@ static inline int get_order(unsigned long size)
 	return order;
 }
 
-#define clear_page(page)   memset((void *)(page)),0,PAGE_SIZE
+#define clear_page(page)   memset((void *)(page),0,PAGE_SIZE)
 
 #endif

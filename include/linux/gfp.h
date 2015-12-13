@@ -34,6 +34,11 @@
 #define __GFP_HIGH   ((gfp_t)___GFP_HIGH) /* Should access emergency pools? */
 #define __GFP_IO     ((gfp_t)___GFP_IO) /* Can start physical IO? */
 #define __GFP_FS     ((gfp_t)___GFP_FS) /* Can call down to low_level FS? */
+#define __GFP_COLD   ((gfp_t)___GFP_COLD) /* cache-cold page required */
+#define __GFP_NOWARN ((gfp_t)___GFP_NOWARN) /* Support page allocation warn */
+#define __GFP_REPEAT ((gfp_t)___GFP_REPEAT) /* See above */
+#define __GFP_NOFAIL ((gfp_t)___GFP_NOFAIL) /* See above */
+#define __GFP_NORETRY ((gfp_t)___GFP_NORETRY) /* See above */
 #define __GFP_THISNODE ((gfp_t)___GFP_THISNODE) /* No fallback,no policies */
 #define __GFP_HARDWALL ((gfp_t)___GFP_HARDWALL) /* Enforce hardwall cpuset*/
 #define __GFP_HIGHMEM  ((gfp_t)___GFP_HIGHMEM)
@@ -48,6 +53,8 @@
 #define GFP_HIGHUSER_MOVABLE (__GFP_WAIT | __GFP_IO | __GFP_FS | \
 		__GFP_HARDWALL | __GFP_HIGHMEM | \
 		__GFP_MOVABLE)
+#define __GFP_ZERO  ((gfp_t)___GFP_ZERO)
+#define __GFP_NOMEMALLOC ((gfp_t)___GFP_NOMEMALLOC)
 
 #define GFP_KERNEL  (__GFP_WAIT | __GFP_IO | __GFP_FS)
 
@@ -66,6 +73,12 @@
 #else
 #define OPT_ZONE_DMA32 ZONE_NORMAL
 #endif
+
+/* This equals 0,but use constants in case they ever change */
+    
+#define GFP_ATOMIC  (__GFP_HIGH)
+#define GFP_KERNEL  (__GFP_WAIT | __GFP_IO | __GFP_FS)
+
 
 /*
  * GFP_ZONE_TABLE is a word size bitstring that is used for looking up the
@@ -113,6 +126,13 @@
  * This mask makes up all the page movable related flags.
  */
 #define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE | __GFP_MOVABLE)
+/*
+ * Control page allocator reclaim behavior.
+ */
+#define GFP_RECLAIM_MASK (__GFP_WAIT | __GFP_HIGH | __GFP_IO | __GFP_FS | \
+		__GFP_NOWARN | __GFP_REPEAT | __GFP_NOFAIL | \
+		__GFP_NORETRY | __GFP_NOMEMALLOC)
+
 
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
@@ -149,10 +169,14 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 		return MIGRATE_UNMOVABLE;
 	/* Group based on mobility */
 	return (((gfp_flags & __GFP_MOVABLE) != 0) << 1) |
-		((gfp_flags & __GFP_RECLAIMABLE) != 0)
+		((gfp_flags & __GFP_RECLAIMABLE) != 0);
 }
 
 #define __free_page(page)  __free_pages((page),0)
+
+extern void free_pages(unsigned long addr,unsigned int order);
+
+#define free_page(addr) free_pages((addr),0)
 #ifndef HAVE_ARCH_FREE_PAGE
 static inline void arch_free_page(struct page *page,int order) {}
 #endif
@@ -170,13 +194,19 @@ static inline struct page *alloc_pages_node(int nid,gfp_t gfp_mask,
 {
 	/* Unknown node is current node */
 	if(nid < 0)
-		node = numa_node_id();
+		nid = numa_node_id();
 	
 	return __alloc_pages(gfp_mask,order,node_zonelist(nid,gfp_mask));
 }
 
 #define alloc_pages(gfp_mask,order)  \
 	alloc_pages_node(numa_node_id(),gfp_mask,order)
+
+#define alloc_page(gfp_mask) alloc_pages(gfp_mask,0)
+
+#define __get_free_page(gfp_mask)   \
+	__get_free_pages((gfp_mask),0)
+
 #ifndef HAVE_ARCH_ALLOC_PAGE
 static inline void arch_alloc_page(struct page *page,int order) {}
 #endif

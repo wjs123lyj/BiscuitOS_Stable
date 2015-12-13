@@ -5,6 +5,8 @@
 #include "atomic.h"
 #include "mmzone.h"
 #include "pfn.h"
+#include "pgtable-nopud.h"
+
 
 #define SECTIONS_WIDTH      0
 #define ZONES_WIDTH         ZONES_SHIFT
@@ -37,6 +39,13 @@
 #define NODES_MASK      ((1UL << NODES_WIDTH) - 1)
 #define SECTIONS_MASK   ((1UL << SECTIONS_WIDTH) - 1)
 #define ZONEID_MASK     ((1UL << ZONEID_SHIFT) - 1)
+
+/*
+ * Compound pages have a destructor function.Provide a 
+ * prototype for that function and accessor functions.
+ * These are _only_valid on the head of a PG_compound page.
+ */
+typedef void compound_page_dtor(struct page *);
 
 static inline enum zone_type page_zonenum(struct page *page)
 {
@@ -224,4 +233,65 @@ static inline struct page *virt_to_head_page(const void *x)
 	struct page *page = virt_to_page(x);
 	return compound_head(page);
 }
+/*
+ * Try to grab a ref unless the page has a refcount of zero,return false if 
+ * that is the case.
+ */
+static inline int get_page_unless_zero(struct page *page)
+{
+	return atomic_inc_not_zero(&page->_count);
+}
+#define compound_lock_irqsave(x)      do {} while(0)
+#define compound_unlock_irqrestore(x) do {} while(0)
+
+static inline compound_page_dtor *get_compound_page_dtor(struct page *page)
+{
+	return (compound_page_dtor *)page[1].lru.next;
+}
+static inline int __pud_alloc(struct mm_struct *mm,pgd_t *pgd,
+		unsigned long address)
+{
+	return 0;
+}
+static inline int __pmd_alloc(struct mm_struct *mm,pud_t *pud,
+		unsigned long address)
+{
+	return 0;
+}
+
+static inline pud_t *pud_alloc(struct mm_struct *mm,pgd_t *pgd,
+		unsigned long address)
+{
+	return (unlikely(pgd_none(*pgd)) && __pud_alloc(mm,pgd,address)) ?
+		NULL : pud_offset(pgd,address);
+}
+static inline pmd_t *pmd_alloc(struct mm_struct *mm,pud_t *pud,
+		unsigned long address)
+{
+	return (unlikely(pud_none(*pud)) && __pmd_alloc(mm,pud,address)) ?
+		NULL : pmd_offset(pud,address);
+}
+
+#define pte_alloc_kernel(pmd,address)     \
+	((unlikely(pmd_none(*(pmd))) && __pte_alloc_kernel(pmd,address)) ? \
+	 NULL : pte_offset_kernel(pmd,address))
+/*
+ * Determine if an address is within the vmalloc range.
+ */
+static inline int is_vmalloc_addr(const void *x)
+{
+#ifndef CONFIG_MMU
+	unsigned long addr = (unsigned long)x;
+
+	return addr >= VMALLOC_START && addr < VMALLOC_END;
+#else
+	return 0;
+#endif
+}
+
+
+
+
+
+
 #endif

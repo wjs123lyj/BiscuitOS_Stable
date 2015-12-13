@@ -8,6 +8,7 @@
 #include "memblock.h"
 #include "numa.h"
 #include "pageblock-flags.h"
+#include "nodemask.h"
 
 enum zone_type {
 

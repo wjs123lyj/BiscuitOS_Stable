@@ -151,5 +151,12 @@ static inline int list_empty(const struct list_head *head)
 	for(pos = list_entry((head)->next,typeof(*pos),member);       \
 			prefetch(pos->member.next),&pos->member != (head);    \
 			pos = list_entry(pos->member.next,typeof(*pos),member))
-
+/*
+ * iterate over list of given type safe against removal of list entry.
+ */
+#define list_for_each_entry_safe(pos,n,head,member)         \
+	for(pos = list_entry((head)->next,typeof(*pos),member),   \
+			n = list_entry(pos->member.next,typeof(*pos),member);  \
+			&pos->member != (head);               \
+			pos = n,n = list_entry(n->member.next,typeof(*n),member))
 #endif

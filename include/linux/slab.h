@@ -19,7 +19,8 @@
 #define SLAB_MEM_SPREAD      0x00100000UL /* Spread some memory over cpuset */
 #define SLAB_TARCE           0x00200000UL /* Trace allocations and frees */
 
-
+#define ZERO_OR_NULL_PTR(x)  ((unsigned long)(x) <= \
+		(unsigned long)ZERO_SIZE_PTR)
 /*
  * Don't track use of uninitialized memory.
  */
@@ -30,4 +31,20 @@ static inline void *kmem_cache_alloc_node(struct kmem_cache *cachep,
 {
 	return kmem_cache_alloc(cachep,flags);
 }
+/*
+ * Kzalloc - allocate memory.The memory is set to zero. 
+ */
+static inline void *kzalloc(size_t size,gfp_t flags)
+{
+	return kmalloc(size,flags | __GFP_ZERO);
+}
+/*
+ * kzalloc - allocate zeroed memory from a particular memory node.
+ */
+static inline void *kzalloc_node(size_t size,gfp_t flags,int node)
+{
+	return kmalloc_node(size,flags | __GFP_ZERO ,node);
+}
+#define kmalloc_track_caller(size,flags) \
+	__kmalloc(size,flags)
 #endif

@@ -24,6 +24,14 @@
 #define CONSISTENT_END     0xFFE00000UL
 #define CONSISTENT_BASE    (CONSISTENT_END - CONSISTENT_DMA_SIZE)
 
+/*
+ * Priorities for the hotplug memory callback routines(stored in decreasing
+ * order in the callback chain)
+ */
+#define SLAB_CALLBACK_PRI          1
+#define IPC_CALLBACK_PRI           10
+
+
 extern struct page *mem_map;
 extern void *high_memory;
 extern unsigned long num_physpages;
@@ -38,4 +46,9 @@ extern unsigned long totalhigh_pages;
  */
 #define UL(x) _AC(x,UL)
 #define arch_is_coherent()      0
+
+#define hotplug_memory_notifier(fn,pri)  do {} while(0)
+
+
+
 #endif

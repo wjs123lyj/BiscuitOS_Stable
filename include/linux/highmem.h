@@ -6,6 +6,8 @@
 #include "uaccess.h"
 #include "percpu.h"
 #include "compiler.h"
+#include "percpu-defs.h"
+#include "fixmap.h"
 /*
  * This is virtual address that used in hihgmem.
  */
@@ -26,7 +28,12 @@
 #define MAX_NR_ZONES  3
 #endif
 
-void *__kamp_atomic(struct page *page)
+#define kmap_prot    PAGE_KERNEL
+
+DECLARE_PER_CPU(int,__kmap_atomic_idx);
+
+static inline int kmap_atomic_idx_push(void);
+void *__kmap_atomic(struct page *page)
 {
 	unsigned int idx;
 	unsigned long vaddr;

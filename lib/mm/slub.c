@@ -6,6 +6,14 @@
 
 #include "../../include/asm/cache.h"
 
+
+static enum {
+	DOWN,    /* No slab functionality available */
+	PARTIAL, /* Kmem_cache_node works */
+	UP,      /* Everything works but does not show up in sysfs */
+	SYSFS    /* Sysfs up */
+} slab_state = DOWN;
+
 static int kmem_size = sizeof(struct kmem_cache);
 
 /*
@@ -24,6 +32,43 @@ enum track_item {
 };
 
 /*
+ * Conversion table for small slab size / 8 to the index in the
+ * kmalloc array.This is necessary for slab < 192 since we have non power
+ * of two cache sizes there.The size of larger slabs can be determined
+ * using fls.
+ */
+static s8 size_index[24] = {
+	3,   /* 8 */
+	4,   /* 16 */
+	5,   /* 24 */
+	5,   /* 32 */
+	6,   /* 40 */
+	6,   /* 48 */
+	6,   /* 56 */
+	6,   /* 64 */
+	1,   /* 72 */
+	1,   /* 80 */
+	1,   /* 88 */
+	1,   /* 96 */
+	7,   /* 104 */
+	7,   /* 112 */
+	7,   /* 120 */
+	7,   /* 128 */
+	2,   /* 136 */
+	2,   /* 144 */
+	2,   /* 152 */
+	2,   /* 160 */
+	2,   /* 168 */
+	2,   /* 176 */
+    2,   /* 184 */
+	2,   /* 192 */
+};
+
+static inline int size_index_elem(size_t bytes)
+{
+	return (bytes - 1) / 8;
+}
+/*
  * Minimum / Maximum ordrer of slab pages.This influences locking overhead
  * and slab fragmentation.A higher order reduces the number of partial slabs
  * and increases the number of allocations possible without having to
@@ -33,9 +78,13 @@ static int slub_min_order;
 static int slub_max_order = PAGE_ALLOC_COSTLY_ORDER;
 static int slub_min_objects;
 
+/* A list of all slab caches on the system */
+static LIST_HEAD(slab_caches);
+
 #define DEBUG_DEFAULT_FLAGS (SLAB_DEBUG_FREE | SLAB_RED_ZONE |  \
 		SLAB_POISON | SLAB_STORE_USER)
 
+struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];
 
 static inline int kmem_cache_debug(struct kmem_cache *s)
 {
@@ -189,6 +238,10 @@ static void restore_bytes(struct kmem_cache *s,char *message,u8 data,
 		void *from,void *to)
 {
 }
+int slab_is_available(void)
+{
+	return slab_state >= UP;
+}
 /*
  * Check the pad bytes at the end of a slab page.
  */
@@ -223,6 +276,17 @@ static int slab_pad_check(struct kmem_cache *s,struct page *page)
 
 	return 0;
 }
+/*****************************************************
+ *     Kmalloc subsystem
+ *****************************************************/
+struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];
+
+
+
+
+
+
+
 static void __free_slab(struct kmem_cache *s,struct page *page)
 {
 	int order = compound_order(page);
@@ -812,6 +876,26 @@ static void *slab_alloc(struct kmem_cache *s,
 
 	return object;
 }
+
+void *__kmalloc(size_t size,gfp_t flags)
+{
+	struct kmem_cache *s;
+	void *ret;
+
+	if(unlikely(size > SLUB_MAX_SIZE))
+		return kmalloc_large(size,flags);
+
+	s = get_slab(size,flags);
+
+	if(unlikely(ZERO_OR_NULL_PTR(s)))
+		return s;
+
+	ret = slab_alloc(s,flags,NUMA_NO_NODE,_RET_IP_);
+
+	trace_kmalloc(_RET_IP_,ret,size,s->size,flags);
+
+	return ret;
+}
 void *kmem_cache_alloc(struct kmem_cache *s,gfp_t gfpflags)
 {
 	void *ret = slab_alloc(s,gfpflags,NUMA_NO_NODE,_RET_IP_);
@@ -965,6 +1049,45 @@ static inline int calculate_order(int size)
 		return order;
 
 	return -ENOSYS;
+}
+static void *kmalloc_large_node(size_t size,gfp_t flags,int node)
+{
+	struct page *page;
+	void *ptr = NULL;
+
+	flags |= alloc_pages_node(node,flags,get_order(size));
+	if(page)
+		ptr = page_address(page);
+
+	kmemleak_alloc(ptr,size,1,flags);
+	return ptr;
+}
+void *__kmalloc_node(size_t size,gfp_t flags,int node)
+{
+	struct kmem_cache *s;
+	void *ret;
+
+	if(unlikely(size > SLUB_MAX_SIZE))
+	{
+		ret = kmalloc_large_node(size,flags,node);
+
+		trace_kmalloc_node(_RET_IP_,ret,
+				size,PAGE_SIZE << get_order(size),
+				flags,node);
+		
+		return ret;
+	}
+
+	s = get_slab(size,flags);
+
+	if(unlikely(ZERO_OR_NULL_PTR(s)))
+		return s;
+
+	ret = slab_alloc(s,flags,node,_RET_IP_);
+
+	trace_kmalloc_node(_RET_IP_,ret,size,s->size,flags,node);
+
+	return ret;
 }
 /*
  * Figure out what the alignment of the object will be.
@@ -1385,6 +1508,27 @@ static inline void slab_free(struct kmem_cache *s,
 
 //	local_irq_restore(flags);
 }
+
+void kfree(const void *x)
+{
+	struct page *page;
+	void *object = (void *)x;
+
+	trace_kfree(_RET_IP_,x);
+
+	if(unlikely(ZERO_OR_NULL_PTR(x)))
+		return;
+
+	page = virt_to_head_page(x);
+	if(unlikely(!PageSlab(page)))
+	{
+		BUG_ON(!PageCompound(page));
+		kmemleak_free(x);
+		put_page(page);
+		return;
+	}
+	slab_free(page->slab,page,object,_RET_IP_);
+}
 void kmem_cache_free(struct kmem_cache *s,void *x)
 {
 	struct page *page;
@@ -1392,6 +1536,13 @@ void kmem_cache_free(struct kmem_cache *s,void *x)
 	page = virt_to_head_page(x);
 
 	slab_free(s,page,x,_RET_IP);
+}
+void *kmem_cache_alloc_node(struct kmem_cache *s,
+		gfp_t gfpflags,int node)
+{
+	void *ret = slab_alloc(s,gfpflags,node,_RET_IP_);
+
+	return ret;
 }
 static void free_kmem_cache_nodes(struct kmem_cache *s)
 {
@@ -1498,7 +1649,52 @@ error:
 
 	return 0;
 }
+/*
+ * Used for early kmem_cache structures that were allocated using
+ * the page allocator.
+ */
+static void __init kmem_cache_bootstrap_fixup(struct kmem_cache *s)
+{
+	int node;
 
+	list_add(&s->list,&slab_caches);
+	s->refcount = -1;
+
+	for_each_node_state(node,N_NORMAL_MEMORY) {
+		struct kmem_cache_node *n = get_node(s,node);
+		struct page *p;
+
+		if(n) {
+			list_for_each_entry(p,&n->partial,lru)
+				p->slab = s;
+		}
+	}
+}
+/*
+ * Create kmalloc cache.
+ */
+static struct kmem_cache *__init create_kmalloc_cache(const char *name,
+		int size,unsigned int flags)
+{
+	struct kmem_cache *s;
+
+	s = kmem_cache_alloc(kmem_cache,GFP_NOWAIT);
+
+	/*
+	 * This function is called with IRQs disabled during early-boot on
+	 * single CPU so there's no need to take slub_lock herer.
+	 */
+	if(!kmem_cache_open(s,name,size,ARCH_KMALLOC_MINALIG,
+				flags,NULL))
+		goto panic;
+	
+	list_add(&s->list,&slab_caches);
+	return s;
+
+panic:
+	mm_err("Creation of kmalloc slab %s size = %d failed.\n",name,size);
+	return NULL;
+}
 void __init kmem_cache_init(void)
 {
 	int i;
@@ -1528,4 +1724,131 @@ void __init kmem_cache_init(void)
 	kmem_cache_open(kmem_cache_node,"kmem_cache_node",
 			sizeof(struct kmem_cache_node),
 			0,SLAB_HWCACHE_ALIGN | SLAB_PANIC,NULL);
+
+	/* Not support notifier for slab */
+//	hotplug_memory_notifier(slab_memory_callback,SLAB_CALLBACK_PRI);
+
+	/* Able to allocate the per node structures */
+	slab_state = PARTIAL;
+
+	temp_kmem_cache = kmem_cache;
+	kmem_cache_open(kmem_cache,"kmem_cache",kmem_size,
+			0,SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
+	kmem_cache = kmem_cache_alloc(kmem_cache,GFP_NOWAIT);
+	memcpy(kmem_cache,temp_kmem_cache,kmem_size);
+
+	/*
+	 * Allocate kmem_cache_node properly from the kmem_cache slab.
+	 * kmem_cache_node is separately allocated so no need to 
+	 * update any list pointers.
+	 */
+	temp_kmem_cache_node = kmem_cache_node;
+
+	kmem_cache_node = kmem_cache_alloc(kmem_cache,GFP_NOWAIT);
+	memcpy(kmem_cache_node,temp_kmem_cache_node,kmem_size);
+
+	kmem_cache_bootstrap_fixup(kmem_cache_node);
+
+	caches++;
+	kmem_cache_bootstrap_fixup(kmem_cache);
+	caches++;
+	/* Free temporary boot structure */
+	free_pages((unsigned long)temp_kmem_cache,order);
+	
+	/* Now we can use the kmem_cache to allocate kmalloc slabs */
+
+	/*
+	 * Patch up the size_index table if we have stange large alignment
+	 * requirements for the kmalloc array.This is only the case for
+	 * MIPS it seems.The standard arches will not generate any code here.
+	 *
+	 * Largest permitted alignment is 256 bytes due to the way we
+	 * handle the index determination for the smaller caches.
+	 *
+	 * Make sure that nothing crazy happens if someone start tinkering
+	 * around with ARCH_KMALLOC_MINALIGN
+	 */
+	BUILD_BUG_ON(KMALLOC_MIN_SIZE > 256 ||
+			(KMALLOC_MIN_SIZE & (KMALLOC_MIN_SIZE - 1)));
+
+	for(i = 8 ; i < KMALLOC_MIN_SIZE ; i+= 8) {
+		int elem = size_index_elem(i);
+
+		if(elem >= ARRAY_SIZE(size_index))
+			break;
+		size_index[elem] = KMALLOC_SHIFT_LOW;
+	}
+
+	if(KMALLOC_MIN_SIZE == 64) {
+		/*
+		 * The 96 byte size cache is not used if the alignment
+		 * is 64 byte.
+		 */
+		for(i = 64 + 8 ; i <= 96 ; i += 8)
+			size_index[size_index_elem(i)] = 7;
+	} else if(KMALLOC_MIN_SIZE == 128) {
+		/*
+		 * The 192 byte sized cache is not used if the alignment
+		 * is 128 byte.Redirect kmalloc to use the 256 byte cache
+		 * instead.
+		 */
+		for(i = 128 + 8 ; i <= 192 ; i+= 8)
+			size_index[size_index_elem(i)] = 8;
+	}
+
+	/* Caches that are not of the two-to-the-power-of size */
+	if(KMALLOC_MIN_SIZE <= 32) {
+		kmalloc_caches[1] = create_kmalloc_cache("kmalloc-96",96,0);
+		caches++;
+	}
+
+	if(KAMLLOC_MIN_SIZE <= 64) {
+		kmalloc_caches[2] = create_kmalloc_cacahe("kmalloc-192",192,0);
+		caches++;
+	}
+
+	for(1 = KMALLOC_SHIFT_LOW ; i < SLUB_PAGE_SHIFT ; i++) {
+		kmalloc_caches[i] = create_kmalloc_cache("kmalloc",1 << i,0);
+		caches++;
+	}
+
+	slab_state = UP;
+
+	/* Provide the correct kmalloc names now that the caches are up */
+	if(KMALLOC_MIN_SIZE <= 32) {
+		kmalloc_caches[1]->name = kstrdup(kmalloc_caches[1]->name,GFP_NOWAIT);
+		BUG_ON(!kmalloc_caches[1]->name);
+	}
+
+	if(KMALLOC_MIN_SIZE <= 64) {
+		kmalloc_caches[2]->name = kstrdup(kmalloc_caches[2]->name,GFP_NOWAIT);
+		BUG_ON(!kmalloc_caches[2]->name);
+	}
+
+	for(! = KMALLOC_SHIFT_LOW ; i < SLUB_PAGE_SHIFT ; i++) {
+		char *s = kasprintf(GFP_NOWAIT,"kmalloc-%d",1 << i);
+
+		BUG_ON(!s);
+		kmalloc_caches[i]->name = s;
+	}
+#ifdef CONFIG_ZONE_DMA
+	for(i = 0 ; i < SLUB_PAGE_SHIFT ; i++) {
+		struct kmem_cache *s = kmalloc_caches[i];
+
+		if(s && s->size) {
+			char *name = kasprintf(GFP_NOWAIT,
+					"dma-kmalloc- %d",s->objsize);
+
+			BUG_ON(!name);
+			kmalloc_dma_caches[i] = create_kmalloc_cache(name,
+					s->objsize,SLUB_CACHE_DMA);
+		}
+	}
+#endif
+	mm_debug("SLUB:Genslabs=%p,HWalign=%p,Order=%p - %p,"
+			"MinObjects=%p,CPUs=%p,Nodes=%d\n",
+			(void *)caches,(void *)cache_line_size(),
+			(void *)slub_min_order,(void *)slub_max_order,
+			(void *)slub_min_objects,
+			(void *)nr_cpu_idx,(void *)nr_node_ids);
 }

@@ -3,6 +3,10 @@
 
 #include "pgtable_types.h"
 #include "page.h"
+#include "init_mm.h"
+#include "pgtable-hwdef.h"
+#include "mmu.h"
+
 
 #define PGDIR_SHIFT 21
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)
@@ -110,7 +114,8 @@ extern pgprot_t pgprot_kernel;
 #define pte_index(x) (unsigned long)((x) >> PAGE_SHIFT)
 #define pte_offset_kernel(pmd,addr) (pmd_page_vaddr(pmd) + pte_index(addr))
 
-#define pfn_pte(pfn,prot) (unsigned int)(((pfn) << PAGE_SHIFT) | prot)
+#define pfn_pte(pfn,prot) (pte_t)(unsigned long)((unsigned long)((pfn) << \
+			PAGE_SHIFT) | (unsigned long)prot)
 
 /*
  * The virtuall address of KERNEL MODULE.
@@ -130,5 +135,88 @@ static inline int pte_hidden(pte_t pte)
 	return pte_flags(pte) & _PAGE_HIDDEN;
 }
 
-#define mk_pte(page,prot)  pfn_pte(page_to_pfn(page),prot)
+#define _MODE_PROT(p,b)   __pgprot(pgprot_val(p) | (b))
+
+
+#define PAGE_NONE           _MODE_PROT(pgprot_user,L_PTE_XN | L_PTE_RDONLY)
+#define PAGE_SHARED         _MODE_PROT(pgprot_user,L_PTE_USER | L_PTE_XN)  
+#define PAGE_SHARED_EXEC    _MODE_PROT(pgprot_user,L_PTE_USER)
+#define PAGE_COPY           _MODE_PROT(pgprot_user,L_PTE_USER | \
+		                               L_PTE_RDONLY | L_PTE_XN)
+#define PAGE_COPY_EXEC      _MODE_PROT(pgprot_user,L_PTE_USER | L_PTE_RDONLY)
+#define PAGE_READONLY       _MODE_PROT(pgprot_user,L_PTE_USER | \
+									   L_PTE_RDONLY | L_PTE_XN)
+#define PAGE_READONLY_EXEC  _MODE_PROT(pgprot_user,L_PTE_USER | L_PTE_RDONLY)
+#define PAGE_KERNEL         _MODE_PROT(pgprot_kernel,L_PTE_XN)
+#define PAGE_KERNEL_EXEC    (pgprot_t)pgprot_kernel
+
+#define pte_set(q,w,e)   do {} while(0)
+#define pte_clear(q,w,e) do {} while(0)
+
+#define pte_pfn(pte)  (pte_val(pte) >> PAGE_SHIFT)
+
+/*
+ * Convert a physical address to a Page Frame Number and back.
+ */
+#define __phys_to_pfn(paddr)  ((paddr) >> PAGE_SHIFT)
+#define __pfn_to_phys(pfn)    ((pfn) << PAGE_SHIFT)
+
+#define pmd_page(pmd)   pfn_to_page(__phys_to_pfn(pnd_val(pmd)))
+
+#define __pte_map(pmd)   (pte_t *)(unsigned long)kmap_atomic(pmd_page(*(pmd)))
+#define __pte_unmap(pte) kunmap_atomic(pte)
+
+
+#define pte_offset_map(pmd,addr) (__pte_map(pmd) + pte_index(addr))
+
+#define pte_page(pte) pfn_to_page(pte_pfn(pte))
+#if WAIT_FOR_DEBUG
+#define mk_pte(page,prot)  (pte_t)(unsigned long)pfn_pte(page_to_pfn(page),prot)
+#else
+#define mk_pte(page,prot) ((pte_t)0)
+#endif
+
+
+static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
+		unsigned long address,pte_t *ptep)
+{
+	pte_t pte = *ptep;
+	pte_clear(mm,address,ptep);
+	return pte;
+}
+
+#define pte_none(pte)         (!pte_val(pte))
+#define pte_present(pte)      (pte_val(pte) & L_PTE_PRESENT)
+#define pte_write(pte)        (!(pte_val(pte) & L_PTE_RDONLY))
+#define pte_dirty(pte)        (pte_val(pte) & L_PTE_DIRTY)
+#define pte_young(pte)        (pte_val(pte) & L_PTE_YOUNG)
+#define pte_exec(pte)         (!(pte_val(pte) & L_PTE_XN))
+#define pte_special(pte)      (0)
+
+#define pte_present_user(pte)  \
+	((pte_val(pte) & (L_PTE_PRESENT | L_PTE_USER)) == \
+	 (L_PTE_PRESENT | L_PTE_USER))
+
+
+#define pte_unmap(pte)     __pte_unmap(pte)
+
+#define set_pte_ext(ptep,pte,ext) do {} while(0)
+
+static inline void __sync_icache_dcache(pte_t pteval)
+{
+}
+
+static inline void set_pte_at(struct mm_struct *mm,unsigned long addr,
+		pte_t *ptep,pte_t pteval)
+{
+#if WAIT_FOR_DEBUG
+	if(addr >= TASK_SIZE)
+		set_pte_ext(ptep,pteval,0);
+	else {
+		__sync_icache_dcache(pteval);
+		set_pte_ext(ptep,pteval,PTE_EXT_NG);
+	}
+#endif
+}
+
 #endif

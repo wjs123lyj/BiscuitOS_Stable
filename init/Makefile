@@ -29,7 +29,16 @@ SRCS = main.c \
 	   ../lib/mm/mmap.c    \
 	   ../lib/mm/page_cgroup.c  \
        ../lib/mm/pte.c   \
-	   ../lib/mm/vmstat.c
+	   ../lib/mm/vmstat.c \
+	   ../lib/mm/swap.c \
+	   ../lib/mm/sched.c  \
+	   ../lib/mm/slub.c   \
+	   ../lib/mm/swap_state.c \
+	   ../lib/mm/rbtree.c  \
+	   ../lib/mm/radix-tree.c  \
+	   ../lib/mm/percpu.c   \
+	   ../lib/mm/vmalloc.c  \
+	   ../lib/kernel/head.c
 
 
 INC= -I./
