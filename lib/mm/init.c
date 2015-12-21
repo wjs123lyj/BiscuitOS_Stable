@@ -8,6 +8,10 @@
 #include "../../include/linux/vmalloc.h"
 #include "../../include/linux/memblock.h"
 #include "../../include/linux/mmzone.h"
+#include "../../include/linux/mm.h"
+#include "../../include/linux/swap.h"
+#include "../../include/linux/gfp.h"
+#include "../../include/linux/page-flags.h"
 
 extern unsigned long max_pfn;
 extern unsigned long min_low_pfn;
@@ -289,7 +293,8 @@ void __init mem_init(void)
 		end  = pfn_to_page(pfn2 - 1) + 1;
 
 		do {
-			if(PageReserved(page))
+			//if(PageReserved(page))
+			if(0)
 				reserved_pages++;
 			else if(!page_count(page))
 				free_pages++;
@@ -415,11 +420,14 @@ void show_mem(void)
 
 		do {
 			total++;
-			if(PageReserved(page))
+			//if(PageReserved(page))
+			if(0)
 				reserved++;
-			else if(PageSwapCache(page))
+			//else if(PageSwapCache(page))
+			else if(0)
 				cached++;
-			else if(PageSlab(page))
+			//else if(PageSlab(page))
+			else if(0)
 				free++;
 			else
 				shared += page_count(page) - 1;

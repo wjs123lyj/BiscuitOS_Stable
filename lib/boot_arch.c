@@ -1,5 +1,6 @@
 #include "../include/linux/kernel.h"
 #include "../include/linux/setup.h"
+#include "../include/linux/debug.h"
 
 /*
  * boot memory bank.

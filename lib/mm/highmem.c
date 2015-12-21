@@ -5,6 +5,7 @@
 #include "../../include/linux/list.h"
 #include "../../include/linux/highmem.h"
 #include "../../include/linux/mm.h"
+#include "../../include/linux/hash.h"
 
 pte_t *pkmap_page_table;
 
@@ -47,7 +48,8 @@ void *page_address(struct page *page)
 	void *ret;
 	struct page_address_slot *pos;
 
-	if(!PageHighMem(page))
+	//if(!PageHighMem(page))
+	if(1)
 		return lowmem_page_address(page);
 
 	pos = page_slot(page);
@@ -108,7 +110,7 @@ void kunmap_high(struct page *page)
 //			need_wakeup = waitqueue_active(&pkmap_map_wait);
 			;
 	}
-	unlock_kmap_any(flags);
+	//unlock_kmap_any(flags);
 
 	/* do wake-up,if needed,race-free outside of the spin lock */
 	if(need_wakeup)
@@ -125,7 +127,8 @@ void __kunmap_atomic(void *kvaddr)
 		type = kmap_atomic_idx();
 		idx  = type + KM_TYPE_NR * smp_processor_id();
 
-		if(cache_id_vivt())
+		//if(cache_id_vivt())
+		if(0)
 //			__cpuc_flush_dcache_area((void *)vaddr,PAGE_SIZE);
 #ifdef CONFIG_DEBUG_HIGHMEM
 		BUG_ON(vaddr != __fix_to_virt(FIX_KMAP_DEGIN + idx));
@@ -140,7 +143,7 @@ void __kunmap_atomic(void *kvaddr)
 		/* This address was obtained through kmap_high_get() */
 		kunmap_high(pte_page(pkmap_page_table[PKMAP_NR(vaddr)]));
 	}
-	pagefault_enable();
+	//pagefault_enable();
 }
 static struct page_address_map page_address_maps[LAST_PKMAP];
 

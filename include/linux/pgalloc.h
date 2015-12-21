@@ -5,6 +5,7 @@
 #include "gfp.h"
 #include "pgtable-hwdef.h"
 #include "domain.h"
+#include "cacheflush.h"
 
 #define _PAGE_USER_TABLE   (PMD_TYPE_TABLE | PMD_BIT4 | \
 							PMD_DOMAIN(DOMAIN_USER))

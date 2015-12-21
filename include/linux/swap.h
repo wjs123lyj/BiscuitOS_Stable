@@ -16,6 +16,7 @@ struct reclaim_state {
 extern struct address_space swapper_space;
 #define total_swapcache_pages swapper_space.nrpages
 
+extern inline unsigned long global_page_state(enum zone_stat_item item);
 /* Definition of global_page_state not available yet */
 #define nr_free_pages() global_page_state(NR_FREE_PAGES)
 

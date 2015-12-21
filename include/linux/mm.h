@@ -4,6 +4,8 @@
 #include "pgtable.h"
 #include "mmzone.h"
 #include "numa.h"
+#include "atomic.h"
+#include "debug.h"
 
 
 #define SECTIONS_WIDTH      0
@@ -228,8 +230,12 @@ static inline void set_compound_page_dtor(struct page *page,
 }
 static inline struct page *virt_to_head_page(const void *x)
 {
+#if 0
+	/* Need debug */
 	struct page *page = (struct page *)(unsigned long)virt_to_page(x);
 	return compound_head(page);
+#endif
+	return NULL;
 }
 /*
  * Try to grab a ref unless the page has a refcount of zero,return false if 

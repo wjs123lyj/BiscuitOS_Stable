@@ -1,6 +1,8 @@
 #ifndef _ATOMIC_LONG_H_
 #define _ATOMIC_LONG_H_  1
 
+#include "atomic.h"
+
 static inline void atomic_long_set(atomic_long_t *l,long i)
 {
 	atomic_t *v = (atomic_t *)l;

@@ -14,6 +14,7 @@
 #include "../../include/linux/vmalloc.h"
 #include "../../include/linux/domain.h"
 #include "../../include/linux/memory.h"
+#include "../../include/linux/cputype.h"
 
 
 extern void *vectors_page;
@@ -244,7 +245,8 @@ static void __init build_mem_type_table(void)
 			cachepolicy = CPOLICY_WRITEBACK;
 		ecc_mask = 0;
 	}
-	if(is_smp())
+	//if(is_smp())
+	if(0)
 		cachepolicy = CPOLICY_WRITEALLOC;
 
 	/*
@@ -353,7 +355,8 @@ static void __init build_mem_type_table(void)
 	/*
 	 * Only use write-through for non-SMP system.
 	 */
-	if(!is_smp() && cpu_arch >= CPU_ARCH_ARMv5 &&
+	//if(!is_smp() && cpu_arch >= CPU_ARCH_ARMv5 &&
+	if(1 && cpu_arch >= CPU_ARCH_ARMv5 &&
 			cachepolicy > CPOLICY_WRITETHROUGH)
 		vecs_pgprot = cache_policies[CPOLICY_WRITETHROUGH].pte;
 
@@ -381,7 +384,8 @@ static void __init build_mem_type_table(void)
 		mem_types[MT_MINICLEAN].prot_sect |= PMD_SECT_APX | PMD_SECT_AP_WRITE;
 		mem_types[MT_CACHECLEAN].prot_sect |= PMD_SECT_APX | PMD_SECT_AP_WRITE;
 
-		if(is_smp())
+		//if(is_smp())
+		if(0)
 		{
 			/*
 			 * Mark memory with the "shared" attribute

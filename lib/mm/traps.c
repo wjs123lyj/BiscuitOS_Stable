@@ -1,5 +1,6 @@
 #include "../../include/linux/kernel.h"
 #include "../../include/linux/page.h"
+#include "../../include/linux/debug.h"
 
 void *vectors_page;
 

@@ -6,6 +6,7 @@
 #include "../../include/linux/mmzone.h"
 #include "../../include/asm/errno-base.h"
 #include "../../include/linux/memory.h"
+#include "../../include/linux/debug.h"
 
 unsigned long max_low_pfn;
 unsigned long min_low_pfn;

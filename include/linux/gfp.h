@@ -2,6 +2,7 @@
 #define _GFP_H_    1
 #include "nodemask.h"
 #include "mmzone.h"
+#include "debug.h"
 /*
  * Plain integer GFP bitmasks.Do not use this directly.
  */

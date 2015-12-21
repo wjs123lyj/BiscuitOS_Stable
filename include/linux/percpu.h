@@ -21,6 +21,8 @@ struct pcpu_chunk {
 
 #define __this_cpu_sub(pcp,val)  __this_cpu_add((pcp),-(val))
 
+#define __this_cpu_read(pcp)   (pcp)
+
 #define this_cpu_ptr(ptr) (ptr)
 #define this_cpu_dec(pcp) __this_cpu_sub((pcp),1)
 

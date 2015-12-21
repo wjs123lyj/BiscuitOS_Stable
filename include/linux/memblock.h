@@ -1,5 +1,8 @@
 #ifndef _MEMBLOCK_H_
 #define _MEMBLOCK_H_
+
+#include "pfn.h"
+
 /*
  * This is open source,you can modify it or copy it.
  */

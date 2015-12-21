@@ -3,6 +3,8 @@
 #include "../../include/linux/mmzone.h"
 #include "../../include/asm/errno-base.h"
 #include "../../include/asm/dma.h"
+#include "../../include/linux/debug.h"
+#include "../../include/linux/memcontrol.h"
 
 static void __meminit __init_page_cgroup(struct page_cgroup *pc,
 		unsigned long pfn)

@@ -1,6 +1,7 @@
 #include "../../include/linux/kernel.h"
 #include "../../include/linux/mm_types.h"
 #include "../../include/linux/page-debug-flags.h"
+#include "../../include/linux/debug.h"
 
 extern int debug_pagealloc_enabled;
 
@@ -61,7 +62,9 @@ static void poison_page(struct page *page)
 {
 	void *addr;
 
-	if(PageHighMem(page))
+	/* Need debug */
+	//if(PageHighMem(page))
+	if(0)
 	{
 		poison_highpage(page);
 		return;
@@ -82,7 +85,9 @@ static void poison_pages(struct page *page,int n)
 
 static void unpoison_page(struct page *page)
 {
-	if(PageHighMem(page))
+	/* Need debug */
+	//if(PageHighMem(page))
+	if(0)
 	{
 		unpoison_highpage(page);
 		return;

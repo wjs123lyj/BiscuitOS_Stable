@@ -13,7 +13,7 @@ static inline bool mem_cgroup_disabled(void)
 	return false;
 }
 
-static inline void mem_cgroup_del_lru_list(struct page *page,int lru)
+inline void mem_cgroup_del_lru_list(struct page *page,int lru)
 {
 	return;
 }

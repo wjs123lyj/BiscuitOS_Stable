@@ -22,8 +22,6 @@ typedef struct { unsigned long pgprot;} pgprot_t;
 #define PAGE_MASK (unsigned int)(~(PAGE_SIZE - 1))
 
 #define PAGE_ALIGN(x) (x & ~(PAGE_SIZE - 1))
-#define PFN_UP(x) (((x) + PAGE_SIZE - 1) >> PAGE_SHIFT)
-#define PFN_DOWN(x) ((x) >> PAGE_SHIFT)
 
 #define PAGE_OFFSET (unsigned long)0xC0000000
 #define PHYS_OFFSET (unsigned long)0x50000000
@@ -63,7 +61,7 @@ extern void *phys_to_mem(phys_addr_t addr);
 	(unsigned long)((struct page *)(unsigned long)(phys_addr_t)mem_to_phys(x) \
 		- mem_map) + PHYS_PFN_OFFSET)
 
-
+#define virt_to_valid(x)  do {} while(0)
 
 #define clear_page(page)   memset((void *)(page),0,PAGE_SIZE)
 #endif

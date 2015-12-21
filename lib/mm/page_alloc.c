@@ -17,6 +17,13 @@
 #include "../../include/linux/page.h"
 #include "../../include/linux/mm.h"
 #include "../../include/linux/bootmem.h"
+#include "../../include/linux/vmstat.h"
+#include "../../include/linux/printk.h"
+#include "../../include/linux/hardirq.h"
+#include "../../include/linux/memory_hotplug.h"
+#include "../../include/linux/cpu.h"
+#include "../../include/linux/debug_locks.h"
+#include "../../include/linux/spinlock.h"
 
 
 /*
@@ -798,7 +805,8 @@ static bool free_pages_prepare(struct page *page,unsigned int order)
 	if(bad)
 		return false;
 
-	if(!PageHighMem(page))
+	//if(!PageHighMem(page))
+	if(1)
 	{
 		debug_check_no_locks_freed((void *)(unsigned long)page_address(page),
 				PAGE_SIZE << order);
@@ -1568,13 +1576,13 @@ void prep_compound_page(struct page *page,unsigned long order)
 	int nr_pages = 1 << order;
 
 	set_compound_page_dtor(page,free_compound_page);
-	set_compound_order(page,order);
-	__SetPageHead(page);
+	//set_compound_order(page,order);
+	//__SetPageHead(page);
 	for(i = 1 ; i < nr_pages ; i++)
 	{
 		struct page *p = page + i;
-
-		__setPageTail(p);
+		/* Need debug */
+		//__setPageTail(p);
 		p->first_page = page;
 	}
 }
@@ -1822,7 +1830,7 @@ static inline int gfp_to_alloc_flags(gfp_t gfp_mask)
 	{
 		if(!in_interrupt() &&
 				((current->flags & PF_MEMALLOC) ||
-				unlikey(test_thread_flags(TIF_MEMDIE)))) 
+				unlikely(test_thread_flags(TIF_MEMDIE)))) 
 			alloc_flags |= ALLOC_NO_WATERMARKS;
 	}
 	return alloc_flags;
@@ -2187,7 +2195,8 @@ void show_free_areas(void)
 			mm_debug("CPU %p:hi:%p,btch:%p usd:%p\n",
 					(void *)(unsigned long)cpu,
 					(void *)(unsigned long)pageset->pcp.high,
-					pageset->pcp.batch,pageset->pcp.count);
+					(void *)(unsigned long)pageset->pcp.batch,
+					(void *)(unsigned long)pageset->pcp.count);
 		}
 	}
 	mm_debug("active_anon:%p\n"
@@ -2207,22 +2216,22 @@ void show_free_areas(void)
 			 "shmem:%p\n"
 			 "pagetables:%p\n"
 			 "bounce:%p\n",
-			 global_page_state(NR_ACTIVE_ANON),
-			 global_page_state(NR_INACTIVE_ANON),
-			 global_page_state(NR_ISOLATED_ANON),
-			 global_page_state(NR_ACTIVE_FILE),
-			 global_page_state(NR_INACTIVE_FILE),
-			 global_page_state(NR_ISOLATED_FILE),
-			 global_page_state(NR_UNEVICTABLE),
-			 global_page_state(NR_FILE_DIRTY),
-			 global_page_state(NR_WRITEBACK),
-			 global_page_state(NR_UNSTABLE_NFS),
-			 global_page_state(NR_FREE_PAGES),
-			 global_page_state(NR_SLAB_RECLAIMABLE),
-			 global_page_state(NR_SLAB_UNRECLAIMABLE),
-			 global_page_state(NR_FILE_MAPPED),
-			 global_page_state(NR_SHMEM),
-			 global_page_state(NR_BOUNCE));
+			 (void *)(unsigned long)global_page_state(NR_ACTIVE_ANON),
+			 (void *)(unsigned long)global_page_state(NR_INACTIVE_ANON),
+			 (void *)(unsigned long)global_page_state(NR_ISOLATED_ANON),
+			 (void *)(unsigned long)global_page_state(NR_ACTIVE_FILE),
+			 (void *)(unsigned long)global_page_state(NR_INACTIVE_FILE),
+			 (void *)(unsigned long)global_page_state(NR_ISOLATED_FILE),
+			 (void *)(unsigned long)global_page_state(NR_UNEVICTABLE),
+			 (void *)(unsigned long)global_page_state(NR_FILE_DIRTY),
+			 (void *)(unsigned long)global_page_state(NR_WRITEBACK),
+			 (void *)(unsigned long)global_page_state(NR_UNSTABLE_NFS),
+			 (void *)(unsigned long)global_page_state(NR_FREE_PAGES),
+			 (void *)(unsigned long)global_page_state(NR_SLAB_RECLAIMABLE),
+			 (void *)(unsigned long)global_page_state(NR_SLAB_UNRECLAIMABLE),
+			 (void *)(unsigned long)global_page_state(NR_FILE_MAPPED),
+			 (void *)(unsigned long)global_page_state(NR_SHMEM),
+			 (void *)(unsigned long)global_page_state(NR_BOUNCE));
 
 	for_each_populated_zone(zone)
 	{
@@ -2257,37 +2266,37 @@ void show_free_areas(void)
 				"pages_scanned:%pkB\n"
 				"all_unreclaimable?%s\n",
 			zone->name,
-			K(zone_page_state(zone,NR_FREE_PAGES)),
-			K(min_wmark_pages(zone)),
-			K(low_wmark_pages(zone)),
-			K(high_wmark_pages(zone)),
-			K(zone_page_state(zone,NR_ACTIVE_ANON)),
-			K(zone_page_state(zone,NR_INACTIVE_ANON)),
-			K(zone_page_state(zone,NR_ACTIVE_FILE)),
-			K(zone_page_state(zone,NR_INACTIVE_FILE)),
-			K(zone_page_state(zone,NR_UNEVICTABLE)),
-			K(zone_page_state(zone,NR_ISOLATED_ANON)),
-			K(zone_page_state(zone,NR_ISOLATED_FILE)),
-			K(zone->present_pages),
-			K(zone_page_state(zone,NR_MLOCK)),
-			K(zone_page_state(zone,NR_FILE_DIRTY)),
-			K(zone_page_state(zone,NR_WRITEBACK)),
-			K(zone_page_state(zone,NR_FILE_MAPPED)),
-			K(zone_page_state(zone,NR_SHMEM)),
-			K(zone_page_state(zone,NR_SLAB_RECLAIMABLE)),
-			K(zone_page_state(zone,NR_SLAB_UNRECLAIMABLE)),
-			zone_page_state(zone,NR_KERNEL_STACK) *
-				THREAD_SIZE / 1024,
-			K(zone_page_state(zone,NR_PAGETABLE)),
-			K(zone_page_state(zone,NR_UNSTABLE_NFS)),
-			K(zone_page_state(zone,NR_BOUNCE)),
-			K(zone_page_state(zone,NR_WRITEBACK_TEMP)),
-			zone->pages_scanned,
+			(void *)(unsigned long)K(zone_page_state(zone,NR_FREE_PAGES)),
+			(void *)(unsigned long)K(min_wmark_pages(zone)),
+			(void *)(unsigned long)K(low_wmark_pages(zone)),
+			(void *)(unsigned long)K(high_wmark_pages(zone)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_ACTIVE_ANON)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_INACTIVE_ANON)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_ACTIVE_FILE)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_INACTIVE_FILE)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_UNEVICTABLE)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_ISOLATED_ANON)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_ISOLATED_FILE)),
+			(void *)(unsigned long)K(zone->present_pages),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_MLOCK)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_FILE_DIRTY)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_WRITEBACK)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_FILE_MAPPED)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_SHMEM)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_SLAB_RECLAIMABLE)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_SLAB_UNRECLAIMABLE)),
+			(void *)(unsigned long)(zone_page_state(zone,NR_KERNEL_STACK) *
+				THREAD_SIZE / 1024),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_PAGETABLE)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_UNSTABLE_NFS)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_BOUNCE)),
+			(void *)(unsigned long)K(zone_page_state(zone,NR_WRITEBACK_TEMP)),
+			(void *)(unsigned long)zone->pages_scanned,
 			(zone->all_unreclaimable ? "yes" : "no")
 				);
 		mm_debug("lowmem_reserve[]:");
 		for(i = 0 ; i < MAX_NR_ZONES ; i++)
-			mm_debug(" %p",zone->lowmem_reserve[i]);
+			mm_debug(" %p",(void *)zone->lowmem_reserve[i]);
 		mm_debug("\n");
 	}
 	
@@ -2306,10 +2315,11 @@ void show_free_areas(void)
 		}
 //		spin_unlock_irqrestore(&zone->lock,flags);
 		for(order = 0 ; order < MAX_ORDER ; order++)
-			mm_debug(" %p %pkB ",nr[order],K(1UL) << order);
-		mm_debug("= %pkB\n",K(total));
+			mm_debug(" %p %pkB ",(void *)nr[order],(void *)(K(1UL) << order));
+		mm_debug("= %pkB\n",(void *)K(total));
 	}
-	mm_debug("%p total pagecache pages\n",global_page_state(NR_FILE_PAGES));
+	mm_debug("%p total pagecache pages\n",
+			(void *)global_page_state(NR_FILE_PAGES));
 
 	show_swap_cache_info();
 }
@@ -2318,7 +2328,7 @@ void free_pages(unsigned long addr,unsigned int order)
 {
 	if(addr != 0)
 	{
-		VM_BUG_ON(!virt_addr_valid((void *)addr));
+		//VM_BUG_ON(!virt_addr_valid((void *)addr));
 		/* Need debug */
 		//__free_pages(virt_to_page((void *)addr),order);
 	}

@@ -8,6 +8,8 @@
 #include "pgtable.h"
 #include "percpu.h"
 #include "smp.h"
+#include "uaccess.h"
+#include "debug.h"
 
 /*
  * This is virtual address that used in hihgmem.
@@ -44,7 +46,9 @@ void *__kmap_atomic(struct page *page)
 	int type;
 
 	pagefault_disable();
-	if(!PageHighMem(page))
+	/* Need debug */
+	//if(!PageHighMem(page))
+	if(0)
 		return page_address(page);
 #ifdef CONFIG_DEBUG_HIGHMEM
 	/*
@@ -121,5 +125,9 @@ static inline void kmap_atomic_idx_pop(void)
 #else
 	__this_cpu_dec(__kmap_atomic_idx);
 #endif
+}
+static inline int kmap_atomic_idx(void)
+{
+	return __this_cpu_read(__kmap_atomic_idx) - 1;
 }
 #endif

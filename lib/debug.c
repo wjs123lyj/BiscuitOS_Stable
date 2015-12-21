@@ -3,6 +3,7 @@
 #include "../include/linux/bootmem.h"
 #include "../include/linux/setup.h"
 #include "../include/linux/memblock.h"
+#include "../include/linux/atomic.h"
 
 
 extern struct memblock memblock;

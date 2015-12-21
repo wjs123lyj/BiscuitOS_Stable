@@ -2,6 +2,8 @@
 #include "../../include/linux/mm_types.h"
 #include "../../include/linux/mmzone.h"
 #include "../../include/linux/internal.h"
+#include "../../include/linux/debug.h"
+#include "../../include/linux/mm.h"
 
 int mminit_loglevel;
 

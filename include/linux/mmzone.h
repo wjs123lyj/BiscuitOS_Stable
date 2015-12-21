@@ -36,6 +36,9 @@ enum zone_watermarks {
 	NR_WMARK
 };
 
+#define min_wmark_pages(z) (z->watermark[WMARK_MIN])
+#define low_wmark_pages(z) (z->watermark[WMARK_LOW])
+#define high_wmark_pages(z) (z->watermark[WMARK_HIGH])
 
 #if MAX_NR_ZONES < 2
 #define ZONES_SHIFT 0
@@ -375,3 +378,4 @@ extern struct pglist_data *first_online_pgdat(void);
 
 
 #endif
+

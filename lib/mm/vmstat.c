@@ -1,5 +1,8 @@
 #include "../../include/linux/kernel.h"
 #include "../../include/linux/mmzone.h"
+#include "../../include/linux/debug.h"
+#include "../../include/linux/vmstat.h"
+#include "../../include/linux/mm.h"
 
 void __dec_zone_page_state(struct page *page,enum zone_stat_item item)
 {

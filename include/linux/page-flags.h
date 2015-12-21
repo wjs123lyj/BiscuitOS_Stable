@@ -158,13 +158,6 @@ static inline int __TestClearPageMlocked(struct page *page)
 	test_and_clear_bit(PG_mlocked,&page->flags);
 }
 
-extern inline int is_highmem(struct zone *zone);
-extern inline struct zone *page_zone(struct page *page);
-/*
- * Must use a macro here due to header dependency issues.page_zone() is not
- * available at this point.
- */
-#define PageHighMem(p) is_highmem(page_zone(p))
 /*
  * HWPoison
  */

@@ -5,6 +5,9 @@
 #include "../../include/asm/arch.h"
 #include "../../include/linux/memblock.h"
 #include "../../include/linux/ioport.h"
+#include "../../include/linux/unwind.h"
+#include "../../include/linux/debug.h"
+#include "../../include/linux/bootmem.h"
 
 extern struct meminfo meminfo;
 extern struct mm_struct init_mm;

@@ -2,6 +2,10 @@
 #include "../../include/linux/mmzone.h"
 #include "../../include/linux/mm_types.h"
 #include "../../include/linux/mm.h"
+#include "../../include/linux/debug.h"
+#include "../../include/linux/atomic.h"
+#include "../../include/linux/spinlock.h"
+#include "../../include/linux/mm_inline.h"
 
 /*
  * This path almost never happens for VM activity - pages are normally
@@ -9,14 +13,17 @@
  */
 static void __page_cache_release(struct page *page)
 {
-	if(PageLRU(page))
+	/* Need debug */
+	//if(PageLRU(page))
+	if(1)
 	{
 		unsigned long flags;
 		struct zone *zone = page_zone(page);
 
 		spin_lock_irqsave(&zone->lru_lock,flags);
-		VM_BUG_ON(!PageLRU(page));
-		__ClearPageLRU(page);
+		//VM_BUG_ON(!PageLRU(page));
+		/* Need debug */
+		//__ClearPageLRU(page);
 		del_page_from_lru(zone,page);
 		spin_unlock_irqrestore(&zone->lru_lock,flags);
 	}
@@ -42,7 +49,7 @@ static void put_compound_page(struct page *page)
 	{
 		/* __split_huge_page_refcount can run under us */
 		struct page *page_head = page->first_page;
-		smp_rmd();
+		//smp_rmd();
 		/*
 		 * If PageTail is still set after smp_rmb() we can be sure
 		 * that the page->first_page we read wasn't a danling pointer
@@ -67,7 +74,7 @@ static void put_compound_page(struct page *page)
 			 * after having it pinned with
 			 * get_page_unless_zero() above.
 			 */
-			smp_mb();
+			//smp_mb();
 			/* page_head wasn't dangling pointer */
 			flags = 0;//compound_lock_irqsave(page_head);
 			if(unlikely(!PageTail(page)))
@@ -119,7 +126,9 @@ static void put_compound_page(struct page *page)
 }
 void put_page(struct page *page)
 {
-	if(unlikely(PageCompound(page)))
+	/* Need debug */
+	//if(unlikely(PageCompound(page)))
+	if(0)
 		put_compound_page(page);
 	else if(put_page_testzero(page))
 		__put_single_page(page);
