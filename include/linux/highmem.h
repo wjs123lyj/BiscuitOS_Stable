@@ -1,13 +1,14 @@
 #ifndef _HIGHMEM_H_
-#define _HIGHMEM_H_
-#include "page.h"
-#include "pgtable.h"
-#include "kmap_types.h"
-#include "uaccess.h"
-#include "percpu.h"
-#include "compiler.h"
+#define _HIGHMEM_H_    1
+
 #include "percpu-defs.h"
+#include "compiler.h"
 #include "fixmap.h"
+#include "kmap_types.h"
+#include "pgtable.h"
+#include "percpu.h"
+#include "smp.h"
+
 /*
  * This is virtual address that used in hihgmem.
  */
@@ -32,6 +33,8 @@
 
 DECLARE_PER_CPU(int,__kmap_atomic_idx);
 
+extern void *kmap_high_get(struct page *page);
+extern void *page_address(struct page *page);
 static inline int kmap_atomic_idx_push(void);
 void *__kmap_atomic(struct page *page)
 {
@@ -67,16 +70,19 @@ void *__kmap_atomic(struct page *page)
 	 */
 	BUG_ON(!pte_none(!(TOP_PTE(vaddr))));
 #endif
-	set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
+	/* Need debug */
+	//set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
 	/*
 	 * When debugging is off,kunmap_atomic leaves the previous mapping
 	 * in place,so this TLB flush ensures the TLB is updated with the 
 	 * new mapping.
 	 */
-	local_flush_tlb_kernel_page(vaddr);
+	/* Need debug */
+//	local_flush_tlb_kernel_page(vaddr);
 
 	return (void *)vaddr;
 }
+void __kunmap_atomic(void *kvaddr);
 /*
  * Prevent people trying to call kunmap_atomic() as if it were kunmap()
  * kunmap_atomic() should get the return value of kmap_atomic,not the page.
@@ -89,7 +95,8 @@ void *__kmap_atomic(struct page *page)
 /*
  * Make both:kmap_atomic(page,idx) and kmap_atomic(page) work.
  */
-#define kmap_atomic(page,args...) __kmap_atomic(page)
+#define kmap_atomic(page,args...)   \
+	__kmap_atomic(page)
 
 static inline void clear_highpage(struct page *page)
 {

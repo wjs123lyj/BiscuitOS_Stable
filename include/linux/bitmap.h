@@ -1,5 +1,7 @@
 #ifndef _BITMAP_H_
-#define _BITMAP_H_
+#define _BITMAP_H_ 1
+
+#include "bitops.h"
 
 #define BITMAP_LAST_WORD_MASK(nbits)       \
 (                                          \

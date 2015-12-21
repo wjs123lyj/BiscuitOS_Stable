@@ -1,7 +1,6 @@
 #ifndef _PGTABLE_TYPES_H_
 #define _PGTABLE_TYPES_H_
-#include "kernel.h"
-#include "page.h"
+
 #include "const.h"
 
 #define _PAGE_BIT_PRESENT           0   /* is present */

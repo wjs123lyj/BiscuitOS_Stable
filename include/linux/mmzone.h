@@ -1,14 +1,13 @@
 #ifndef _MMZONE_H_
 #define _MMZONE_H_
-#include "kernel.h"
-#include "config.h"
-#include "bootmem.h"
-#include "highmem.h"
+
 #include "bitops.h"
-#include "memblock.h"
-#include "numa.h"
+#include "highmem.h"
 #include "pageblock-flags.h"
+#include "list.h"
+#include "page_cgroup.h"
 #include "nodemask.h"
+#include "spinlock_types.h"
 
 enum zone_type {
 
@@ -96,7 +95,7 @@ enum zone_stat_item {
 					 only modified from process context */
 	NR_FILE_PAGES,
 	NR_FILE_DIRTY,
-	NR_WRITEBASK,
+	NR_WRITEBACK,
 	NR_SLAB_RECLAIMABLE,
 	NR_SLAB_UNRECLAIMABLE,
 	NR_PAGETABLE, /* used for pagetables */
@@ -207,6 +206,10 @@ struct zone {
 
 	unsigned long pages_scanned;   /* Since last reclaim */
 	int all_unreclaimable;         /* All pages pinned */
+	/* Fields commonly accessed by the page reclaim scanner */
+	spinlock_t lru_lock;
+	
+	unsigned long lowmem_reserve[MAX_NR_ZONES];
 };
 
 typedef struct pglist_data {
@@ -256,7 +259,7 @@ static inline int is_highmem_idx(enum zone_type idx)
  * highmem zone or not.This is an attempt to keep references
  * to ZONE_{DMA/NORMAL/HIGHMEM/etc} in general code to a minimum.
  */
-static inline int is_highmem(struct zone *zone)
+inline int is_highmem(struct zone *zone)
 {
 #ifndef CONFIG_HIGHMEM
 	int zone_off = (char *)zone - (char *)zone->zone_pgdata->node_zones;
@@ -292,6 +295,9 @@ static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 {
 	return zoneref->zone;
 }
+extern struct zoneref *next_zones_zonelist(struct zoneref *z,
+				enum zone_type highest_zoneidx,
+				nodemask_t *nodes,struct zone **zone);
 
 #define high_wmark_pages(z)   (z->watermark[WMARK_HIGH])
 
@@ -356,7 +362,8 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 	return next_zones_zonelist(zonelist->_zonerefs,highest_zoneidx,nodes,
 			zone);
 }
-
+extern struct zone *next_zone(struct zone *zone);
+extern struct pglist_data *first_online_pgdat(void);
 #define for_each_populated_zone(zone)                         \
 	for(zone = (first_online_pgdat())->node_zones;            \
 			zone;               \
@@ -364,6 +371,7 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 		if(!populated_zone(zone))         \
 			; /* do nothing */         \
 		else
+
 
 
 #endif

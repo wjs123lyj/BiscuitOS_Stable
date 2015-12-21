@@ -1,11 +1,6 @@
-#include "../include/linux/config.h"
-#include "../include/linux/memblock.h"
-#include "../include/linux/boot_arch.h"
+#include "../include/linux/kernel.h"
 #include "../include/linux/setup.h"
-#include "../include/linux/debug.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 /*
  * boot memory bank.
  */

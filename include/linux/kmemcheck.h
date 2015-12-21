@@ -1,6 +1,8 @@
 #ifndef _KMEMCHECK_H_
 #define _KMEMCHECK_H_
 
+#include "mm_types.h"
+
 #define kmemcheck_enabled  0
 static inline bool kmemcheck_page_is_tracked(struct page *p)
 {
@@ -22,7 +24,7 @@ static inline void kmemcheck_mark_unallocated_pages(struct page *page,
 		unsigned int n)
 {
 }
-static inline void kmemcheck_slab_allc(struct kmem_cache *s,gfp_t gfpflags,
+static inline void kmemcheck_slab_alloc(struct kmem_cache *s,gfp_t gfpflags,
 		void *object,size_t size)
 {
 }

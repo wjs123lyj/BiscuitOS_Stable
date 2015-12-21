@@ -1,18 +1,16 @@
 #ifndef _PAGE_H_
 #define _PAGE_H_
-#include "memory.h"
-#include "mm_type.h"
 
 typedef unsigned long pteval_t;
 /*
  * These are used to make use of C type-checking...
  */
-typedef struct { pteval_t pte; }           pte_t;
-typedef struct { unsigned long pmd; }      pmd_t;
-typedef struct { unsigned long pgd[2]; }   pgd_t;
-typedef struct { unsigned long pgprot; }   pgprot_t;
+typedef struct { pteval_t pte;} pte_t;
+typedef struct { unsigned long pmd;} pmd_t;
+typedef struct { unsigned long pgd[2];} pgd_t;
+typedef struct { unsigned long pgprot;} pgprot_t;
 
-#define pte_val(x)    ((x).pte)
+#define pte_val(x)    do {} while(0) //((x).pte)
 #define pgprot_val(x) ((x).pgprot)
 
 #define __pte(x)      ((pte_t) {(x)})
@@ -41,6 +39,8 @@ typedef struct { unsigned long pgprot; }   pgprot_t;
 #define __pa(x) virt_to_phys(x)
 #define __va(x) phys_to_virt(x)
 #define __pfn_to_phys(x) pfn_to_phys(x)
+extern struct page *mem_map;
+extern void *phys_to_mem(phys_addr_t addr);
 /*
  * Note: In order to ignore the Virtual Memory layer we change the way
  * to get page via a pfn.Please mind the address of page is a Virtual
@@ -64,21 +64,6 @@ typedef struct { unsigned long pgprot; }   pgprot_t;
 		- mem_map) + PHYS_PFN_OFFSET)
 
 
-/* Pure 2^n version of get_order */
-static inline int get_order(unsigned long size)
-{
-	int order;
-
-	size = (size - 1) >> (PAGE_SHIFT - 1);
-	order = -1;
-	do {
-		size >>= 1;
-		order++;
-	} while(size);
-	
-	return order;
-}
 
 #define clear_page(page)   memset((void *)(page),0,PAGE_SIZE)
-
 #endif

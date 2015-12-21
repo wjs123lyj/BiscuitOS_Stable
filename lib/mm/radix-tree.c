@@ -1,18 +1,29 @@
+#include "../../include/linux/kernel.h"
+#include "../../include/linux/radix-tree.h"
+#include "../../include/linux/gfp.h"
+#include "../../include/linux/rcupdate.h"
+#include "../../include/linux/debug.h"
+
 
 #define RADIX_TREE_MAP_SHIFT     3
 
 #define RADIX_TREE_MAP_SIZE    (1UL << RADIX_TREE_MAP_SHIFT)
 #define RADIX_TREE_MAP_MASK    (RADIX_TREE_MAP_SIZE)
 
-#define RADIX_TREE_MAP_LONGS      \
+#define RADIX_TREE_TAG_LONGS      \
 	((RADIX_TREE_MAP_SIZE + BITS_PER_LONG - 1) / BITS_PER_LONG)
+
+/*
+ * Radix tree node cache.
+ */
+static struct kmem_cache *radix_tree_node_cachep;
 
 struct radix_tree_node {
 	unsigned int height;    /* Height from the bottom */
 	unsigned int count;
 	struct rcu_head rcu_head;
 	void __rcu *slots[RADIX_TREE_MAP_SIZE];
-	unsigned long tags[RADIX_TREE_MAX_TREE][RADIX_TREE_TAG_LONGS];
+	unsigned long tags[RADIX_TREE_MAX_TAGS][RADIX_TREE_TAG_LONGS];
 };
 
 struct radix_tree_path {
@@ -34,6 +45,10 @@ static unsigned long height_to_maxindex[RADIX_TREE_MAX_PATH + 1];
 /****************************************************************
  *      Helper Function
  ***************************************************************/
+static inline void *ptr_to_indirect(void *ptr)
+{
+	return (void *)((unsigned long)ptr | RADIX_TREE_INDIRECT_PTR);
+}
 static inline void *indirect_to_ptr(void *ptr)
 {
 	return (void *)((unsigned long)ptr & ~RADIX_TREE_INDIRECT_PTR);
@@ -59,7 +74,7 @@ static inline void root_tag_clear_all(struct radix_tree_root *root)
  */
 static inline unsigned long radix_tree_maxindex(unsigned int height)
 {
-	return hight_to_maxindex[hight];
+	return height_to_maxindex[height];
 }
 static inline int tag_get(struct radix_tree_node *node,
 		unsigned int tag,int offset)
@@ -170,6 +185,7 @@ static inline void radix_tree_node_free(struct radix_tree_node *node)
 {
 	call_rcu(&node->rcu_head,radix_tree_node_rcu_free);
 }
+static inline void radix_tree_shrink(struct radix_tree_root *root);
 /*
  * delete an item from a radix tree.
  */
@@ -179,7 +195,7 @@ void *radix_tree_delete(struct radix_tree_root *root,unsigned long index)
 	 * Thr radix tree path needs to be one longer than the maximum path
 	 * since the "list" is null terminated.
 	 */
-	struct radix_tree_path path[PADIX_TREE_MAX_PATH + 1],*pathp = path;
+	struct radix_tree_path path[RADIX_TREE_MAX_PATH + 1],*pathp = path;
 	struct radix_tree_node *slot = NULL;
 	struct radix_tree_node *to_free;
 	unsigned int height,shift;
@@ -190,11 +206,11 @@ void *radix_tree_delete(struct radix_tree_root *root,unsigned long index)
 	if(index > radix_tree_maxindex(height))
 		goto out;
 
-	slot = root->mode;
+	slot = root->rnode;
 	if(height == 0)
 	{
 		root_tag_clear_all(root);
-		root->mode = NULL;
+		root->rnode = NULL;
 		goto out;
 	}
 	slot = indirect_to_ptr(slot);

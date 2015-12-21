@@ -1,6 +1,9 @@
 #ifndef _PAGE_CGROUP_H_
 #define _PAGE_CGROUP_H_
 
+#include "mem_cgroup.h"
+#include "mm_types.h"
+#include "list.h"
 /*
  * Page Cgoup can be considered as an extended mem_map.
  * A page_cgroup is associated with every page descriptor.The

@@ -1,8 +1,5 @@
 #ifndef _MEMORY_H_
 #define _MEMORY_H_
-#include "config.h"
-#include "types.h"
-#include "const.h"
 
 #ifndef arch_adjust_zones
 #define arch_adjust_zones(size,holes) do {} while(0)
@@ -51,4 +48,8 @@ extern unsigned long totalhigh_pages;
 
 
 
+/*
+ * Extern function.
+ */
+extern int __pte_alloc_kernel(pmd_t *pmd,unsigned long address);
 #endif

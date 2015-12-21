@@ -1,6 +1,7 @@
 #ifndef _CPUSET_H_
-#define _CPUSET_H_
+#define _CPUSET_H_   1
 #include "nodemask.h"
+#include "mmzone.h"
 
 #define cpuset_current_mems_allowed (node_states[N_HIGH_MEMORY])
 static inline void get_mems_allowed(void)

@@ -1,12 +1,10 @@
-#include "../../include/linux/highmem.h"
-#include "../../include/linux/list.h"
-#include "../../include/linux/mm.h"
-#include "../../include/linux/page-flags.h"
-#include "../../include/linux/hash.h"
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/smp.h"
+#include "../../include/linux/kmap_types.h"
 #include "../../include/linux/fixmap.h"
-#include "../../include/linux/tlbflush.h"
+#include "../../include/linux/page.h"
+#include "../../include/linux/list.h"
+#include "../../include/linux/highmem.h"
+#include "../../include/linux/mm.h"
 
 pte_t *pkmap_page_table;
 
@@ -34,6 +32,7 @@ static struct page_address_slot {
 //  spinlock_t lock;         /* Protect this bucket's list */
 } page_address_htable[1 << PA_HASH_ORDER];
 
+#define unlock_kmao_any(flags) do {} while(0)
 static struct page_address_slot *page_slot(struct page *page)
 {
 	return &page_address_htable[hash_ptr(page,PA_HASH_ORDER)];
@@ -91,7 +90,7 @@ void kunmap_high(struct page *page)
 	 * without a TLB flush!
 	 */
 	need_wakeup = 0;
-	switch(__pkmap_count[nr])
+	switch(--pkmap_count[nr])
 	{
 		case 0:
 			BUG();
@@ -107,6 +106,7 @@ void kunmap_high(struct page *page)
 			 * test if the queue is empty.
 			 */
 //			need_wakeup = waitqueue_active(&pkmap_map_wait);
+			;
 	}
 	unlock_kmap_any(flags);
 

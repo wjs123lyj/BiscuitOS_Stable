@@ -11,5 +11,6 @@
 #define for_each_possible_cpu(cpu)  for_each_cpu((cpu),cpu_possible_mask)
 
 #define nr_cpu_ids    1
+#define num_online_cpus()   1U
 
 #endif

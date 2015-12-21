@@ -1,6 +1,5 @@
 #ifndef _IOPORT_H_
 #define _IOPORT_H_
-#include "types.h"
 
 /*
  * Resource are tree-like,allowing

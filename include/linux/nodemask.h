@@ -1,13 +1,10 @@
 #ifndef _NODEMASK_H_
 #define _NODEMASK_H_
-#include "config.h"
+
 #include "bitops.h"
-#include "mmzone.h"
+#include "numa.h"
 
 typedef struct {DECLARE_BITMAP(bits,MAX_NUMNODES);} nodemask_t;
-extern struct zoneref *next_zones_zonelist(struct zoneref *z,
-		enum zone_type highest_zoneidx,
-		nodemask_t *nodes,struct zone **zone);
 
 /*
  * Bitmasks that are kept for all the nodes.
@@ -23,6 +20,14 @@ enum node_states {
 	NR_NODE_STATES,
 };
 
+extern nodemask_t node_states[NR_NODE_STATES];
+
+#define NODE_MASK_LAST_WORD BITMAP_LAST_WORD_MASK(MAX_NUMNODES)
+
+#define NODE_MASK_ALL          \
+	((nodemask_t) {{             \
+	 [BITS_TO_LONGS(MAX_NUMNODES) - 1] = NODE_MASK_LAST_WORD      \
+	 }})
 #define nr_online_nodes        1
 #define first_online_node      0
 

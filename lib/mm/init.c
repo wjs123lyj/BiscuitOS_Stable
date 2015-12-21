@@ -1,19 +1,17 @@
 #include "../../include/linux/kernel.h"
 #include "../../include/linux/setup.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/memory.h"
-#include "../../include/linux/bootmem.h"
+#include "../../include/linux/mm_types.h"
 #include "../../include/linux/mman.h"
+#include "../../include/linux/memory.h"
 #include "../../include/linux/pgtable.h"
-#include "../../include/linux/fixmap.h"
 #include "../../include/linux/highmem.h"
+#include "../../include/linux/vmalloc.h"
 #include "../../include/linux/memblock.h"
-#include "../../include/linux/mm_type.h"
-#include "../../include/linux/swap.h"
-#include "../../include/linux/mm.h"
-#include "../../include/linux/page-flags.h"
-#include "../../include/linux/gfp.h"
+#include "../../include/linux/mmzone.h"
+
+extern unsigned long max_pfn;
+extern unsigned long min_low_pfn;
+extern unsigned long max_low_pfn;
 /*
  * Initialize memblock of ARM
  */
@@ -428,12 +426,12 @@ void show_mem(void)
 			page++;
 		} while(page < end);
 	}
-	mm_debug("%p pages of RAM\n",(void *)total);
-	mm_debug("%p free pages\n",(void *)free);
-	mm_debug("%p reserved pages\n",(void *)reserved);
-	mm_debug("%p slab pages\n",(void *)slab);
-	mm_debug("%p pages shared\n",(void *)shared);
-	mm_debug("%p pages swap cached\n",(void *)cached);
+	mm_debug("%p pages of RAM\n",(void *)(unsigned long)total);
+	mm_debug("%p free pages\n",(void *)(unsigned long)free);
+	mm_debug("%p reserved pages\n",(void *)(unsigned long)reserved);
+	mm_debug("%p slab pages\n",(void *)(unsigned long)slab);
+	mm_debug("%p pages shared\n",(void *)(unsigned long)shared);
+	mm_debug("%p pages swap cached\n",(void *)(unsigned long)cached);
 }
 
 

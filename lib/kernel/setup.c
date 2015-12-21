@@ -1,28 +1,15 @@
-#include "../../include/linux/memblock.h"
-#include "../../include/linux/debug.h"
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/list.h"
-#include "../../include/linux/pgtable.h"
-#include "../../include/linux/mm_type.h"
-#include "../../include/linux/types.h"
-#include "../../include/linux/highmem.h"
-#include "../../include/linux/config.h"
-#include "../../include/linux/boot_arch.h"
-#include "../../include/linux/init_mm.h"
-#include "../../include/linux/mmu.h"
-#include "../../include/linux/pgalloc.h"
-#include "../../include/linux/highmem.h"
-#include "../../include/linux/setup.h"
-#include "../../include/linux/ioport.h"
-#include "../../include/linux/resource.h"
-
-#include "../../include/asm/sections.h"
-#include "../../include/asm/arch.h"
 #include "../../include/asm/system.h"
+#include "../../include/asm/sections.h"
+#include "../../include/linux/mm_types.h"
+#include "../../include/asm/arch.h"
+#include "../../include/linux/memblock.h"
+#include "../../include/linux/ioport.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
+extern struct meminfo meminfo;
+extern struct mm_struct init_mm;
+extern struct resource ioport_resource;
+extern struct resource iomem_resource;
 /*
  * Standard memory resource.
  */

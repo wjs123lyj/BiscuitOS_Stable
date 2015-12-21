@@ -1,5 +1,5 @@
 #ifndef _FIXMAP_H_
-#define _FIXMAP_H_
+#define _FIXMAP_H_    1
 
 /*
  * Nothing to fancy for now.

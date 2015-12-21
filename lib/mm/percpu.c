@@ -1,18 +1,17 @@
-#include "../../include/linux/percpu.h"
-#include "../../include/linux/vmalloc.h"
 #include "../../include/linux/kernel.h"
+#include "../../include/linux/vmalloc.h"
+#include "../../include/linux/percpu.h"
 #include "../../include/linux/cpumask.h"
 #include "../../include/asm/errno-base.h"
-#include "../../include/linux/mm_type.h"
-#include "../../include/linux/pgtable.h"
-#include "../../include/linux/page.h"
 #include "../../include/linux/gfp.h"
-#include "../../include/linux/types.h"
+#include "../../include/linux/slab.h"
+#include "../../include/linux/bitmap.h"
 #include "../../include/linux/debug.h"
-#include "../../include/linux/vmalloc.h"
-#include <stdlib.h>
-#include <stdio.h>
-
+#include "../../include/asm/topology.h"
+#include "../../include/linux/cacheflush.h"
+#include "../../include/linux/tlbflush.h"
+#include "../../include/linux/spinlock.h"
+#include "../../include/linux/mutex.h"
 
 #define PCPU_SLOT_BASE_SHIFT    5  /* 1-31 shares the same slot */
 #define PCPU_DFL_MAP_ALLOC      16 /* start a map with 16 ents */
@@ -24,7 +23,11 @@ int pcpu_nr_units   __read_mostly;
 int pcpu_atom_size  __read_mostly;
 int pcpu_nr_slots   __read_mostly;
 int pcpu_chunk_struct_size __read_mostly;
+const unsigned long *pcpu_unit_offsets __read_mostly; /* cpu->unit offset */
 
+static int pcpu_alloc_mutex;
+static int pcpu_lock;
+static int vmap_area_lock;
 /* cpus with the lowest and highest unit numbers */
 unsigned int pcpu_first_unit_cpu __read_mostly;
 unsigned int pcpu_last_unit_cpu  __read_mostly;
@@ -34,7 +37,7 @@ const unsigned long *pcpu_uint_offsets __read_mostly;
 /* group information,used for vm allocation */
 int pcpu_nr_groups __read_mostly;
 const unsigned long *pcpu_group_offsets __read_mostly;
-const size_t *pcpu_group_sizes __read_mostly;
+size_t *pcpu_group_sizes __read_mostly;
 /*
  * Optional reserved chunk.This chunk reserves part of the first
  * chunk and serves it for reserved allocations. The amount of 
@@ -45,6 +48,16 @@ const size_t *pcpu_group_sizes __read_mostly;
 static struct pcpu_chunk *pcpu_reserved_chunk;
 static int pcpu_reserved_chunk_limit;
 static struct list_head *pcpu_slot __read_mostly; /* chunk list slots */
+
+extern void insert_vmalloc_vm(struct vm_struct *vm,struct vmap_area *va,
+		unsigned long flags,void *caller);
+extern void __insert_vmap_area(struct vmap_area *va);
+extern bool pvm_find_next_prev(unsigned long end,
+		struct vmap_area **pnext,
+		struct vmap_area **pprev);
+extern unsigned long pvm_determine_end(struct vmap_area **pnext,
+		struct vmap_area **pprev,unsigned long align);
+extern void purge_vmap_area_lazy(void);
 
 #define __addr_to_pcpu_ptr(addr)  (void __percpu *)(addr)
 #define __pcpu_ptr_to_addr(pte)   (void __force *)(ptr)
@@ -60,6 +73,7 @@ static void pcpu_set_page_chunk(struct page *page,struct pcpu_chunk *pcpu)
 {
 	page->index = (unsigned long)pcpu;
 }
+extern void *vzalloc(unsigned long size);
 /*
  * Allocate memory.
  */
@@ -71,7 +85,7 @@ static void *pcpu_mem_alloc(size_t size)
 	if(size <= PAGE_SIZE)
 		return kzalloc(size,GFP_KERNEL);
 	else
-		return valloc(size);
+		return vzalloc(size);
 }
 /*
  * determin whether chunk area map needs to be extended.
@@ -128,7 +142,7 @@ static int pcpu_extend_area_map(struct pcpu_chunk *chunk,int new_alloc)
 	new = NULL;
 
 out_unlock:
-	spin_unlock_irqstore(&pcpu_lock,flags);
+	spin_unlock_irqrestore(&pcpu_lock,flags);
 
 	/*
 	 * pcpu_mem_free() minght end up calling vfree() which uses
@@ -150,7 +164,7 @@ static void pcpu_split_block(struct pcpu_chunk *chunk,int i,
  	/* insert new subblocks */
 	memmove(&chunk->map[i + nr_extra],&chunk->map[i],
 			sizeof(chunk->map[0]) * (chunk->map_used - i));
-	chunk_map_used += nr_extra;
+	chunk->map_used += nr_extra;
 
 	if(head)
 	{
@@ -279,7 +293,7 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk,int size,int align)
 	}
 
 	chunk->contig_hint = max_contig; /* fully scanned */
-	pcpu_chunk_relocate(chunl,oslot);
+	pcpu_chunk_relocate(chunk,oslot);
 
 	/* tell the upper layer that this chunk has no matching area */
 	return -1;
@@ -310,7 +324,7 @@ static void pcpu_free_area(struct pcpu_chunk *chunk,int freeme)
 		i--;
 	}
 	/* Merge with next */
-	if(i + 1 < chunk->map_unsed && chunk->map[i + 1] >= 0) {
+	if(i + 1 < chunk->map_used && chunk->map[i + 1] >= 0) {
 		chunk->map[i] += chunk->map[i + 1];
 		chunk->map_used--;
 		memmove(&chunk->map[i + 1],&chunk->map[1 + 2],
@@ -328,18 +342,18 @@ static int pcpu_populate_chunk(struct pcpu_chunk *chunk,int off,int size);
 static void __percpu *pcpu_alloc(size_t size,size_t align,bool reserved)
 {
 	static int warn_limit = 10;
-	struct pcp_chunk *chunk;
+	struct pcpu_chunk *chunk;
 	const char *err;
 	int slot,off,new_alloc;
 	unsigned long flags;
 
-	if(unlikely(!size || size > PCP_MIN_UNIT_SIZE || align > PAGE_SIZE))
+	if(unlikely(!size || size > PCPU_MIN_UNIT_SIZE || align > PAGE_SIZE))
 	{
 		mm_warn("illegal size (%p) or align %p for"
 				" percpu allocation\n",(void *)size,(void *)align);
 		return NULL;
 	}
-	mutex_lock(&pcp_alloc_mutex);
+	mutex_lock(&pcpu_alloc_mutex);
 	spin_lock_irqsave(&pcpu_lock,flags);
 
 	/* seve reserved allocations from the reserved chunk if available */
@@ -366,7 +380,7 @@ static void __percpu *pcpu_alloc(size_t size,size_t align,bool reserved)
 
 		off = pcpu_alloc_area(chunk,size,align);
 		if(off >= 0)
-			goto arae_found;
+			goto area_found;
 
 		err = "alloc_from reserved chunk failed";
 		goto fail_unlock;
@@ -390,7 +404,7 @@ restart:
 					err = "failed to extend area map";
 					goto fail_unlock_mutex;
 				}
-				spin_lock_irqsave(&pcpu_lock),flags;
+				spin_lock_irqsave(&pcpu_lock,flags);
 				/*
 				 * pcpu_lock has been dropped,need to 
 				 * restart cpu_slot list walking.
@@ -398,7 +412,7 @@ restart:
 				goto restart;
 			}
 
-			off = pcp_alloc_area(chunk,size,align);
+			off = pcpu_alloc_area(chunk,size,align);
 			if(off >= 0)
 				goto area_found;
 		}
@@ -414,7 +428,7 @@ restart:
 	}
 
 	spin_lock_irqsave(&pcpu_lock,flags);
-	pcpu_chunk_reloate(chunk,-1);
+	pcpu_chunk_relocate(chunk,-1);
 	goto restart;
 
 area_found:
@@ -476,16 +490,18 @@ static struct pcpu_chunk *pcpu_alloc_chunk(void)
 	chunk->map[chunk->map_used++] = pcpu_unit_size;
 
 	INIT_LIST_HEAD(&chunk->list);
-	chunk->free_szie = pcpu_unit_size;
+	chunk->free_size = pcpu_unit_size;
 	chunk->contig_hint = pcpu_unit_size;
 
 	return chunk;
 }
+
+extern struct vmap_area *node_to_va(struct rb_node *n);
 /*
  * Allocate vmalloc area for pepcu allocator.
  */
 struct vm_struct **pcpu_get_vm_areas(const unsigned long *offsets,
-		const size_t sizes,int nr_vms,
+		const size_t *sizes,int nr_vms,
 		size_t align)
 {
 	const unsigned long vmalloc_start = ALIGN(VMALLOC_START,align);
@@ -510,7 +526,7 @@ struct vm_struct **pcpu_get_vm_areas(const unsigned long *offsets,
 		for(area2 = 0 ; area2 < nr_vms ; area2++)
 		{
 			unsigned long start2 = offsets[area2];
-			unsigned long end2 = start2 + sizes[arae2];
+			unsigned long end2 = start2 + sizes[area2];
 
 			if(area2 == area)
 				continue;
@@ -527,15 +543,19 @@ struct vm_struct **pcpu_get_vm_areas(const unsigned long *offsets,
 		return NULL;
 	}
 
-	vms = kzalloc(sizeof(vms[0]) * nr_vms , GFP_KERNEL);
-	vas = kzalloc(sizeof(vas[0]) * nr_vms , GFP_KERNEL);
+	vms = (struct vm_struct **)(unsigned long)kzalloc(
+							sizeof(vms[0]) * nr_vms , GFP_KERNEL);
+	vas = (struct vmap_area **)(unsigned long)kzalloc(
+							sizeof(vas[0]) * nr_vms , GFP_KERNEL);
 	if(!vas || !vms)
 		goto err_free;
 
 	for(area = 0;area < nr_vms ; area++)
 	{
-		vas[area] = kzalloc(sizeof(struct vmap_area),GFP_KERNEL);
-		vms[area] = kzalloc(sizeof(struct vm_struct),GFP_KERNEL);
+		vas[area] = (struct vmap_area *)(unsigned long)kzalloc(
+							sizeof(struct vmap_area),GFP_KERNEL);
+		vms[area] = (struct vm_struct *)(unsigned long)kzalloc(
+							sizeof(struct vm_struct),GFP_KERNEL);
 		if(!vas[area] || !vms[area])
 			goto err_free;
 	}
@@ -579,7 +599,7 @@ retry:
 		 * If next overlaps,move base downwards so that it's 
 		 * right below next and then recheck.
 		 */
-		if(next && next->va_strat < base + end)
+		if(next && next->va_start < base + end)
 		{
 			base = pvm_determine_end(&next,&prev,align) - end;
 			term_area = area;
@@ -684,6 +704,7 @@ void __maybe_unused pcpu_next_unpop(struct pcpu_chunk *chunk,
 			(rs) < (re);    \
 			(rs) = (re) + 1,pcpu_next_pop((chunk),&(rs),&(re),(end)))
 
+extern struct page *vmalloc_to_page(const void *vmalloc_addr);
 static struct page *pcpu_chunk_page(struct pcpu_chunk *chunk,
 		unsigned int cpu,int page_idx)
 {
@@ -766,7 +787,7 @@ static int __pcpu_map_pages(unsigned long addr,struct page **pages,
  * Map pages into a pcpu_chunk
  */
 static int pcpu_map_pages(struct pcpu_chunk *chunk,
-		struct page *pages,unsigned long *populated,
+		struct page **pages,unsigned long *populated,
 		int page_start,int page_end)
 {
 	unsigned int cpu,tcpu;
@@ -867,7 +888,8 @@ static struct page **pcpu_get_pages_and_bitmap(struct pcpu_chunk *chunk,
 	}
 
 	memset(pages,0,pages_size);
-	bitmap_copy(bitmap,chunk->populated,pcpu_unit_pages);
+	bitmap_copy(bitmap,
+			(unsigned long *)(unsigned long)chunk->populated,pcpu_unit_pages);
 
 	*bitmapp = bitmap;
 	
@@ -926,7 +948,8 @@ static int pcpu_populate_chunk(struct pcpu_chunk *chunk,int off,int size)
 	pcpu_post_map_flush(chunk,page_start,page_end);
 
 	/* commit new bitmap */
-	bitmap_copy(chunk->populated,populated,pcpu_unit_pages);
+	bitmap_copy((unsigned long *)(unsigned long)chunk->populated,
+			populated,pcpu_unit_pages);
 clear:
 	for_each_possible_cpu(cpu)
 		memset((void *)pcpu_chunk_addr(chunk,cpu,0) + off , 0 , size);

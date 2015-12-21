@@ -1,5 +1,5 @@
 #ifndef _CPUTYPE_H_
-#define _CPUTYPE_H_
+#define _CPUTYPE_H_   1
 
 #ifndef CONFIG_CPU_XSC3
 #define cpu_is_xsc3()      0

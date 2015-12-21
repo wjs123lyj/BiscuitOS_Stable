@@ -1,5 +1,6 @@
 #ifndef _CGROUP_H_
-#define _CGROUP_H_
+#define _CGROUP_H_   1
+
 #include "list.h"
 
 struct cgroup_subsys {

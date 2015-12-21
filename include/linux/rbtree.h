@@ -1,6 +1,5 @@
 #ifndef _RBTREE_H_
 #define _RBTREE_H_
-#include "kernel.h"
 
 struct rb_node {
 	unsigned long rb_parent_color;
@@ -20,7 +19,7 @@ struct rb_root {
 #define rb_is_red(r)  (!rb_color(r))
 #define rb_is_block(r)  rb_color(r)
 #define rb_set_red(r)  do { (r)->rb_parent_color &= ~1;} while(0)
-#define rb_set_block(r) do{ (r)->rb_parent_color |= 1;} while(0)
+#define rb_set_black(r) do{ (r)->rb_parent_color |= 1;} while(0)
 
 static inline void rb_set_parent(struct rb_node *rb,struct rb_node *p)
 {

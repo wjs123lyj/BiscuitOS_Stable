@@ -1,6 +1,5 @@
 #ifndef _BITOPS_H_
-#define _BITOPS_H_
-#include "kernel.h"
+#define _BITOPS_H_ 1
 
 #define BITS_PER_LONG   32
 

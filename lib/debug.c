@@ -1,11 +1,14 @@
-#include "../include/linux/debug.h"
-#include "../include/linux/memblock.h"
-#include "../include/linux/types.h"
-#include "../include/linux/boot_arch.h"
-#include "../include/linux/setup.h"
+#include "../include/linux/kernel.h"
 #include "../include/linux/mmzone.h"
-#include "../include/linux/atomic.h"
-#include "../include/linux/mm_type.h"
+#include "../include/linux/bootmem.h"
+#include "../include/linux/setup.h"
+#include "../include/linux/memblock.h"
+
+
+extern struct memblock memblock;
+extern struct meminfo meminfo;
+extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
+extern unsigned int memory_array1[CONFIG_BANK1_SIZE / BYTE_MODIFY];
 
 unsigned int high_to_low(unsigned int old)
 {

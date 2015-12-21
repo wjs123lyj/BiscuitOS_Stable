@@ -1,16 +1,6 @@
-#include "../../include/linux/page.h"
-#include "../../include/linux/mm_type.h"
-#include "../../include/linux/poison.h"
-#include "../../include/linux/page-debug-flags.h"
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/page-flags.h"
-#include "../../include/linux/mm.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/traps.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../../include/linux/mm_types.h"
+#include "../../include/linux/page-debug-flags.h"
 
 extern int debug_pagealloc_enabled;
 

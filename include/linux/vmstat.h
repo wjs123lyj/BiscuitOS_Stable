@@ -1,8 +1,8 @@
 #ifndef _VMSTAT_H_
 #define _VMSTAT_H_
-#include <string.h>
+#include "types.h"
 #include "mmzone.h"
-#include "atomic-long.h"
+
 /*
  * Manage combined zone based /global counters.
  */
@@ -47,4 +47,10 @@ static inline unsigned long global_page_state(enum zone_stat_item item)
 	return x;
 }
 #define zone_statistics(_zl,z) do{} while(0)
+
+static inline unsigned long zone_page_state(struct zone *zone,
+		enum zone_stat_item item)
+{
+	long x = atomic_long_read(&zone->vm_stat[item]);
+}
 #endif

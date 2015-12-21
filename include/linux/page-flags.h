@@ -1,9 +1,8 @@
 #ifndef _PAGE_FLAGS_H_
 #define _PAGE_FLAGS_H_
 
-#include "config.h"
 #include "bounds.h"
-#include "mmzone.h"
+#include "mm_types.h"
 /*
  * Various page->flags bits:
  * PG_reserved is set for special pages,which can never be swapped out.Some
@@ -159,6 +158,8 @@ static inline int __TestClearPageMlocked(struct page *page)
 	test_and_clear_bit(PG_mlocked,&page->flags);
 }
 
+extern inline int is_highmem(struct zone *zone);
+extern inline struct zone *page_zone(struct page *page);
 /*
  * Must use a macro here due to header dependency issues.page_zone() is not
  * available at this point.
@@ -176,3 +177,4 @@ static inline void __ClearPageTail(struct page *page)
 	page->flags &= ~PG_head_tail_mask;
 }
 #endif
+

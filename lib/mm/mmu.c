@@ -1,31 +1,24 @@
-#include "../../include/linux/config.h"
-#include "../../include/linux/types.h"
-#include "../../include/linux/debug.h"
+#include "../../include/linux/kernel.h"
+#include "../../include/linux/page.h"
 #include "../../include/linux/highmem.h"
+#include "../../include/linux/map.h"
 #include "../../include/linux/pgtable.h"
 #include "../../include/linux/memblock.h"
-#include "../../include/linux/kernel.h"
 #include "../../include/linux/setup.h"
-#include "../../include/linux/init_mm.h"
-#include "../../include/linux/map.h"
-#include "../../include/linux/pgalloc.h"
-#include "../../include/linux/traps.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/memory.h"
 #include "../../include/linux/mm.h"
-#include "../../include/linux/pgtable-hwdef.h"
-#include "../../include/linux/mmu.h"
 #include "../../include/linux/map.h"
-#include "../../include/linux/io.h"
-#include "../../include/linux/domain.h"
-#include "../../include/asm/smp_plat.h"
-#include "../../include/linux/cputype.h"
-
+#include "../../include/linux/pgtable-hwdef.h"
+#include "../../include/linux/page.h"
 #include "../../include/asm/system.h"
+#include "../../include/linux/io.h"
+#include "../../include/linux/vmalloc.h"
+#include "../../include/linux/domain.h"
+#include "../../include/linux/memory.h"
 
-#include <string.h>
-#include <malloc.h>
 
+extern void *vectors_page;
+extern struct meminfo meminfo;
+extern pgprot_t protection_map[16];
 
 #define CPOLICY_UNCACHED        0
 #define CPOLICY_BUFFERED        1
@@ -591,7 +584,7 @@ static pte_t * __init early_pte_alloc(pmd_t *pmd,unsigned long addr,
 /*
  * pte_set
  */
-void set_pte_ext(phys_addr_t addr,unsigned long pte)
+void set_pte_ext(phys_addr_t addr,unsigned long pte,int e)
 {
 	unsigned int *p;
 
@@ -608,7 +601,8 @@ void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,
 	
 	do {
 		/* Core Deal */
-		set_pte_ext(pfn_pte(pfn,0),(unsigned long)pte);
+		/* Need debug */
+		//set_pte_ext(pfn_pte(pfn,0),(unsigned long)pte,0);
 		/* --------- */
 		pfn++;
 	} while(pte++,addr += PAGE_SIZE,addr != end);

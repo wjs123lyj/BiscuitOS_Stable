@@ -1,23 +1,17 @@
-#include "../../include/linux/config.h"
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/bootmem.h"
-#include "../../include/linux/mmzone.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/pfn.h"
-#include "../../include/linux/error.h"
 #include "../../include/linux/list.h"
-#include "../../include/linux/mm_type.h"
+#include "../../include/linux/bootmem.h"
+#include "../../include/linux/mm_types.h"
 #include "../../include/linux/bitops.h"
-
-#include "../../include/asm/dma.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../../include/linux/mmzone.h"
+#include "../../include/asm/errno-base.h"
+#include "../../include/linux/memory.h"
 
 unsigned long max_low_pfn;
 unsigned long min_low_pfn;
 unsigned long max_pfn;
+
+extern void *phys_to_mem(phys_addr_t addr);
 
 #define bootmem_arch_preferred_node(__bdata,size,align,goal,limit)     \
 	(NODE_DATA(0)->bdata)

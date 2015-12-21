@@ -1,11 +1,9 @@
 #ifndef _MM_H_
 #define _MM_H_
-#include "mm_type.h"
-#include "page.h"
-#include "atomic.h"
+
+#include "pgtable.h"
 #include "mmzone.h"
-#include "pfn.h"
-#include "pgtable-nopud.h"
+#include "numa.h"
 
 
 #define SECTIONS_WIDTH      0
@@ -71,7 +69,7 @@ static inline int page_to_nid(struct page *page)
 {
 	return (page->flags >> NODES_PGSHIFT) & NODES_MASK;
 }
-static inline struct zone *page_zone(struct page *page)
+inline struct zone *page_zone(struct page *page)
 {
 	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
 }
@@ -205,7 +203,8 @@ static inline void init_page_count(struct page *page)
 
 static inline void *lowmem_page_address(struct page *page)
 {
-	return (void *)(unsigned long)__va(PFN_PHYS(page_to_pfn(page)));
+	return (void *)(unsigned long)__va(
+			PFN_PHYS(page_to_pfn(page)));
 }
 
 struct mem_type {
@@ -221,7 +220,6 @@ extern pmd_t *top_pmd;
 
 #define TOP_PTE(x)  pte_offset_kernel(top_pmd,x)
 
-typedef void compound_page_dtor(struct page *);
 
 static inline void set_compound_page_dtor(struct page *page,
 		compound_page_dtor *dtor)
@@ -230,7 +228,7 @@ static inline void set_compound_page_dtor(struct page *page,
 }
 static inline struct page *virt_to_head_page(const void *x)
 {
-	struct page *page = virt_to_page(x);
+	struct page *page = (struct page *)(unsigned long)virt_to_page(x);
 	return compound_head(page);
 }
 /*
@@ -242,7 +240,7 @@ static inline int get_page_unless_zero(struct page *page)
 	return atomic_inc_not_zero(&page->_count);
 }
 #define compound_lock_irqsave(x)      do {} while(0)
-#define compound_unlock_irqrestore(x) do {} while(0)
+#define compound_unlock_irqrestore(y,x) do {} while(0)
 
 static inline compound_page_dtor *get_compound_page_dtor(struct page *page)
 {
@@ -262,18 +260,18 @@ static inline int __pmd_alloc(struct mm_struct *mm,pud_t *pud,
 static inline pud_t *pud_alloc(struct mm_struct *mm,pgd_t *pgd,
 		unsigned long address)
 {
-	return (unlikely(pgd_none(*pgd)) && __pud_alloc(mm,pgd,address)) ?
+	return (unlikely(pgd_none(pgd)) && __pud_alloc(mm,pgd,address)) ?
 		NULL : pud_offset(pgd,address);
 }
 static inline pmd_t *pmd_alloc(struct mm_struct *mm,pud_t *pud,
 		unsigned long address)
 {
-	return (unlikely(pud_none(*pud)) && __pmd_alloc(mm,pud,address)) ?
+	return (unlikely(pud_none(pud)) && __pmd_alloc(mm,pud,address)) ?
 		NULL : pmd_offset(pud,address);
 }
 
 #define pte_alloc_kernel(pmd,address)     \
-	((unlikely(pmd_none(*(pmd))) && __pte_alloc_kernel(pmd,address)) ? \
+	((unlikely(pmd_none((pmd))) && __pte_alloc_kernel(pmd,address)) ? \
 	 NULL : pte_offset_kernel(pmd,address))
 /*
  * Determine if an address is within the vmalloc range.

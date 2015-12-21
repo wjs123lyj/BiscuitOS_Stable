@@ -1,9 +1,10 @@
 #ifndef _BOOTMEM_H_
-#define _BOOTMEM_H_
+#define _BOOTMEM_H_  1
+
 #include "list.h"
+#include "numa.h"
 #include "../asm/dma.h"
 #include "../asm/cache.h"
-#include "numa.h"
 
 #define BOOTMEM_DEFAULT        0
 #define BOOTMEM_EXCLUSIVE      (1 << 0)

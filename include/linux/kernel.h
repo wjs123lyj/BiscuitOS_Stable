@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "config.h"
+#include "types.h"
+#include <string.h>
 
 #define __init
 #define __init_memblock
@@ -15,11 +17,12 @@
 #define __force 
 #define __read_mostly
 #define __maybe_unused
-
+#define __rcu
 
 #define true  1
 #define false 0
 #define bool   int
+
 
 #define ULONG_MAX (~0UL)
 
@@ -74,7 +77,7 @@
 		mm_debug("[Sleep]\n");}   \
 		while(0)
 
-#define _RET_IP     (unsigned long)__builtin_return_address(0)
+#define _RET_IP_     (unsigned long)__builtin_return_address(0)
 
 /*
  * and if you can't take the strict
@@ -85,7 +88,7 @@
 #define min_t(type,x,y)    ({        \
 		type __min1 = (x);     \
 		type __min2 = (y);     \
-		__min1 < min2 ? __min1 : __min2;})
+		__min1 < __min2 ? __min1 : __min2;})
 
 #define max_t(type,x,y)  ({     \
 		type __max1 = (x);     \

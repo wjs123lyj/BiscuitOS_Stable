@@ -1,6 +1,5 @@
 #ifndef _CACHE_H_
 #define _CACHE_H_
-#include "../linux/config.h"
 
 
 #define L1_CACHE_SHIFT  CONFIG_ARM_L1_CACHE_SHIFT

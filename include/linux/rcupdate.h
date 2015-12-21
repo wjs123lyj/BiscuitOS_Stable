@@ -1,6 +1,7 @@
 #ifndef _RCUPDATE_H_
 #define _RCUPDATE_H_
 
+
 #define __rcu 
 
 /*

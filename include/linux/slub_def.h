@@ -2,7 +2,13 @@
 #define _SLUB_DEF_H_
 
 #include "list.h"
-#include "atomic-long.h"
+#include "types.h"
+#include "slab.h"
+#include "spinlock_types.h"
+#include "../asm/getorder.h"
+#include "log2.h"
+#include "kmemleak.h"
+
 enum stat_item {
 	ALLOC_FASTPATH,          /* Allocation from cpu slab */
 	ALLOC_SLOWPATH,          /* Allocation by getting a new cpu slab */
@@ -10,6 +16,7 @@ enum stat_item {
 	FREE_SLOWPATH,           /* Freeing not to cpu slab */
 	FREE_FROZEN,             /* Freeing to frozen slab */
 	FREE_ADD_PARTIAL,        /* Freeing moves slab to partial list */
+	FREE_REMOVE_PARTIAL,     /* Freeing removes last object */
 	ALLOC_FROM_PARTIAL,      /* Cpu slab acquired from partial list */
 	ALLOC_SLAB,              /* Cpu slab acquried from page allocator */
 	ALLOC_REFILL,            /* Refill cpu slab from slab freelist */
@@ -24,10 +31,33 @@ enum stat_item {
 	NR_SLUB_STAT_ITEMS
 };
 
+
 #define KMALLOC_MIN_SIZE 8
 #define KMALLOC_SHIFT_LOW  ilog2(KMALLOC_MIN_SIZE)
 
+#define ARCH_KMALLOC_MINALIGN __alignof__(unsigned long long)
+
+#define ARCH_SLAB_MINALIGN __alignof__(unsigned long long)
+
+/*
+ * Maximum kmalloc object size handled by SLUB.Larger object allocations
+ * area passed through to the page allocator.The page allocator "fastpath"
+ * is relatively slow so we need this value sufficiently high so that
+ * performance critical objects are allocated through the SLUB fastpath
+ *
+ * This should be dropped to PAGE_SIZE / 2once the page allocator
+ * "fastpath" becomes competitive with the slab allocator fastpaths.
+ */
+#define SLUB_MAX_SIZE   (2 * PAGE_SIZE)
+
 #define SLUB_PAGE_SHIFT  (PAGE_SHIFT + 2)
+
+#ifdef CONFIG_ZONE_DMA
+#define SLUB_DMA   __GFP_DMA
+#else
+/* Disable DMA functionality */
+#define SLUB_DMA   ((gfp_t)0)
+#endif
 
 struct kmem_cache_cpu {
 	void **freelist;    /* Pointer to first free per cpu object */
@@ -38,6 +68,7 @@ struct kmem_cache_cpu {
 #endif
 };
 struct kmem_cache_node {
+	spinlock_t list_lock; /* Protet partial list and nr_partial */
 	unsigned long nr_partial;
 	struct list_head partial;
 #ifdef CONFIG_SLUB_DEBUG
@@ -58,7 +89,7 @@ struct kmem_cache_order_objects {
  * Slab cache management.
  */
 struct kmem_cache {
-	struct kmem_cache_type __percpu *cpu_slab;
+	struct kmem_cache_cpu __percpu *cpu_slab;
 	/*
 	 * Userd for retriving partial slabs etc
 	 */
@@ -80,13 +111,16 @@ struct kmem_cache {
 	const char *name;  /* Name(only for display!)*/
 	struct list_head list; /* List of slab caches */
 	struct kmem_cache_node *node[MAX_NUMNODES];
-}
+};
 
-static inline void *kmem_cache_alloc_trace(size_t size,
-		struct kmem_cache *cachep,gfp_t flags)
+extern void *kmem_cache_alloc(struct kmem_cache *s,gfp_t gfpflags);
+
+static inline void *kmem_cache_alloc_trace(struct kmem_cache *cachep,
+		gfp_t flags,size_t size)
 {
 	return kmem_cache_alloc(cachep,flags);
 }
+
 static inline void *kmalloc_order(size_t size,gfp_t flags,unsigned int order)
 {
 	void *ret = (void *)(unsigned long)__get_free_pages(flags | 
@@ -158,13 +192,14 @@ static inline int kmalloc_index(size_t size)
 	 *			return i;
 	 */
 }
+extern struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];
 /*
  * Find the slab cache for a given combination of allocation flags and size.
  *
  * This ought to end up with a global pointer to the right cache
  * in kmalloc_caches.
  */
-static inline kmem_cache *kmalloc_slab(size_t size)
+static inline struct kmem_cache *kmalloc_slab(size_t size)
 {
 	int index = kmalloc_index(size);
 
@@ -173,10 +208,11 @@ static inline kmem_cache *kmalloc_slab(size_t size)
 
 	return kmalloc_caches[index];
 }
+extern void *__kmalloc(size_t size,gfp_t flags);
 /*
  * kmalloc!!!!
  */
-static inline void *kmalloc(size_t size,gfp_t flags)
+inline void *kmalloc(size_t size,gfp_t flags)
 {
 	if(__builtin_constant_p(size))
 	{
@@ -196,13 +232,16 @@ static inline void *kmalloc(size_t size,gfp_t flags)
 	return __kmalloc(size,flags);
 
 }
+extern void *kmem_cache_alloc_node(struct kmem_cache *s,
+		gfp_t gfpflags,int node);
 static inline void *kmem_cache_alloc_node_trace(
-		struct kmem_cache *s,gfp_t gfp_t gfpflags,
+		struct kmem_cache *s,gfp_t gfpflags,
 		int node,size_t size)
 {
 	return kmem_cache_alloc_node(s,gfpflags,node);
 }
-static inline void *kmalloc_node(size_t size,gfp_t flags,int node)
+extern void *__kmalloc_node(size_t size,gfp_t flags,int node);
+inline void *kmalloc_node(size_t size,gfp_t flags,int node)
 {
 	if(__builtin_constant_p(size) &&
 			size <= SLUB_MAX_SIZE && !(flags & SLUB_DMA))

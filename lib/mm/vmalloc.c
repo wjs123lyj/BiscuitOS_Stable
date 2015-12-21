@@ -1,25 +1,32 @@
-#include "../../include/linux/vmalloc.h"
-#include "../../include/linux/spinlock_types.h"
-#include "../../include/linux/page.h"
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/rbtree.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/mm_type.h"
-#include "../../include/linux/gfp.h"
-#include "../../include/linux/rwlock_types.h"
-#include "../../include/asm/errno-base.h"
 #include "../../include/linux/pgtable.h"
+#include "../../include/linux/rbtree.h"
+#include "../../include/linux/vmalloc.h"
+#include "../../include/linux/bitops.h"
+#include "../../include/linux/gfp.h"
+#include "../../include/asm/errno-base.h"
 #include "../../include/linux/rculist.h"
 #include "../../include/linux/cpumask.h"
-#include "../../include/linux/pgtable-nopud.h"
+#include "../../include/linux/spinlock_types.h"
 #include "../../include/linux/radix-tree.h"
-#include "../../include/linux/types.h"
 #include "../../include/linux/atomic.h"
-#include "../../include/linux/rbtree.h"
 #include "../../include/linux/mm.h"
-#include "../../include/linux/mmu.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "../../include/linux/debug.h"
+#include "../../include/linux/kmemleak.h"
+#include "../../include/linux/hardirq.h"
+#include "../../include/linux/debug_locks.h"
+#include "../../include/linux/cacheflush.h"
+#include "../../include/linux/rwlock.h"
+#include "../../include/linux/pgtable-nopud.h"
+#include "../../include/linux/spinlock.h"
+#include "../../include/linux/err.h"
+#include "../../include/linux/slab.h"
+#include "../../include/linux/printk.h"
+#include "../../include/linux/bitmap.h"
+#include "../../include/linux/rcutiny_plugin.h"
+#include "../../include/linux/tlbflush.h"
+#include "../../include/linux/mutex.h"
+
 
 /**** Global kva allocator ****/
 
@@ -64,18 +71,26 @@ struct vmap_block {
 	struct list_head purge;
 };
 
-static DEFINE_SPINLOCK(vmap_area_lock);
+int vmlist_lock;
+//DEFINE_RWLOCK(vmlist_lock);
+struct vm_struct *vmlist;
+
+int vmap_area_lock;
+//DEFINE_SPINLOCK(vmap_area_lock);
 static struct rb_root vmap_area_root = RB_ROOT;
-static unsigned long vmap_area_pcpu_hole;
+unsigned long vmap_area_pcpu_hole;
 static atomic_t vmap_lazy_nr = ATOMIC_INIT(0);
 static LIST_HEAD(vmap_area_list);
-
+extern unsigned long totalram_pages;
+extern void kfree(const void *x);
 /*
  * Radix tree of vmap blocks,indexed by address,to quickly find a vmap block
  * in the free path.Could get rid of this if we change the API to return a
  * 'cookie' from alloc,to be passed to free.But no big deal yet.
  */
-static DEFINE_SPINLOCK(vmap_block_tree_lock);
+static int vmap_block_tree_lock;
+
+//static DEFINE_SPINLOCK(vmap_block_tree_lock);
 static RADIX_TREE(vmap_block_tree,GFP_ATOMIC);
 /**** Per cpu kva allocator ****/
 
@@ -149,6 +164,7 @@ int is_vmalloc_or_module_addr(const void *x)
 #endif
 	return is_vmalloc_addr(x);
 }
+static void purge_fragmented_blocks_allcpus(void);
 /*
  * Purges all lazily - free vmap areas.
  */
@@ -173,7 +189,7 @@ static void __purge_vmap_area_lazy(unsigned long *start,unsigned long *end,
 	} else
 		spin_lock(&purge_lock);
 	if(sync)
-		purge_fragmented_block_allcpus();
+		purge_fragmented_blocks_allcpus();
 
 	rcu_read_lock();
 	list_for_each_entry_rcu(va,&vmap_area_list,list)
@@ -217,8 +233,11 @@ static void try_purge_vmap_area_lazy(void)
 
 	__purge_vmap_area_lazy(&start,&end,0,0);
 }
-static void rcu_free_vb(struct rcu_head *head);
 static void free_vmap_area_noflush(struct vmap_area *va);
+static void rcu_free_vb(struct rcu_head *head);
+/*
+ * 
+ */
 static void free_vmap_block(struct vmap_block *vb)
 {
 	struct vmap_block *tmp;
@@ -226,7 +245,8 @@ static void free_vmap_block(struct vmap_block *vb)
 
 	vb_idx = addr_to_vb_idx(vb->va->va_start);
 	spin_lock(&vmap_block_tree_lock);
-	tmp = radix_tree_delete(&vmap_block_tree,vb_idx);
+	tmp = (struct vmap_block *)(unsigned long)radix_tree_delete(
+					&vmap_block_tree,vb_idx);
 	spin_unlock(&vmap_block_tree_lock);
 	BUG_ON(tmp != vb);
 
@@ -252,8 +272,10 @@ static void purge_fragmented_blocks(int cpu)
 		{
 			vb->free = 0; /* prevent further allocs after releasing lock */
 			vb->dirty = VMAP_BBMAP_BITS; /* prevent purging it again */
-			bitmap_fill(vb->alloc_map,VMAP_BBMAP_BITS);
-			bitmap_fill(vb->dirty_map,VMAP_BBMAP_BITS);
+			bitmap_fill((unsigned long *)(unsigned long)vb->alloc_map,
+					VMAP_BBMAP_BITS);
+			bitmap_fill((unsigned long *)(unsigned long)vb->dirty_map,
+					VMAP_BBMAP_BITS);
 			spin_lock(&vbq->lock);
 			list_del_rcu(&vb->free_list);
 			spin_unlock(&vbq->lock);
@@ -287,7 +309,7 @@ static void purge_vmap_aera_lazy(void)
 
 	__purge_vmap_area_lazy(&start,&end,1,0);
 }
-static void __insert_vmap_area(struct vmap_area *va)
+void __insert_vmap_area(struct vmap_area *va)
 {
 	struct rb_node **p = &vmap_area_root.rb_node;
 	struct rb_node *parent = NULL;
@@ -323,7 +345,7 @@ static void __insert_vmap_area(struct vmap_area *va)
 /*
  * Kick off a purge of the outstanding lazy areas.
  */
-static void purge_vmap_area_lazy(void)
+void purge_vmap_area_lazy(void)
 {
 	unsigned long start = ULONG_MAX,end = 0;
 
@@ -346,10 +368,11 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	BUG_ON(!size);
 	BUG_ON(size & ~PAGE_MASK);
 
-	va = kmalloc_node(sizeof(struct vmap_area),
+	va = (struct vmap_area *)(unsigned long)kmalloc_node(
+				sizeof(struct vmap_area),
 			gfp_mask & GFP_RECLAIM_MASK,node);
 	if(unlikely(!va))
-		return ERR_PTR(-ENOMEM);
+		return (struct vmap_area *)(unsigned long)ERR_PTR(-ENOMEM);
 
 retry:
 	addr = ALIGN(vstart,align);
@@ -420,7 +443,7 @@ overflow:
 					"use vmalloc=<size> to increase size.\n",
 					(void *)size);
 		kfree(va);
-		return ERR_PTR(-EBUSY);
+		return (struct vmap_area *)(unsigned long)ERR_PTR(-EBUSY);
 	}
 
 	BUG_ON(addr & (align - 1));
@@ -435,10 +458,8 @@ overflow:
 	
 }
 /*** Old vmalloc interfaces ***/
-DEFINE_RWLOCK(vmlist_lock);
-struct vm_struct *vmlist;
 
-static void insert_vmalloc_vm(struct vm_struct *vm,struct vmap_area *va,
+void insert_vmalloc_vm(struct vm_struct *vm,struct vmap_area *va,
 		unsigned long flags,void *caller)
 {
 	struct vm_struct *tmp,**p;
@@ -485,7 +506,8 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	if(unlikely(!size))
 		return NULL;
 
-	area = kzalloc_node(sizeof(*area),gfp_mask & GFP_RECLAIM_MASK,node);
+	area = (struct vm_struct *)(unsigned long)kzalloc_node(
+					sizeof(*area),gfp_mask & GFP_RECLAIM_MASK,node);
 	if(unlikely(!area))
 		return NULL;
 
@@ -553,12 +575,14 @@ static void free_vmap_area_noflush(struct vmap_area *va)
 static void vunmap_pte_range(pmd_t *pmd,unsigned long addr,unsigned long end)
 {
 	pte_t *pte;
-
+#if 0
 	pte = pte_offset_kernel(pmd,addr);
 	do {
-		pte_t ptent = ptep_get_and_clear(&init_mm,addr,pte);
+		pte_t ptent;
+		ptent = ptep_get_and_clear(&init_mm,addr,pte);
 		WARN_ON(!pte_none(ptent) && !pte_present(ptent));
 	} while(pte++,addr += PAGE_SIZE , addr != end);
+#endif
 }
 static void vunmap_pmd_range(pud_t *pud,unsigned long addr,unsigned long end)
 {
@@ -568,7 +592,9 @@ static void vunmap_pmd_range(pud_t *pud,unsigned long addr,unsigned long end)
 	pmd = pmd_offset(pud,addr);
 	do {
 		next = pmd_addr_end(addr,end);
-		if(pmd_none_or_clear_bad(pmd))
+		/* Need debug */
+		//if(pmd_none_or_clear_bad(pmd))
+		if(0)
 			continue;
 		vunmap_pte_range(pmd,addr,next);
 	} while(pmd++,addr = next,addr != end);
@@ -581,7 +607,9 @@ static void vunmap_pud_range(pgd_t *pgd,unsigned long addr,unsigned long end)
 	pud = pud_offset(pgd,addr);
 	do {
 		next = pud_addr_end(addr,end);
-		if(pud_none_or_clear_bad(pud))
+		/* Need debug */
+		//if(pud_none_or_clear_bad(pud))
+		if(0)
 			continue;
 		vunmap_pmd_range(pud,addr,next);
 	} while(pud++,addr = next,addr != end);
@@ -595,7 +623,9 @@ static void vunmap_page_range(unsigned long addr,unsigned long end)
 	pgd = pgd_offset_k(addr);
 	do {
 		next = pgd_addr_end(addr,end);
-		if(pgd_none_or_clear_bad(pgd))
+		/* Need debug */
+		//if(pgd_none_or_clear_bad(pgd))
+		if(0)
 			continue;
 		vunmap_pud_range(pgd,addr,next);
 	} while(pgd++,addr = next,addr != end);
@@ -611,8 +641,9 @@ static int vmap_pte_range(pmd_t *pmd,unsigned long addr,
 	 * nr is running index into the array which helps higher level
 	 * callers keep track of where we're up to.
 	 */
-	
-	pte = pte_alloc_kernel(pmd,addr);
+    
+	/* Need to debug */
+	//pte = pte_alloc_kernel(pmd,addr);
 	if(!pte)
 		return -ENOMEM;
 	do {
@@ -916,9 +947,9 @@ static void __vunmap(const void *addr,int deallocate_pages)
 		mm_warn("Trying to vfree() nonexistent vm area\n");
 		return;
 	}
-	
-	debug_check_no_locks_freed(addr,area->size);
-	debug_check_no_obj_freed(addr,area->size);
+	/* Need debug */	
+//	debug_check_no_locks_freed(addr,area->size);
+//	debug_check_no_obj_freed(addr,area->size);
 
 	if(deallocate_pages) {
 		int i;
@@ -949,14 +980,14 @@ void vfree(const void *addr)
 
 	__vunmap(addr,1);
 }
-static struct vmap_area *node_to_va(struct rb_node *n)
+struct vmap_area *node_to_va(struct rb_node *n)
 {
 	return n ? rb_entry(n,struct vmap_area,rb_node) : NULL;
 }
 /*
  * Find the highest aligned address between two vmap_areas
  */
-static unsigned long pvm_determine_end(struct vmap_area **pnext,
+unsigned long pvm_determine_end(struct vmap_area **pnext,
 		struct vmap_area **pprev,
 		unsigned long align)
 {
@@ -979,7 +1010,7 @@ static unsigned long pvm_determine_end(struct vmap_area **pnext,
 /*
  * Find the next and prev vmap_area surrounding @end
  */
-static bool pvm_find_next_prev(unsigned long end,
+bool pvm_find_next_prev(unsigned long end,
 		struct vmap_area **pnext,
 		struct vmap_area **pprev)
 {
@@ -1047,11 +1078,11 @@ struct page *vmalloc_to_page(const void *vmalloc_addr)
 			pmd_t *pmd = pmd_offset(pud,addr);
 			if(!pmd_none(pmd)) {
 				pte_t *ptep,pte;
-
-				ptep = pte_offset_map(pmd,addr);
+				/* Need rebuilt */
+				//ptep = pte_offset_map(pmd,addr);
 				pte = *ptep;
 				if(pte_present(pte))
-					page = pte_page(pte);
+					page = (struct page *)(unsigned long)pte_page(pte);
 				pte_unmap(ptep);
 			}
 		}

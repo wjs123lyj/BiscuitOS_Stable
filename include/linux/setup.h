@@ -1,7 +1,6 @@
 #ifndef _SETUP_H_
 #define _SETUP_H_
-#include "config.h"
-#include "kernel.h"
+
 /*
  * Memory map description
  */

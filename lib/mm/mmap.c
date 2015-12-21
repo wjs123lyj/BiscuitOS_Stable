@@ -1,5 +1,5 @@
+#include "../../include/linux/kernel.h"
 #include "../../include/linux/mman.h"
-#include "../../include/linux/pgtable.h"
 #include "../../include/linux/page.h"
 
 /*

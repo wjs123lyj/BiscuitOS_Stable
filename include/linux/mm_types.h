@@ -1,10 +1,12 @@
-#ifndef _MM_TYPE_H_
-#define _MM_TYPE_H_
-#include "pgtable.h"
-#include "config.h"
-#include "sched.h"
+#ifndef _MM_TYPES_H_
+#define _MM_TYPES_H_
+
+#include "page.h"
 #include "types.h"
 #include "list.h"
+#include "fs.h"
+#include "sched.h"
+#include "spinlock_types.h"
 
 /*
  * The page structure.
@@ -48,6 +50,7 @@ struct page {
 								   * set PAGE_MAPPING_ANON below,
 								   */
 		};
+		struct kmem_cache *slab;
 		struct page *first_page;  /* Compound tail pages */
 	};
 #ifdef CONFIG_WANT_PAGE_DEBUG_FLAGS
@@ -76,6 +79,8 @@ struct mm_struct {
 	 */
 	struct task_struct *owner;
 #endif
+	spinlock_t page_table_lock;  /* Protects page tables and some counters */
+
 	unsigned long total_vm,locked_vm,shared_vm,exec_vm;
 	unsigned long stack_vm,reserved_vm,def_flags,nr_ptes;
 	unsigned long start_code,end_code,start_data,end_data;

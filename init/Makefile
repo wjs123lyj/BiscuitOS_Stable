@@ -9,7 +9,6 @@ SRCS = main.c \
 	   ../lib/mm/init-mm.c \
 	   ../lib/boot_arch.c \
 	   ../lib/mm/init.c \
-	   ../lib/mm/pgtable.c \
 	   ../lib/mm/tlb.c \
 	   ../lib/mm/traps.c \
 	   ../lib/mm/highmem.c \
@@ -37,8 +36,10 @@ SRCS = main.c \
 	   ../lib/mm/rbtree.c  \
 	   ../lib/mm/radix-tree.c  \
 	   ../lib/mm/percpu.c   \
+	   ../lib/mm/kmemcheck.c   \
 	   ../lib/mm/vmalloc.c  \
-	   ../lib/kernel/head.c
+	   ../lib/kernel/head.c  \
+	   ../lib/mm/test.c
 
 
 INC= -I./

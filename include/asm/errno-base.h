@@ -3,5 +3,6 @@
 
 #define ENOMEM     12  /* Out of memory */
 #define EBUSY      16  /* Device or resource busy */
+#define ENOSYS     38  /* Function not implemented */
 
 #endif

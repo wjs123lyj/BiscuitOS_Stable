@@ -1,6 +1,7 @@
 #ifndef _RCUTINY_PLUGIN_H_
 #define _RCUTINY_PLUGIN_H_
 
+#include "rcupdate.h"
 /*
  * Queue a preemptible - RCU callback for invocation after a grace period.
  */

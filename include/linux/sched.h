@@ -1,9 +1,14 @@
 #ifndef _SCHED_H_
 #define _SCHED_H_
 
+#define TASK_COMM_LEN  16
+
 struct task_struct {
 	unsigned long state;
+	unsigned int flags;
 	int prio;
+	struct reclaim_state *reclaim_state;
+	char comm[TASK_COMM_LEN];
 };
 
 #define MAX_USER_RT_PRIO    100

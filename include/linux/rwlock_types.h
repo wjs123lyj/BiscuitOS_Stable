@@ -1,5 +1,6 @@
 #ifndef _RWLOCK_TYPES_H_
 #define _RWLOCK_TYPES_H_
+
 #include "spinlock_types.h"
 
 /*

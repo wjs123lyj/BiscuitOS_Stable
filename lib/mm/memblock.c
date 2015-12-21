@@ -1,17 +1,7 @@
-#include "../../include/linux/memblock.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/page.h"
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/types.h"
-#include "../../include/linux/list.h"
+#include "../../include/linux/memblock.h"
 #include "../../include/linux/mmzone.h"
-#include "../../include/linux/memory.h"
-#include "../../include/linux/highmem.h"
-#include "../../include/linux/mm_type.h"
-#include "../../include/linux/error.h"
-#include "../../include/linux/nodemask.h"
-#include <malloc.h>
-#include <string.h>
+#include "../../include/linux/bootmem.h"
 
 struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 struct memblock_region default_reserved[INIT_MEMBLOCK_REGIONS + 1];

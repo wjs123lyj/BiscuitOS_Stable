@@ -2,6 +2,16 @@
 #define _PGALLOC_H_
 
 #include "pgtable.h"
+#include "gfp.h"
+#include "pgtable-hwdef.h"
+#include "domain.h"
+
+#define _PAGE_USER_TABLE   (PMD_TYPE_TABLE | PMD_BIT4 | \
+							PMD_DOMAIN(DOMAIN_USER))
+#define _PAGE_KERNEL_TABLE (PMD_TYPE_TABLE | PMD_BIT4 | \
+							PMD_DOMAIN(DOMAIN_KERNEL))
+#define PGALLOC_GFP  (GFP_KERNEL | __GFP_NOTRACK | __GFP_REPEAT | __GFP_ZERO)
+extern void *phys_to_mem(phys_addr_t addr);
 /*
  * Set pmd table.
  */
@@ -25,7 +35,7 @@ static inline void pmd_populate_kernel(struct mm_struct *mm,pmd_t *pmdp,
 	/*
 	 * The pmd must be loaded with the physical address of the PTE table.
 	 */
-	__pmd_populate(pmdp,__pa(ptep),__PAGE_KERNEL_TABLE);
+	__pmd_populate(pmdp,__pa(ptep),_PAGE_KERNEL_TABLE);
 }
 static inline void clean_pte_table(pte_t *pte)
 {
@@ -52,7 +62,7 @@ static inline pte_t * pte_alloc_one_kernel(struct mm_struct *mm,
 {
 	pte_t *pte;
 
-	pte = (pte_t *)__get_free_page(PGALLOC_GFP);
+	pte = (pte_t *)(unsigned long)__get_free_page(PGALLOC_GFP);
 	if(pte)
 		clean_pte_table(pte);
 

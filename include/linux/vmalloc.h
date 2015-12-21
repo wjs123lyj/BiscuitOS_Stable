@@ -1,8 +1,11 @@
 #ifndef _VMALLOC_H_
 #define _VMALLOC_H_
+
+#include "page.h"
 #include "types.h"
 #include "rbtree.h"
-
+#include "rcupdate.h"
+#include "list.h"
 
 struct vm_struct {
 	struct vm_struct *next;
@@ -42,14 +45,13 @@ struct vmap_area {
 
 
 
+#define VMALLOC_END (unsigned long)(PAGE_OFFSET + SZ_256M * 2 + SZ_8M)
 
 
 
 
 
 
-
-
-
+extern unsigned long vmap_area_pcpu_hole;
 
 #endif

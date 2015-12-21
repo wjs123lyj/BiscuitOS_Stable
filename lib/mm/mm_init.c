@@ -1,12 +1,7 @@
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/config.h"
-#include "../../include/linux/internal.h"
-#include "../../include/linux/nodemask.h"
+#include "../../include/linux/mm_types.h"
 #include "../../include/linux/mmzone.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/mm.h"
-#include "../../include/linux/mm_type.h"
+#include "../../include/linux/internal.h"
 
 int mminit_loglevel;
 

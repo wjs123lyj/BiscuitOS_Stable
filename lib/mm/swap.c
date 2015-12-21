@@ -1,6 +1,7 @@
-
-
-
+#include "../../include/linux/kernel.h"
+#include "../../include/linux/mmzone.h"
+#include "../../include/linux/mm_types.h"
+#include "../../include/linux/mm.h"
 
 /*
  * This path almost never happens for VM activity - pages are normally
@@ -27,11 +28,13 @@ static void __put_single_page(struct page *page)
 }
 static void __put_compound_page(struct page *page)
 {
+#if 0 // Need debug
 	compound_page_dtor *dtor;
 
 	__page_cache_release(page);
 	dtor = get_compound_page_dtor(page);
 	(*dtor)(page);
+#endif
 }
 static void put_compound_page(struct page *page)
 {
@@ -66,7 +69,7 @@ static void put_compound_page(struct page *page)
 			 */
 			smp_mb();
 			/* page_head wasn't dangling pointer */
-			flags = compound_lock_irqsave(page_head);
+			flags = 0;//compound_lock_irqsave(page_head);
 			if(unlikely(!PageTail(page)))
 			{
 				/* __split_huge_page_refcount run before us */

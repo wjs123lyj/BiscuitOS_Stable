@@ -12,4 +12,7 @@ static inline void kmemleak_alloc(const void *ptr,size_t size,
 static inline void kmemleak_free(const void *ptr)
 {
 }
+static inline void kmemleak_free_recursive(const void *ptr,unsigned long flags)
+{
+}
 #endif

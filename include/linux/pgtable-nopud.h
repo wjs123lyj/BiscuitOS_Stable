@@ -1,7 +1,7 @@
 #ifndef _PGTABLE_NOPUD_H_
 #define _PGTABLE_NOPUD_H_
-#include "page.h"
 
+#include "page.h"
 /*
  * Having the pud type consist of a pgd gets the size right,and allows
  * us to conceptually access the pgd entry that this pud is folded into
@@ -24,4 +24,7 @@ static inline pud_t *pud_offset(pgd_t *pgd,unsigned long address)
 {
 	return (pud_t *)pgd;
 }
+
+#define pud_addr_end(addr,end)     (end)
+
 #endif

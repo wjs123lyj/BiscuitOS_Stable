@@ -1,14 +1,7 @@
-#include "../include/linux/setup.h"
-#include "../include/linux/init_mm.h"
-#include "../include/linux/init_task.h"
-#include "../include/linux/debug.h"
-#include "../include/linux/bitops.h"
-#include "../include/linux/page-flags.h"
-#include "../include/linux/highmem.h"
-#include "../include/linux/page.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "../include/linux/kernel.h"
 
+extern struct task_struct init_task;
+extern struct mm_struct init_mm;
 #ifdef CONFIG_DEBUG_PAGEALLOC
 int debug_pagealloc_enabled = 0;
 #endif

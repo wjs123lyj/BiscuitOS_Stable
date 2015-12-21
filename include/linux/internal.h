@@ -1,8 +1,7 @@
 #ifndef _INTERNAL_H_
-#define _INTERNAL_H_
+#define _INTERNAL_H_    1
+#include "mm_types.h"
 
-#include "atomic.h"
-#include "mm_type.h"
 /*
  * Memory initialisation debug and verification.
  */

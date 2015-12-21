@@ -1,9 +1,9 @@
 #ifndef _RCULIST_H_
 #define _RCULIST_H_
 
-#include "kernel.h"
-#include "rcupdate.h"
-
+#include "poison.h"
+#include "list.h"
+#include "../asm/system.h"
 
 #define __rcu_assign_pointer(p,v,space)   \
 	({ \

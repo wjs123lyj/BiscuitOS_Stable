@@ -1,20 +1,16 @@
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/mmzone.h"
-#include "../../include/linux/page_cgroup.h"
-#include "../../include/linux/error.h"
-#include "../../include/linux/mm_type.h"
 #include "../../include/linux/nodemask.h"
-#include "../../include/asm/smp_plat.h"
-#include "../../include/linux/memcontrol.h"
-#include "../../include/linux/debug.h"
-
+#include "../../include/linux/mmzone.h"
+#include "../../include/asm/errno-base.h"
+#include "../../include/asm/dma.h"
 
 static void __meminit __init_page_cgroup(struct page_cgroup *pc,
 		unsigned long pfn)
 {
 	pc->flags = 0;
 	pc->mem_cgroup = NULL;
-	pc->page = pfn_to_page(pfn);
+	/* Need debug */
+	//pc->page = pfn_to_page(pfn);
 	INIT_LIST_HEAD(&pc->lru);
 }
 static unsigned long total_usage;

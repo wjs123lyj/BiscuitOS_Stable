@@ -1,4 +1,8 @@
+#include "../../include/linux/kernel.h"
 #include "../../include/linux/page.h"
+#include "../../include/asm/errno-base.h"
+#include "../../include/linux/mm_types.h"
+#include "../../include/linux/pgalloc.h"
 
 struct page *mem_map;
 
@@ -8,6 +12,8 @@ unsigned long num_physpages;
 unsigned long totalram_pages;
 unsigned long max_mapnr;
 unsigned long totalhigh_pages;
+
+extern struct mm_struct init_mm;
 
 int __pte_alloc_kernel(pmd_t *pmd,unsigned long address)
 {
@@ -31,3 +37,4 @@ int __pte_alloc_kernel(pmd_t *pmd,unsigned long address)
 		pte_free_kernel(&init_mm,new);
 	return 0;
 }
+

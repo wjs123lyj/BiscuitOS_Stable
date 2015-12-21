@@ -1,7 +1,6 @@
 #ifndef _BOOT_ARCH_H_
-#define _BOOT_ARCH_H_
+#define _BOOT_ARCH_H_   1
 
-#include "config.h"
 /*
  * Configure the number of bank that we set virtual physical memory.
  * If we define CONFIG_BOTH_BANKS,and we will use two memory bank.

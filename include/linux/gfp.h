@@ -1,6 +1,6 @@
 #ifndef _GFP_H_
-#define _GFP_H_
-#include "kernel.h"
+#define _GFP_H_    1
+#include "nodemask.h"
 #include "mmzone.h"
 /*
  * Plain integer GFP bitmasks.Do not use this directly.
@@ -46,7 +46,6 @@
 	                   ((gfp_t)___GFP_RECLAIMABLE) /* Page is reclaimable */
 
 #define __GFP_DMA  ((gfp_t)___GFP_DMA)
-#define __GFP_HIGHMEM ((gfp_t)___GFP_HIGHMEM)
 #define __GFP_DMA32   ((gfp_t)___GFP_DMA32)
 #define __GFP_MOVABLE ((gfp_t)___GFP_MOVABLE)
 #define GFP_ZONEMASK  (__GFP_DMA | __GFP_HIGHMEM | __GFP_DMA32 | __GFP_MOVABLE)
@@ -55,8 +54,16 @@
 		__GFP_MOVABLE)
 #define __GFP_ZERO  ((gfp_t)___GFP_ZERO)
 #define __GFP_NOMEMALLOC ((gfp_t)___GFP_NOMEMALLOC)
+#define __GFP_COMP  ((gfp_t)___GFP_COMP)
+#define __GFP_NOTRACK ((gfp_t)___GFP_NOTRACK)
 
-#define GFP_KERNEL  (__GFP_WAIT | __GFP_IO | __GFP_FS)
+#define __GFP_NO_KSWAPD  (gfp_t)___GFP_NO_KSWAPED
+
+/* Control allocation constraints */
+#define GFP_CONSTRAINT_MASK  (__GFP_HARDWALL | __GFP_THISNODE)
+
+/* Do not use these with a slab allocator */
+#define GFP_SLAB_BUG_MASK   (__GFP_DMA32 | __GFP_HIGHMEM | ~__GFP_BITS_MASK)
 
 #ifdef CONFIG_ZONE_DMA
 #define OPT_ZONE_DMA ZONE_DMA
@@ -74,11 +81,15 @@
 #define OPT_ZONE_DMA32 ZONE_NORMAL
 #endif
 
+#define GFP_THISNODE  ((gfp_t)0)
+
 /* This equals 0,but use constants in case they ever change */
-    
+#define GFP_NOWAIT  (GFP_ATOMIC & ~__GFP_HIGH)    
 #define GFP_ATOMIC  (__GFP_HIGH)
 #define GFP_KERNEL  (__GFP_WAIT | __GFP_IO | __GFP_FS)
 
+/* Control slab gfp mask during early boot */
+#define GFP_BOOT_MASK (__GFP_BITS_MASK & ~(__GFP_WAIT | __GFP_IO | __GFP_FS))
 
 /*
  * GFP_ZONE_TABLE is a word size bitstring that is used for looking up the
@@ -133,6 +144,8 @@
 		__GFP_NOWARN | __GFP_REPEAT | __GFP_NOFAIL | \
 		__GFP_NORETRY | __GFP_NOMEMALLOC)
 
+#define __GFP_BITS_SHIFT    23 /* Room for 23 __GFP_FOO bits */
+#define __GFP_BITS_MASK     ((gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
 
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
@@ -183,6 +196,9 @@ static inline void arch_free_page(struct page *page,int order) {}
 
 #define numa_node_id() 0
 
+extern struct page *__alloc_pages_nodemask(gfp_t gfp_mask,
+		unsigned int order,struct zonelist *zonelist,nodemask_t *nodemask);
+
 static inline struct page * __alloc_pages(gfp_t gfp_mask,unsigned int order,
 		struct zonelist *zonelist)
 {
@@ -206,6 +222,17 @@ static inline struct page *alloc_pages_node(int nid,gfp_t gfp_mask,
 
 #define __get_free_page(gfp_mask)   \
 	__get_free_pages((gfp_mask),0)
+
+extern gfp_t gfp_allowed_mask;
+
+
+static inline struct page *alloc_pages_exact_node(int nid,gfp_t gfp_mask,
+		unsigned int order)
+{
+	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
+
+	return __alloc_pages(gfp_mask,order,node_zonelist(nid,gfp_mask));
+}
 
 #ifndef HAVE_ARCH_ALLOC_PAGE
 static inline void arch_alloc_page(struct page *page,int order) {}

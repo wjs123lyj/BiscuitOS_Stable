@@ -1,8 +1,10 @@
 #ifndef _RADIX_TREE_H_
 #define _RADIX_TREE_H_
 
+#include "types.h"
 /*** Radix tree API start here ***/
 #define RADIX_TREE_MAX_TAGS     3
+
 /* root tags are shored in gfp_mask,shifted by __GFP_BITS_SHIFT */
 struct radix_tree_root {
 	unsigned int height;
@@ -33,5 +35,9 @@ struct radix_tree_root {
 		(root)->rnode = NULL;         \
 	} while(0)
 
+static inline int radix_tree_is_indirect_ptr(void *ptr)
+{
+	return (int)((unsigned long)ptr & RADIX_TREE_INDIRECT_PTR);
+}
 
 #endif

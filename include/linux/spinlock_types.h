@@ -12,7 +12,7 @@ typedef struct raw_spinlock {
 typedef struct spinlock {
 	union {
 		struct raw_spinlock rlock;
-	}
+	};
 } spinlock_t;
 
 

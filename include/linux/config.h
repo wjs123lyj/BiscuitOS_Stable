@@ -1,7 +1,6 @@
 #ifndef _CONFIG_H_
-#define _CONFIG_H_
+#define _CONFIG_H_     1
 
-#include "types.h"
 /*
  * Configure the number of physcial memory bank.
  * If we will use two bank and we must define CONFIG_BOTH_BANKS.
@@ -37,11 +36,6 @@
 #define CONFIG_BANK1_SIZE   (unsigned long)(CONFIG_MEMORY_SIZE - SZ_256M)
 #define MAX_BANK1_PHYS_ADDR (unsigned long)(CONFIG_BANK1_START + CONFIG_BANK1_SIZE)
 #endif
-/*
- * Configure the end address of VMALLOC area.
- * We build VMALLOC area are 256M that PAGE_OFFSET,PHYS_AREA,HOLE_8M,and VMALLOC AREA.
- */
-#define VMALLOC_END (unsigned long)(PAGE_OFFSET + SZ_256M + SZ_8M + SZ_256M)
 /*
  * Configure the reserve vmalloc area.
  */
@@ -92,4 +86,16 @@
  * Support hardware-poison
  */
 #define CONFIG_MEMORY_FAILURE
+/*
+ * Support SLUB debug
+ */
+#define CONFIG_SLUB_DEBUG
+/*
+ * Support the state of slub.
+ */
+#define CONFIG_SLUB_STATS
+/*
+ * Support the kmemcheck
+ */
+#define CONFIG_KMEMCHECK
 #endif

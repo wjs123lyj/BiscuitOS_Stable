@@ -1,11 +1,8 @@
-#include "../../include/linux/types.h"
+#include "../../include/linux/kernel.h"
+#include "../../include/asm/errno-base.h"
 #include "../../include/linux/ioport.h"
-#include "../../include/linux/error.h"
-#include "../../include/linux/debug.h"
 #include "../../include/asm/io.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 
 struct resource ioport_resource = {
 	.name   = "PCI IO",

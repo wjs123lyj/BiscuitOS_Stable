@@ -1,13 +1,5 @@
 #ifndef _MEMBLOCK_H_
 #define _MEMBLOCK_H_
-#include "list.h"
-#include "page.h"
-#include "types.h"
-#include "boot_arch.h"
-#include "kernel.h"
-#include "mmzone.h"
-#include "bootmem.h"
-#include "../asm/cache.h"
 /*
  * This is open source,you can modify it or copy it.
  */

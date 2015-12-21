@@ -1,12 +1,8 @@
 #ifndef _PGTABLE_H_
 #define _PGTABLE_H_
-
 #include "pgtable_types.h"
-#include "page.h"
-#include "init_mm.h"
-#include "pgtable-hwdef.h"
-#include "mmu.h"
-
+#include "mm_types.h"
+#include "pgtable-nopud.h"
 
 #define PGDIR_SHIFT 21
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)
@@ -14,6 +10,8 @@
 
 #define PMD_SHIFT   21
 #define PMD_SIZE    (1UL << PMD_SHIFT)
+#define PMD_MASK    (~(PMD_SIZE - 1))
+
 
 #define PTRS_PER_PGD 2048
 #define PTRS_PER_PMD 1
@@ -80,6 +78,7 @@ extern pgprot_t pgprot_kernel;
 #define __PAGE_READONLY_EXEC \
 						   __pgprot(_L_PTE_DEFAULT | L_PTE_USER | L_PTE_RDONLY)
 
+extern struct mm_struct init_mm;
 #define pgd_index(addr) (unsigned long)(addr >> PGDIR_SHIFT)
 #define pgd_offset(mm,addr) ((mm)->pgd + pgd_index(addr))
 #define pgd_offset_k(addr) (pgd_t *)((unsigned long *)(init_mm.pgd) + pgd_index(addr))
@@ -89,7 +88,7 @@ extern pgprot_t pgprot_kernel;
  * X is a value not pointer.
  */
 #define pgd_val(x)  (unsigned long)(((pgd_t *)phys_to_mem(virt_to_phys(x)))->pgd[0])
-#define pgd_none(x) !!!pgd_val(x)
+#define pgd_none(x) 0 //!!!pgd_val(x)
 #define pgd_bad(x)  0
 #define pgd_clear(x)  do {   \
 		       ((pgd_t *)phys_to_mem(virt_to_phys(x)))->pgd[0] = 0;	\
@@ -97,7 +96,7 @@ extern pgprot_t pgprot_kernel;
 		} while(0)
 
 #define pmd_val(x)   (unsigned long)(((pmd_t *)phys_to_mem(virt_to_phys(x)))->pmd)
-#define pmd_none(x)  !!!pmd_val(x)
+#define pmd_none(x)  0 //!!!pmd_val(x)
 #define pmd_bad(x)   0
 #define pmd_clear(x) pgd_clear((pgd_t *)x)
 #define __pmd(x) (unsigned int)(x)
@@ -107,6 +106,11 @@ extern pgprot_t pgprot_kernel;
 ({     unsigned long __boundary = ((addr) + PGDIR_SIZE) & PGDIR_MASK; \
 	   (__boundary - 1) < (end - 1) ? __boundary : end ;  \
  })
+
+#define pmd_addr_end(addr,end)                   \
+({   unsigned long __boundary = ((addr) + PMD_SIZE) & PMD_MASK;  \
+	 (__boundary - 1 < (end) - 1) ? __boundary : (end); \
+})
 /*
  * Get the virtual address of page that pmd pointes.
  */
@@ -125,6 +129,7 @@ extern pgprot_t pgprot_kernel;
 /*
  * VMALLOC AREA
  */
+extern void *high_memory;
 #ifndef VMALLOC_START
 #define VMALLOC_OFFSET  (8 * 1024 * 1024)
 #define VMALLOC_START   (((unsigned long)high_memory + VMALLOC_OFFSET))
@@ -159,7 +164,6 @@ static inline int pte_hidden(pte_t pte)
  * Convert a physical address to a Page Frame Number and back.
  */
 #define __phys_to_pfn(paddr)  ((paddr) >> PAGE_SHIFT)
-#define __pfn_to_phys(pfn)    ((pfn) << PAGE_SHIFT)
 
 #define pmd_page(pmd)   pfn_to_page(__phys_to_pfn(pnd_val(pmd)))
 
@@ -169,7 +173,7 @@ static inline int pte_hidden(pte_t pte)
 
 #define pte_offset_map(pmd,addr) (__pte_map(pmd) + pte_index(addr))
 
-#define pte_page(pte) pfn_to_page(pte_pfn(pte))
+#define pte_page(pte) 0 //pfn_to_page(pte_pfn(pte))
 #if WAIT_FOR_DEBUG
 #define mk_pte(page,prot)  (pte_t)(unsigned long)pfn_pte(page_to_pfn(page),prot)
 #else
@@ -185,12 +189,12 @@ static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 	return pte;
 }
 
-#define pte_none(pte)         (!pte_val(pte))
-#define pte_present(pte)      (pte_val(pte) & L_PTE_PRESENT)
-#define pte_write(pte)        (!(pte_val(pte) & L_PTE_RDONLY))
-#define pte_dirty(pte)        (pte_val(pte) & L_PTE_DIRTY)
-#define pte_young(pte)        (pte_val(pte) & L_PTE_YOUNG)
-#define pte_exec(pte)         (!(pte_val(pte) & L_PTE_XN))
+#define pte_none(pte)         0 //(!pte_val(pte))
+#define pte_present(pte)      0 //(pte_val(pte) & L_PTE_PRESENT)
+#define pte_write(pte)        0 //(!(pte_val(pte) & L_PTE_RDONLY))
+#define pte_dirty(pte)        0 //(pte_val(pte) & L_PTE_DIRTY)
+#define pte_young(pte)        0 //(pte_val(pte) & L_PTE_YOUNG)
+#define pte_exec(pte)         0 //(!(pte_val(pte) & L_PTE_XN))
 #define pte_special(pte)      (0)
 
 #define pte_present_user(pte)  \
@@ -200,7 +204,7 @@ static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 
 #define pte_unmap(pte)     __pte_unmap(pte)
 
-#define set_pte_ext(ptep,pte,ext) do {} while(0)
+extern void set_pte_ext(phys_addr_t addr,unsigned long pte,int e);
 
 static inline void __sync_icache_dcache(pte_t pteval)
 {
@@ -218,5 +222,8 @@ static inline void set_pte_at(struct mm_struct *mm,unsigned long addr,
 	}
 #endif
 }
+
+
+#define pgd_none_or_clear_bad(pgd) do {} while(0)
 
 #endif

@@ -1,10 +1,5 @@
-#include "../../include/linux/config.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/mmzone.h"
-#include "../../include/linux/nodemask.h"
 #include "../../include/linux/kernel.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "../../include/linux/mmzone.h"
 
 int page_group_by_mobility_disabled;
 
@@ -41,11 +36,10 @@ struct pglist_data *next_online_pgdat(struct pglist_data *pgdat)
 		return NULL;
 	return NODE_DATA(nid);
 }
-struct pgdata_data *first_online_pgdat(void)
+struct pglist_data *first_online_pgdat(void)
 {
 	return NODE_DATA(first_online_node);
 }
-struct pglist_data
 /*
  * helper magic for for_each_zone()
  */
