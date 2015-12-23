@@ -47,7 +47,7 @@ TARGET=align
 OBJS = ${SRCS:.c=.o}
 LOG_FILE=debug.log
 ${TARGET}:
-	${CC} ${SRCS} ${FLAGS} -o ${TARGET}
+	${CC} ${SRCS} ${FLAGS} -o ${TARGET} 2>&1|tee makelog.log
 	ctags -R
 	./${TARGET}
 #	./${TARGET} > ${LOG_FILE}

@@ -262,7 +262,7 @@ static inline int is_highmem_idx(enum zone_type idx)
  * highmem zone or not.This is an attempt to keep references
  * to ZONE_{DMA/NORMAL/HIGHMEM/etc} in general code to a minimum.
  */
-inline int is_highmem(struct zone *zone)
+static inline int is_highmem(struct zone *zone)
 {
 #ifndef CONFIG_HIGHMEM
 	int zone_off = (char *)zone - (char *)zone->zone_pgdata->node_zones;

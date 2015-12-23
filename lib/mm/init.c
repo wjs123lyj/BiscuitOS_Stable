@@ -12,6 +12,7 @@
 #include "../../include/linux/swap.h"
 #include "../../include/linux/gfp.h"
 #include "../../include/linux/page-flags.h"
+#include "../../include/linux/vmstat.h"
 
 extern unsigned long max_pfn;
 extern unsigned long min_low_pfn;

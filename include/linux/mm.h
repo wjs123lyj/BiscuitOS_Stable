@@ -71,10 +71,13 @@ static inline int page_to_nid(struct page *page)
 {
 	return (page->flags >> NODES_PGSHIFT) & NODES_MASK;
 }
-inline struct zone *page_zone(struct page *page)
+
+static inline struct zone *page_zone(struct page *page)
 {
-	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
+//	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
+	return NULL;
 }
+
 static inline unsigned long page_to_section(struct page *page)
 {
 	return (page->flags >> SECTIONS_PGSHIFT) & SECTIONS_MASK;

@@ -204,6 +204,20 @@ static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 
 #define pte_unmap(pte)     __pte_unmap(pte)
 
+/*
+ * Section address mask and size difinitions.
+ */
+#define SECTION_SHIFT     20
+#define SECTION_SIZE      (1UL << SECTION_SHIFT)
+#define SECTION_MASK      (~(SECTION_SIZE - 1))
+
+/*
+ * ARMv6 supersection address mask and size definitions.
+ */
+#define SUPERSECTION_SHIFT   24
+#define SUPERSECTION_SIZE    (1UL << SUPERSECTION_SHIFT)
+#define SUPERSECTION_MASK    (~(SUPERSECTION_SIZE - 1))
+
 extern void set_pte_ext(phys_addr_t addr,unsigned long pte,int e);
 
 static inline void __sync_icache_dcache(pte_t pteval)

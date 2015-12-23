@@ -15,6 +15,7 @@
 #include "../../include/linux/domain.h"
 #include "../../include/linux/memory.h"
 #include "../../include/linux/cputype.h"
+#include "../../include/linux/tlbflush.h"
 
 
 extern void *vectors_page;
@@ -599,9 +600,10 @@ void set_pte_ext(phys_addr_t addr,unsigned long pte,int e)
  * Alloc and init pte. 
  */
 void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,
-		unsigned long end,unsigned long pfn,unsigned long prot)
+		unsigned long end,unsigned long pfn,
+		const struct mem_type *type)
 {
-	pte_t *pte = early_pte_alloc(pmd,addr,prot);
+	pte_t *pte = NULL;//early_pte_alloc(pmd,addr,prot);
 	
 	do {
 		/* Core Deal */
@@ -615,35 +617,148 @@ void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,
  * Alloc and init section
  */
 void alloc_init_section(pgd_t *pgd,unsigned long addr,
-		unsigned long end,phys_addr_t phys,unsigned long prot)
+		unsigned long end,phys_addr_t phys,
+		const struct mem_type *type)
 {
-	pmd_t *pmd = pmd_offset(pgd,addr);
+	pmd_t *pmd = NULL;//pmd_offset(pgd_addr);
 
-	alloc_init_pte(pmd,addr,end,phys_to_pfn(phys),prot);
+	/*
+	 * Try a section mapping - end,addr and phys must all be aligned
+	 * to a section boundary.Note that PMDs refer to the individual
+	 * L1 entries,whereas PGDs refer to a group of L1 entries making
+	 * up one logical pointer to an L2 table.
+	 */
+	if(((addr | end | phys) & ~SECTION_MASK) == 0) {
+		pmd_t *p = pmd;
+
+		if(addr & SECTION_SIZE)
+			pmd++;
+
+		do {
+			//*pmd == __pmd(phys | type->prot_sect);
+			phys += SECTION_SIZE;
+		} while(pmd++,addr += SECTION_SIZE , addr != end);
+
+		flush_pmd_entry(p);
+	} else {
+		/*
+		 * No need to loop:pte's aren't interested in the 
+		 * individual L1 entries.
+		 */
+		alloc_init_pte(pmd,addr,end,__phys_to_pfn(phys),type);
+	}
 }
+static void __init create_36bit_mapping(struct map_desc *md,
+		const struct mem_type *type)
+{
+	unsigned long addr,length,end;
+	phys_addr_t phys;
+	pgd_t *pgd;
+
+	addr = md->virtual;
+	phys = (unsigned long)__pfn_to_phys(md->pfn);
+	length = PAGE_ALIGN(md->length);
+
+	if(!(cpu_architecture() >= CPU_ARCH_ARMv6 || cpu_is_xsc3())) {
+		mm_err("MM:CPU doesn't support supersection "
+				"mapping for %p at %p\n",
+				(void *)__pfn_to_phys((u64)md->pfn),(void *)addr);
+		return;
+	}
+	/*
+	 * ARMv6 supersection are only defined to work with domain 0.
+	 * Since domain assignments can in fact be arbitrary,the
+	 * 'domain == 0' check below is required to insure that ARMv6
+	 * supersections are only allocated for domain 0 regardless
+	 * of the actual domain assignments in use.
+	 */
+	if(type->domain) {
+		mm_err("MM:invalid domain in supersection "
+				"mapping for %p at %p\n",
+				(void *)__pfn_to_phys((u64)md->pfn),(void *)addr);
+		return;
+	}
+	
+	if((addr | length | __pfn_to_phys(md->pfn)) & ~SUPERSECTION_MASK) {
+		mm_err("MM:cannot create mapping for "
+				"%p at %p invalid alignment\n",
+				(void *)__pfn_to_phys((u64)md->pfn),(void *)addr);
+		return;
+	}
+
+	/*
+	 * Shift bits[35:32] of address into bits[23:20] of PMD.
+	 */
+	phys |= (((md->pfn >> (32 - PAGE_SHIFT)) & 0xF) << 20);
+
+	pgd = pgd_offset_k(addr);
+	end = addr + length;
+
+	do {
+		pmd_t *pmd = pmd_offset(pgd,addr);
+		int i;
+	
+		for(i = 0 ; i < 16 ; i++) 
+			//*pmd++ = __pmd(phys | type->prot_sect | PMD_SECT_SUPER);
+				;
+
+		addr += SUPERSECTION_SIZE;
+		phys += SUPERSECTION_SIZE;
+		pgd  += SUPERSECTION_SIZE >> PGDIR_SHIFT;
+	} while(addr != end);
+}
+#define vectors_base()  (vectors_high() ? 0xffff0000 : 0)
 /*
  * Create mapping.
  */
 void create_mapping(struct map_desc *md)
 {
-	unsigned long start,end,next,length;
-	phys_addr_t phys;
+	unsigned long phys,addr,length,end;
+	const struct mem_type *type;
 	pgd_t *pgd;
-	pgd_t *p_end;
 
-	start = md->virtual & PAGE_MASK;
-	phys  = (unsigned long)pfn_to_phys(md->pfn);
+	if(md->virtual != vectors_base() && md->virtual < TASK_SIZE) {
+		mm_warn("BUG:not creating mapping for %p at %p in user region\n",
+				(void *)__pfn_to_phys(md->pfn),(void *)md->virtual);
+		return;
+	}
+
+	if((md->type == MT_DEVICE || md->type == MT_ROM) &&
+			md->virtual >= PAGE_OFFSET && md->virtual < VMALLOC_END) {
+		mm_warn("BUG:mapping for %p at %p overlaps vmalloc space\n",
+				(void *)__pfn_to_phys(md->pfn),(void *)md->virtual);
+	}
+
+	type = &mem_types[md->type];
+
+	/*
+	 * Catch 36-bit addresses
+	 */
+	if(md->pfn >= 0x100000) {
+		create_36bit_mapping(md,type);
+		return;
+	}
+
+	addr = md->virtual & PAGE_MASK;
+	phys = (unsigned long)__pfn_to_phys(md->pfn);
 	length = PAGE_ALIGN(md->length + (md->virtual & ~PAGE_MASK));
 
-	pgd = pgd_offset_k(start);
-	p_end = pgd;
-	end = start + length;
+	if(type->prot_l1 == 0 && ((addr | phys | length) & ~SECTION_MASK)) {
+		mm_warn("BUG:map for %p at %p can't be mapped using pages,ignoring\n",
+				(void *)__pfn_to_phys(md->pfn),(void *)addr);
+		return;
+	}
+
+	pgd = pgd_offset_k(addr);
+	end = addr + length;
 	do {
-		next = pgd_addr_end(start,end);
-		alloc_init_section(pgd,start,next,phys,0);
-		phys += next - start;
-		start = next;
-	} while(pgd++,start != end);
+		unsigned long next = pgd_addr_end(addr,end);
+
+		alloc_init_section(pgd,addr,next,phys,type);
+
+		phys += next - addr;
+		addr = next;
+	} while(pgd++,addr != end);
 }
 /*
  * Maping lowmem.

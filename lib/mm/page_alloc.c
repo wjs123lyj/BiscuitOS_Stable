@@ -202,7 +202,7 @@ void set_pageblock_flags_group(struct page *page,unsigned long flags,
 	unsigned long pfn,bitidx;
 	unsigned long value = 1;
 
-	zone = page_zone(page);
+	zone = NULL;//page_zone(page);
 	pfn  = page_to_pfn(page);
 	bitmap = get_pageblock_bitmap(zone,pfn);
 	bitidx = pfn_to_bitidx(zone,pfn);
@@ -830,7 +830,7 @@ unsigned long get_pageblock_flags_group(struct page *page,
 	unsigned long flags = 0;
 	unsigned long value = 1;
 
-	zone = page_zone(page);
+	zone = NULL;//page_zone(page);
 	pfn  = page_to_pfn(page);
 	bitmap = get_pageblock_bitmap(zone,pfn);
 	bitidx = pfn_to_bitidx(zone,pfn);
@@ -1133,7 +1133,7 @@ static void free_pcppages_bulk(struct zone *zone,int count,
  */
 void free_hot_cold_page(struct page *page,int cold)
 {
-	struct zone *zone = page_zone(page);
+	struct zone *zone = NULL;//page_zone(page);
 	struct per_cpu_pages *pcp;
 	unsigned long flags;
 	int migratetype;
@@ -1192,8 +1192,8 @@ static void __free_pages_ok(struct page *page,unsigned int order)
 	if(unlikely(wasMlocked))
 		free_page_mlock(page);
 //	__count_vm_evnets(PGFREE,1 << order);
-	free_one_page(page_zone(page),page,order,
-			get_pageblock_migratetype(page));
+//	free_one_page(page_zone(page),page,order,
+//			get_pageblock_migratetype(page));
 //	local_irq_restore(flags);
 
 }
@@ -1336,7 +1336,7 @@ static int move_freepages(struct zone *zone,
 	 * Remove at a later data when no bug reports exist related to 
 	 * grouping pages by mobility.
 	 */
-	BUG_ON(page_zone(start_page) != page_zone(end_page));
+//	BUG_ON(page_zone(start_page) != page_zone(end_page));
 #endif
 
 	for(page = start_page ; page <= end_page ; )
@@ -2214,7 +2214,7 @@ void show_free_areas(void)
 			 "slab_unreclaimable:%p\n"
 			 "mapped:%p\n"
 			 "shmem:%p\n"
-			 "pagetables:%p\n"
+			 "pagetables:%p\n",
 			 "bounce:%p\n",
 			 (void *)(unsigned long)global_page_state(NR_ACTIVE_ANON),
 			 (void *)(unsigned long)global_page_state(NR_INACTIVE_ANON),

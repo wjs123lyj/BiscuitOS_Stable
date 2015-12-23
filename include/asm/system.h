@@ -43,6 +43,8 @@
 #define CR_AFE    (1 << 29)  /* Access flag enable */
 #define CR_TE     (1 << 30)  /* Thumb exception enable */
 
+#define vectors_high() (0)
+
 static inline unsigned int get_cr(void)
 {
 	unsigned int val;
