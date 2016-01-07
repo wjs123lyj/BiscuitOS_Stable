@@ -19,12 +19,12 @@ extern void *phys_to_mem(phys_addr_t addr);
 static inline __pmd_populate(pmd_t *__pmd,phys_addr_t pte,
 		unsigned long prot)
 {
-	/* simulate the virtual memory */
-	unsigned int *pmdp = phys_to_mem(virt_to_phys(__pmd));
-	unsigned int pmdval = ((unsigned int)pte + PTE_HWTABLE_OFF) | prot;
-
-	pmdp[0] = __pmd(pmdval);
-	pmdp[1] = __pmd(pmdval + 256 * sizeof(pte_t));
+	unsigned long pmdval = (pte + PTE_HWTABLE_OFF) | prot;
+	/* Simulate the L2 page table. */
+	pmd_t *__ptr =
+		(pmd_t *)(unsigned long)phys_to_mem(virt_to_phys((unsigned long)__pmd));
+	__ptr[0] = __pmd(pmdval);
+	__ptr[1] = __pmd(pmdval + 256 * sizeof(pte_t));
 }
 /*
  * Populate the pmdp entry with a pointer to the pte.This pmd is part

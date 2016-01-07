@@ -3,6 +3,8 @@
 #include "pgtable_types.h"
 #include "mm_types.h"
 #include "pgtable-nopud.h"
+#include "page.h"
+#include "../asm/head.h"
 
 #define PGDIR_SHIFT 21
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)
@@ -17,9 +19,9 @@
 #define PTRS_PER_PMD 1
 #define PTRS_PER_PTE 512
 
-#define PTE_HWTABLE_PTRS   (unsigned long)(PTRS_PER_PTE)
-#define PTE_HWTABLE_OFF    (unsigned long)(PTE_HWTABLE_PTRS * sizeof(pte_t))
-#define PTE_HWTABLE_SIZE   (unsigned long)(PTRS_PER_PTE * 4)
+#define PTE_HWTABLE_PTRS   (PTRS_PER_PTE)
+#define PTE_HWTABLE_OFF    (PTE_HWTABLE_PTRS * sizeof(pte_t))
+#define PTE_HWTABLE_SIZE   (PTRS_PER_PTE * 4)
 
 /*
  * Linux PTE definitions.
@@ -78,10 +80,42 @@ extern pgprot_t pgprot_kernel;
 #define __PAGE_READONLY_EXEC \
 						   __pgprot(_L_PTE_DEFAULT | L_PTE_USER | L_PTE_RDONLY)
 
+/*
+ * The table below defines the page protection levels that we insert into our
+ * Linux page table version.These get translated into the best that the 
+ * architecture can perform.Note that on most ARM hardware:
+ * 1) We cannot do execute protection.
+ * 2) If we could do execute protection,then read is implied.
+ * 3) write implies read permissions.
+ */
+#define __P000 __PAGE_NONE
+#define __P001 __PAGE_READONLY
+#define __P010 __PAGE_COPY
+#define __P011 __PAGE_COPY
+#define __P100 __PAGE_READONLY_EXEC
+#define __P101 __PAGE_READONLY_EXEC
+#define __P110 __PAGE_COPY_EXEC
+#define __P111 __PAGE_COPY_EXEC
+
+#define __S000 __PAGE_NONE
+#define __S001 __PAGE_READONLY
+#define __S010 __PAGE_SHARED
+#define __S011 __PAGE_SHARED
+#define __S100 __PAGE_READONLY_EXEC
+#define __S101 __PAGE_READONLY_EXEC
+#define __S110 __PAGE_SHARED_EXEC
+#define __S111 __PAGE_SHARED_EXEC
+
 extern struct mm_struct init_mm;
-#define pgd_index(addr) (unsigned long)(addr >> PGDIR_SHIFT)
+/* to find an entry in a page-table-directory */
+#define pgd_index(addr)     ((addr) >> PGDIR_SHIFT)
+
 #define pgd_offset(mm,addr) ((mm)->pgd + pgd_index(addr))
-#define pgd_offset_k(addr) (pgd_t *)((unsigned long *)(init_mm.pgd) + pgd_index(addr))
+
+/* to find an entry in a kernel page-table-directory */
+#define pgd_offset_k(addr)  pgd_offset(&init_mm,addr)
+
+/* Find an entry in the second-level page table */
 #define pmd_offset(pgd,addr) ((pmd_t *)pgd)
 
 /*
@@ -96,12 +130,20 @@ extern struct mm_struct init_mm;
 		} while(0)
 
 #define pmd_val(x)   (unsigned long)(((pmd_t *)phys_to_mem(virt_to_phys(x)))->pmd)
-#define pmd_none(x)  0 //!!!pmd_val(x)
-#define pmd_bad(x)   0
-#define pmd_clear(x) pgd_clear((pgd_t *)x)
-#define __pmd(x) (unsigned int)(x)
+#define pmd_none(x)  !pmd_val(x)
+#define pmd_bad(x)   (pmd_val(x) & 2)
 
-#define pmd_off_k(virt) pmd_offset((pgd_t *)pgd_offset_k(virt),virt)
+#define pmd_clear(pmdp)     \
+	do {                      \
+	    pmd_t *__pmdp = \
+		(pmd_t *)(unsigned long)phys_to_mem(virt_to_phys(pmdp));  \
+	    __pmdp[0] = __pmd(0);   \
+		__pmdp[1] = __pmd(0);   \
+	} while(0)
+
+	
+
+
 #define pgd_addr_end(addr,end) \
 ({     unsigned long __boundary = ((addr) + PGDIR_SIZE) & PGDIR_MASK; \
 	   (__boundary - 1) < (end - 1) ? __boundary : end ;  \
@@ -111,11 +153,17 @@ extern struct mm_struct init_mm;
 ({   unsigned long __boundary = ((addr) + PMD_SIZE) & PMD_MASK;  \
 	 (__boundary - 1 < (end) - 1) ? __boundary : (end); \
 })
+
+static inline pte_t *pmd_page_vaddr(pmd_t *pmd)
+{
+	return (pte_t *)__va(pmd_val(pmd) & PAGE_MASK);
+}
+
 /*
  * Get the virtual address of page that pmd pointes.
  */
-#define pmd_page_vaddr(pmd) (pte_t *)(__va((pmd_val(pmd) & PAGE_MASK)))
-#define pte_index(x) (unsigned long)((x) >> PAGE_SHIFT)
+#define pte_index(x) (((addr) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1))
+
 #define pte_offset_kernel(pmd,addr) (pmd_page_vaddr(pmd) + pte_index(addr))
 
 #define pfn_pte(pfn,prot) (pte_t)(unsigned long)((unsigned long)((pfn) << \

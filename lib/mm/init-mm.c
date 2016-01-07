@@ -1,6 +1,7 @@
 #include "../../include/linux/kernel.h"
-#include "../../include/linux/highmem.h"
+#include "../../include/asm/head.h"
+#include "../../include/linux/mm_types.h"
 
 struct mm_struct init_mm = {
-	.pgd = (pgd_t *)swapper_pg_dir,
+	.pgd = swapper_pg_dir,
 };

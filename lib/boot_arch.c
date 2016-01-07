@@ -2,12 +2,6 @@
 #include "../include/linux/setup.h"
 #include "../include/linux/debug.h"
 
-/*
- * boot memory bank.
- */
-struct meminfo meminfo = {
-	.nr_banks = 0,
-};
 unsigned int MEM0_OFFSET;
 #ifdef CONFIG_BOTH_BANKS
 unsigned int MEM1_OFFSET;
@@ -23,34 +17,24 @@ unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
 unsigned int memory_array1[CONFIG_BANK1_SIZE / BYTE_MODIFY];	
 #endif
 /*
- * Initialize the system physical memory information.
+ * Initialize the virtual physical memory.
  */
-static void boot_init_meminfo(void)
+void __uboot virtual_memory_init(void)
 {
 	/*
 	 * Get dynamic virtual address offset.
 	 */
 	memset(memory_array0,0,sizeof(CONFIG_BANK0_SIZE));
-	MEM0_OFFSET = (unsigned long)((unsigned long)(unsigned int *)CONFIG_BANK0_START - 
-		(unsigned long)(unsigned long)memory_array0);
+	MEM0_OFFSET = (unsigned long)(
+			(unsigned long)(unsigned int *)CONFIG_BANK0_START - 
+			(unsigned long)(unsigned long)memory_array0);
 #ifdef CONFIG_BOTH_BANKS
 	memset(memory_array1,0,sizeof(CONFIG_BANK1_SIZE));
-	MEM1_OFFSET = (unsigned long)((unsigned long)(unsigned int *)CONFIG_BANK1_START -
-		(unsigned long)(unsigned long)memory_array1);
+	MEM1_OFFSET = (unsigned long)(
+			(unsigned long)(unsigned int *)CONFIG_BANK1_START -
+			(unsigned long)(unsigned long)memory_array1);
 #endif
-	/*
-	 * Setup meminfo.
-	 */
-	meminfo.bank[0].start = CONFIG_BANK0_START;
-	meminfo.bank[0].size  = CONFIG_BANK0_SIZE;
-	meminfo.bank[0].highmem = 0;
-	meminfo.nr_banks++;
-#ifdef CONFIG_BOTH_BANKS
-	meminfo.bank[1].start = CONFIG_BANK1_START;
-	meminfo.bank[1].size  = CONFIG_BANK1_SIZE;
-	meminfo.bank[1].highmem = 0;
-	meminfo.nr_banks++;
-#endif
+
 }
 /*
  * Physical address turn to virtual memory address.
@@ -124,11 +108,4 @@ phys_addr_t mem_to_phys(void *ad)
 	phys_addr = addr + (unsigned long)MEM0_OFFSET;
 #endif
 	return phys_addr;
-}
-/*
- * ARCH_INIT
- */
-void virt_arch_init(void)
-{
-	boot_init_meminfo();
 }

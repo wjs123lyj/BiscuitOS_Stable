@@ -12,9 +12,15 @@ LOG_FILE	Makefile	/^LOG_FILE=debug.log$/;"	m
 OBJS	Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
 SRCS	Makefile	/^SRCS = main.c \\$/;"	m
 TARGET	Makefile	/^TARGET=align$/;"	m
+U_boot	main.c	/^__attribute__((constructor)) __uboot U_boot(void)$/;"	f
+__setup_end	main.c	/^static struct obs_kernel_param *__setup_end = &__setup_early_vmalloc + 8;$/;"	v	typeref:struct:obs_kernel_param	file:
+__setup_start	main.c	/^static struct obs_kernel_param *__setup_start = &__setup_early_vmalloc;$/;"	v	typeref:struct:obs_kernel_param	file:
+boot_command_line	main.c	/^char __initdata boot_command_line[COMMAND_LINE_SIZE];$/;"	v
 debug_pagealloc_enabled	main.c	/^int debug_pagealloc_enabled = 0;$/;"	v
+do_early_param	main.c	/^static int __init do_early_param(char *param,char *val)$/;"	f	file:
 main	main.c	/^int main()$/;"	f
-main	test.c	/^int main()$/;"	f
 mm_init	main.c	/^static void __init mm_init(void)$/;"	f	file:
+parse_early_options	main.c	/^void __init parse_early_options(char *cmdline)$/;"	f
+parse_early_param	main.c	/^void __init parse_early_param(void)$/;"	f
 smp_setup_processor_id	main.c	/^void __init smp_setup_processor_id(void)$/;"	f
 start_kernel	main.c	/^static void start_kernel(void)$/;"	f	file:

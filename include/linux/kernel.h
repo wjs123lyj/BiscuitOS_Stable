@@ -2,7 +2,7 @@
 #define _KERNEL_H_
 #include <stdio.h>
 #include <stdlib.h>
-#include "config.h"
+#include "autoconf.h"
 #include "types.h"
 #include <string.h>
 
@@ -18,6 +18,12 @@
 #define __read_mostly
 #define __maybe_unused
 #define __rcu
+#define __uboot
+#define __used
+#define __initconst
+#define __initdata_memblock
+#define __init_data
+
 
 #define true  1
 #define false 0
@@ -67,7 +73,7 @@
 #define NUMA_BUILD  0
 #endif
 
-#define likely(x)   (x)
+#define likely(x)     (x)
 #define unlikely(x)   (x)
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))

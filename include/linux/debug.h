@@ -14,24 +14,28 @@
 #define panic printf
 #define mm_warn printf
 
-#if 0
-#define BUG_ON(x) ({ \
-	if((!!(x))) \
-		mm_err("BUG_ON %s:%d\n",__FUNCTION__,__LINE__); \
-	else \
-		; \
-		})
-#endif
-#define BUG_ON(x)  (x)
-#define WARN_ON(x) BUG_ON(x)
-#define VM_BUG_ON(x) BUG_ON(x)
-#define BUILD_BUG_ON(x) BUG_ON(x)
-#define BUILD_ON(x)     BUG_ON(x)
-#define VIRTUAL_BUG_ON(x)   BUG_ON(x)
-#define WARN_ON_ONCE(x)   BUG_ON(x)
+#define BUG() do {  \
+	mm_debug("BUG:failure at %s:%d %s()!\n",\
+			__FILE__,__LINE__,__func__);  \
+    } while(0)
+
+#define BUG_ON(condition) do { if((condition)) BUG(); } while(0)
+
+#define WARN_ON(condition)    ({                     \
+		int __ret_warn_on = !!(condition);           \
+		unlikely(__ret_warn_on);                     \
+})
+
+#define VM_BUG_ON(x) WARN_ON(x)
+#define BUILD_BUG_ON(x) WARN_ON(x)
+#define BUILD_ON(x)     WARN_ON(x)
+#define VIRTUAL_BUG_ON(x) WARN_ON(x)
+#define WARN_ON_ONCE(x)   WARN_ON(x)
 
 
-#define BUG() \
-	mm_err("ERR:%s %d\n",__FUNCTION__,__LINE__)
+
+
+#define line()    \
+	mm_debug("[%s %d]\n",__FUNCTION__,__LINE__)
 
 #endif

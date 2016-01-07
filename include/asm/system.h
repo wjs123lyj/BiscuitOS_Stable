@@ -43,17 +43,49 @@
 #define CR_AFE    (1 << 29)  /* Access flag enable */
 #define CR_TE     (1 << 30)  /* Thumb exception enable */
 
-#define vectors_high() (0)
+#define vectors_high() (1)
 
 static inline unsigned int get_cr(void)
 {
-	unsigned int val;
+	extern unsigned int CP15_C1;	
 	
-	val = 1;
-	
-	return val;
+	return CP15_C1;
 }
+/*
+ * Simuate the function that initialize the C1 register of CP15 duing uboot.
+ */
+static inline void __uboot init_CP15_C1(void)
+{
+	extern unsigned int CP15_C1;
 
+	CP15_C1 |= CR_M | CR_C | CR_W | CR_P | CR_D | CR_L | CR_Z |
+		       CR_I | CR_V | CR_DT | CR_IT | CR_U | CR_XP;
+}
+/*
+ * Simulate the function that initialize the C0 register of CP15 that 
+ * store the ID information during the Uboot.
+ */
+static inline void __uboot init_CP15_C00(void)
+{
+	extern unsigned int CP15_C00;
+
+	/* The number of ARM */
+	CP15_C00 |= (0x0f) << 16;
+	/* The number of Producer */
+	CP15_C00 |= (0x41) << 24;
+	/* The number of major number that producer definite it. */
+	CP15_C00 |= (0xb76) << 4;
+	/* The number of minor number that producer definite it. */
+	CP15_C00 |= (0x00) << 20;
+	/* The version of producer definited. */
+	CP15_C00 |= (0x06) << 0;
+}
+static inline void init_CP15_C01(void)
+{
+	extern unsigned int CP15_C01;
+
+	CP15_C01 = 0x1d152152;
+}
 #define smp_rmb() do {} while(0)
 #define smp_wmb() do {} while(0)
 #endif

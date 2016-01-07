@@ -17,6 +17,14 @@ struct pcpu_chunk {
 	unsigned int populated[]; /* populated bitmap */
 };
 
+enum pcpu_fc {
+	PCPU_FC_AUTO,
+	PCPU_FC_EMBED,
+	PCPU_FC_PAGE,
+
+	PCPU_FC_NR,
+};
+
 #define __this_cpu_add(pcp,val)  ({pcp += val;})
 
 #define __this_cpu_sub(pcp,val)  __this_cpu_add((pcp),-(val))

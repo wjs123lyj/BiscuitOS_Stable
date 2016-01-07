@@ -21,6 +21,7 @@
 #include "../../include/linux/spinlock.h"
 #include "../../include/linux/irqflags.h"
 #include "../../include/linux/printk.h"
+#include "../../include/linux/init.h"
 
 
 
@@ -113,6 +114,12 @@ static struct kmem_cache *kmem_cache_node;
 static int disable_higher_order_debug;
 /* A list of all slab caches on the system */
 static LIST_HEAD(slab_caches);
+
+/*
+ * Merge control.If this is set then no merging of slab caches will occur.
+ * (Could be removed.This was introduced to pacify the merge skeptics.)
+ */
+static int slub_nomerge;
 
 #define DEBUG_DEFAULT_FLAGS (SLAB_DEBUG_FREE | SLAB_RED_ZONE |  \
 		SLAB_POISON | SLAB_STORE_USER)
@@ -2034,3 +2041,35 @@ void __init kmem_cache_init(void)
 			(void *)(unsigned long)nr_cpu_ids,
 			(void *)(unsigned long)nr_node_ids);
 }
+
+static int __init setup_slub_min_order(char *str)
+{
+//	get_option(&str,&slub_min_order);
+
+	return 1;
+}
+__setup("slub_min_order=",setup_slub_min_order);
+
+static int __init setup_slub_max_order(char *str)
+{
+//	get_option(&str,&slub_max_order);
+	slub_max_order = min(slub_max_order,MAX_ORDER  -1 );
+
+	return 1;
+}
+__setup("slub_max_order",setup_slub_max_order);
+
+static int __init setup_slub_min_objects(char *str)
+{
+	//get_option(&str,&slub_min_objects);
+
+	return 1;
+}
+__setup("slub_min_objects=",setup_slub_min_objects);
+
+static int __init setup_slub_nomerge(char *str)
+{
+	slub_nomerge = 1;
+	return 1;
+}
+__setup("slub_nomerge",setup_slub_nomerge);

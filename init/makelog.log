@@ -1,4 +1,0 @@
-../lib/mm/page_alloc.c: In function ‘show_free_areas’:
-../lib/mm/page_alloc.c:2234:5: warning: too many arguments for format [-Wformat-extra-args]
-     (void *)(unsigned long)global_page_state(NR_BOUNCE));
-     ^

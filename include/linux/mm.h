@@ -78,6 +78,16 @@ static inline struct zone *page_zone(struct page *page)
 	return NULL;
 }
 
+static inline pmd_t *pmd_off(pgd_t *pgd,unsigned long virt)
+{
+	return pmd_offset(pgd,virt);	
+}
+
+static inline pmd_t *pmd_off_k(unsigned long virt)
+{
+	return pmd_off(pgd_offset_k(virt),virt);
+}
+
 static inline unsigned long page_to_section(struct page *page)
 {
 	return (page->flags >> SECTIONS_PGSHIFT) & SECTIONS_MASK;

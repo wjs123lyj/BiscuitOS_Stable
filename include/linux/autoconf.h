@@ -2,6 +2,15 @@
 #define _CONFIG_H_     1
 
 /*
+ * Configure machine type
+ * Machine type see mach-types.h
+ */
+#define CONFIG_MACH_TYPE  99
+/*
+ * This marco is used to ignore some code in system.
+ */
+#define CONFIG_NO_USE 1
+/*
  * Configure the number of physcial memory bank.
  * If we will use two bank and we must define CONFIG_BOTH_BANKS.
  */
@@ -98,4 +107,28 @@
  * Support the kmemcheck
  */
 #define CONFIG_KMEMCHECK
+/*
+ * Supprot CMDLINE force
+ */
+#define CONFIG_CMDLINE_FORCE
+/*
+ * Support DCACHE
+ */
+//#define CONFIG_CPU_DCACHE_DISABLE
+/*
+ * Support CACACHE Writethough
+ */
+#define CONFIG_CPU_DCACHE_WRITETHOUGH
+/*
+ * Support VIVT
+ */
+//#define CONFIG_CPU_CACHE_VIVT
+/*
+ * Support VIPT
+ */
+#define CONFIG_CPU_CACHE_VIPT
+/*
+ * ARCHv7
+ */
+#define __LINUX_ARM_ARCH__ 7
 #endif

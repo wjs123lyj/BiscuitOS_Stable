@@ -3,6 +3,7 @@
 
 #include "rbtree.h"
 #include "gfp.h"
+#include "slub_def.h"
 /*
  * Flags to pass to kmem_cache_create().
  * The one marks DEBUG are only valid if CONFIG_SLAB_DEBUG is set.

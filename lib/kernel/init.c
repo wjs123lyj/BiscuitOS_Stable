@@ -13,10 +13,43 @@
 #include "../../include/linux/gfp.h"
 #include "../../include/linux/page-flags.h"
 #include "../../include/linux/vmstat.h"
+#include "../../include/linux/init.h"
 
 extern unsigned long max_pfn;
 extern unsigned long min_low_pfn;
 extern unsigned long max_low_pfn;
+
+static unsigned long phys_initrd_start __initdata = 0;
+static unsigned long phys_initrd_size  __initdata = 0;
+
+static int __init early_initrd(char *p)
+{
+	unsigned long start,size;
+	char *endp;
+
+	start = memparse(p,&endp);
+	if(*endp == ',') {
+		size = memparse(endp + 1 , NULL);
+
+		phys_initrd_start = start;
+		phys_initrd_size  = size;
+	}
+	return 0;
+}
+early_param("initrd",early_initrd);
+
+/*
+ * This keeps memory configuration data used by a couple memory
+ * initialization functions,as well as show_mem() for keep the skipping
+ * of holes in the memory map.It is populated by arm_add_memory().
+ */
+struct meminfo meminfo;
+static int __init meminfo_cmp(const void *_a,const void *_b)
+{
+	const struct membank *a = _a,*b = _b;
+	long cmp = bank_pfn_start(a) - bank_pfn_start(b);
+	return cmp < 0 ? -1 : cmp > 0 ? 1 : 0;
+}
 /*
  * Initialize memblock of ARM
  */
@@ -24,13 +57,10 @@ void __init arm_memblock_init(struct meminfo *mi)
 {
 	int i;
 
-	/*
-	 * First initizalize the memblock.
-	 */
+	sort(&meminfo.bank,meminfo.nr_banks,
+			sizeof(meminfo.bank[0]),meminfo_cmp,NULL);
+
 	memblock_init();
-	/*
-	 * Add all region of memblock.memory.
-	 */
 	for(i = 0 ; i < mi->nr_banks ; i++)
 		memblock_add(mi->bank[i].start,mi->bank[i].size);
 	/*
@@ -54,7 +84,6 @@ void early_parment(void)
 	/*
 	 * Initilize the VMALLOC_AREA.
 	 */
-	early_vmalloc();
 }
 /*
  * Find the normal memory limit.

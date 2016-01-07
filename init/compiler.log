@@ -1,0 +1,25 @@
+../lib/mm/memblock.c: In function ‘memblock_double_array’:
+../lib/mm/memblock.c:403:20: warning: assignment makes pointer from integer without a cast
+   addr = new_array = NULL ? MEMBLOCK_ERROR : __pa(new_array);
+                    ^
+../lib/mm/memblock.c:403:8: warning: assignment makes integer from pointer without a cast
+   addr = new_array = NULL ? MEMBLOCK_ERROR : __pa(new_array);
+        ^
+../lib/mm/memblock.c:413:12: warning: assignment makes pointer from integer without a cast
+  new_array = __va(addr);
+            ^
+../lib/mm/memblock.c:418:4: warning: format ‘%p’ expects a matching ‘void *’ argument [-Wformat=]
+    (void *)(unsigned long)(addr + new_size - 1));
+    ^
+../lib/mm/page_alloc.c: In function ‘show_free_areas’:
+../lib/mm/page_alloc.c:2234:5: warning: too many arguments for format [-Wformat-extra-args]
+     (void *)(unsigned long)global_page_state(NR_BOUNCE));
+     ^
+../lib/kernel/setup.c: In function ‘lookup_machine_type’:
+../lib/kernel/setup.c:125:24: warning: assignment makes integer from pointer without a cast
+   machine->boot_params = phys_to_mem(machine->boot_params);
+                        ^
+../lib/kernel/setup.c: In function ‘cacheid_init’:
+../lib/kernel/setup.c:338:29: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+  mm_debug("CACHE type %p\n",(void *)cachetype);
+                             ^

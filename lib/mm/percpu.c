@@ -12,10 +12,12 @@
 #include "../../include/linux/tlbflush.h"
 #include "../../include/linux/spinlock.h"
 #include "../../include/linux/mutex.h"
+#include "../../include/linux/init.h"
 
 #define PCPU_SLOT_BASE_SHIFT    5  /* 1-31 shares the same slot */
 #define PCPU_DFL_MAP_ALLOC      16 /* start a map with 16 ents */
 
+enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
 
 int pcpu_unit_pages __read_mostly;
 int pcpu_unit_size  __read_mostly;
@@ -986,3 +988,22 @@ static struct pcpu_chunk *pcpu_create_chunk(void)
 	chunk->base_addr = vms[0]->addr - pcpu_group_offsets[0];
 	return chunk;
 }
+
+static int __init percpu_alloc_setup(char *str)
+{
+	if(0)
+		/* nada */;
+#ifdef CONFIG_NEED_PER_CPU_EMBED_FIRST_CHUNL
+	else if(!strcmp(str,"embed"))
+		pcpu_chosen_fc = PCPU_FC_EMBED;
+#endif
+#ifdef CONFIG_NEED_PER_CPU_PAGE_FIRST_CHUNK
+	else if(!strcmp(str,"page"))
+		pcpu_chosen_fc = PCPU_FC_PAGE;
+#endif
+	else
+		mm_warn("PERCPU:unknow allocator %s specified\n",str);
+
+	return 0;
+}
+early_param("percpu_alloc",percpu_alloc_setup);

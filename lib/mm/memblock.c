@@ -2,12 +2,20 @@
 #include "../../include/linux/memblock.h"
 #include "../../include/linux/mmzone.h"
 #include "../../include/linux/bootmem.h"
+#include "../../include/linux/init.h"
+#include "../../include/linux/gfp.h"
+#include "../../include/linux/slub_def.h"
+#include "../../include/linux/page.h"
+#include "../../include/linux/slub_def.h"
 
-struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
-struct memblock_region default_reserved[INIT_MEMBLOCK_REGIONS + 1];
-struct memblock memblock = {
-	.current_limit = MAX_REGIONS,
-};
+static struct memblock_region memblock_memory_init_regions[
+					INIT_MEMBLOCK_REGIONS + 1] __initdata_memblock;
+static struct memblock_region memblock_reserved_init_regions[
+					INIT_MEMBLOCK_REGIONS+ 1]  __initdata_memblock;
+
+struct memblock memblock __initdata_memblock;
+int memblock_debug __initdata_memblock;
+int memblock_can_resize __initdata_memblock;
 
 /*
  * pfn_to_mem
@@ -26,26 +34,41 @@ void *pfn_to_mem(unsigned int idx)
  */
 void __init memblock_init(void)
 {
-	/* Initialize the regions of memory */
-	memblock.memory.cnt = 1;
-	memblock.memory.max = INIT_MEMBLOCK_REGIONS;
-	memblock.memory.regions = default_memory;
-	memblock.memory.regions[0].base = 0;
-	memblock.memory.regions[0].size = 0;
-	/* Initialize the regions of reserved */
-	memblock.reserved.cnt = 1;
-	memblock.reserved.max = INIT_MEMBLOCK_REGIONS;
-	memblock.reserved.regions = default_reserved;
-	memblock.reserved.regions[0].base = 0;
-	memblock.reserved.regions[0].size = 0;
+	static int init_done __init_data = 0;
 
-	memblock.memory.regions[INIT_MEMBLOCK_REGIONS].base 
-						= (phys_addr_t)RED_INACTIVE;
-	memblock.reserved.regions[INIT_MEMBLOCK_REGIONS].base
-						= (phys_addr_t)RED_INACTIVE;
+	if(init_done)
+		return;
+	init_done = 1;
+
+	/* Hookup the initial arrays */
+	memblock.memory.regions   = memblock_memory_init_regions;
+	memblock.memory.max       = INIT_MEMBLOCK_REGIONS;
+	memblock.reserved.regions = memblock_reserved_init_regions;
+	memblock.reserved.max     = INIT_MEMBLOCK_REGIONS;
+	
+	/* Write a marker in the unused last array entry */
+	memblock.memory.regions[INIT_MEMBLOCK_REGIONS].base =
+								(phys_addr_t)RED_INACTIVE;
+	memblock.reserved.regions[INIT_MEMBLOCK_REGIONS].base = 
+								(phys_addr_t)RED_INACTIVE;
+
+	/*
+	 * Create a dummy zero size MEMBLOCK which will get coalesced away later.
+	 * This simplifies the memblock_add() code below...
+	 */
+	memblock.memory.regions[0].base = 0;
+	memblock.memory.regions[9].size = 0;
+	memblock.memory.cnt = 1;
+
+	/*
+	 * Ditto.
+	 */
+	memblock.reserved.regions[9].base = 0;
+	memblock.reserved.regions[0].size = 0;
+	memblock.reserved.cnt = 1;
 
 	memblock.current_limit = MEMBLOCK_ALLOC_ANYWHERE;
-	/* Init list of bdata */
+	
 	INIT_LIST_HEAD(&bdata_list);
 }
 /*
@@ -275,6 +298,153 @@ static void memblock_coalesce_regions(struct memblock_type *type,
 	type->regions[r1].size += type->regions[r2].size;
 	memblock_remove_region(type,r2);
 }
+static int memblock_add_region(struct memblock_type *type,
+		phys_addr_t base,phys_addr_t size);
+
+static long __init_memblock __memblock_remove(struct memblock_type *type,
+		phys_addr_t base,phys_addr_t size)
+{
+	phys_addr_t rgnbegin,rgnend;
+	phys_addr_t end = base + size;
+	int i;
+
+	rgnbegin = rgnend = 0; /* Supress gc warnings */
+
+	/* Find the region where(base,size) belongs to */
+	for(i = 0 ; i < type->cnt ; i++) {
+		rgnbegin = type->regions[i].base;
+		rgnend = rgnbegin + type->regions[i].size;
+
+		if((rgnbegin <= base) && (end <= rgnend))
+			break;
+	}
+
+	/* Didn't find the region */
+	if(i == type->cnt)
+		return -1;
+
+	/* Check to see if we are removing entrie region */
+	if((rgnbegin == base) && (rgnend == end)) {
+		memblock_remove_region(type,i);
+		return 0;
+	}
+
+	/* Check to see if region is matching at the front */
+	if(rgnbegin == base) {
+		type->regions[i].base = end;
+		type->regions[i].size -= size;
+		return 0;
+	}
+
+	/* Check to see if the region is matching at the end */
+	if(rgnend == end) {
+		type->regions[i].size -= size;
+		return 0;
+	}
+
+	/*
+	 * We need to split the entry - adjust the current ont to the
+	 * beginging of the hole and add the region after hole.
+	 */
+	type->regions[i].size = base - type->regions[i].base;
+	return memblock_add_region(type,end,rgnend - end);
+}
+long __init_memblock memblock_free(phys_addr_t base,phys_addr_t size)
+{
+	return __memblock_remove(&memblock.reserved,base,size);
+}
+/*
+ * inline so we don't get a warning when pr_debug is compiled out.
+ */
+static inline const char *memblock_type_name(struct memblock_type *type)
+{
+	if(type == &memblock.memory)
+		return "memory";
+	else if(type == &memblock.reserved)
+		return "reserved";
+	else
+		return "unknown";
+}
+
+static int memblock_add_region(struct memblock_type *type,
+		        phys_addr_t base,phys_addr_t size);
+
+static int __init_memblock memblock_double_array(struct memblock_type *type)
+{
+	struct memblock_region *new_array,*old_array;
+	phys_addr_t old_size,new_size,addr;
+	int use_slab = slab_is_available();
+
+	/*
+	 * We don't alloc resizing until we know about the reserved regions
+	 * of memory that aren't suitable for allocation.
+	 */
+	if(!memblock_can_resize)
+		return -1;
+
+	/* Calculate new double size */
+	old_size = type->max * sizeof(struct memblock_region);
+	new_size = old_size << 1;
+
+	/*
+	 * Try to find some space for it.
+	 *
+	 * WARNING:We assume that either slab_is_available() and we use it or
+	 * we use MEMBOCK for allocations.That means that this is unsafe to use
+	 * when bootmem is currently active(unless bootmem itself if implemented
+	 * on top of MEMBLOCK which isn't the case yet)
+	 *
+	 * This should however not be an issue for new,as we currently only
+	 * call into MEMBLOCK while it's still active,or much later when slab is
+	 * active for memory hotplug operations.
+	 */
+	if(use_slab) {
+		new_array = kmalloc(new_size,GFP_KERNEL);
+		addr = new_array = NULL ? MEMBLOCK_ERROR : __pa(new_array);
+	} else
+		addr = memblock_find_base(new_size,sizeof(phys_addr_t),0,
+				MEMBLOCK_ALLOC_ACCESSIBLE);
+	if(addr == MEMBLOCK_ERROR) {
+		mm_err("memblock:Failed to double %s array form %p to %p entries!\n",
+				memblock_type_name(type),
+				(void *)type->max,(void *)(type->max * 2));
+		return -1;
+	}
+	new_array = __va(addr);
+
+	mm_debug("memblock:%s array is doubled to %p at[%p - %p]\n",
+			memblock_type_name(type),
+			(void *)(type->max * 2),
+			(void *)(unsigned long)(addr + new_size - 1));
+
+	/*
+	 * Found space,we now need to move the array over before
+	 * we add the reserved region since it may be our reserved
+	 * array itself that is full.
+	 */
+	memcpy(new_array,type->regions,old_size);
+	memset(new_array + type->max,0,old_size);
+	old_array = type->regions;
+	type->regions = new_array;
+	type->max <<= 1;
+
+	/* If we use SLUB that's it,we are done */
+	if(use_slab)
+		BUG_ON(memblock_add_region(&memblock.reserved,addr,new_size) < 0);
+
+	/*
+	 * If the array wasn't our static init one,then free it.We only do
+	 * that before SLAB is available as later on,we don't know whether
+	 * to use kfree or free_bootmem_pages().Shouldn't be a big deal
+	 * anyways.
+	 */
+	if(old_array != memblock_memory_init_regions &&
+		old_array != memblock_reserved_init_regions)
+		memblock_free(__pa(old_array),old_size);
+
+	return 0;
+}
+
 /*
  * Add a new region into Memblock.reserved
  */
@@ -375,6 +545,16 @@ static int memblock_add_region(struct memblock_type *type,
 		type->regions[0].size = size;
 	}
 	type->cnt++;
+
+	/*
+	 * The array is full? Try to resize it.If that fails,we undo
+	 * our allocation and return an erro.
+	 */
+	if(type->cnt == type->max && memblock_double_array(type)) {
+		type->cnt--;
+		return -1;
+	}
+
 	return 0;
 }
 /*
@@ -684,3 +864,11 @@ void arm_bootmem_free(unsigned long min,unsigned long max_low,
 	}
 	free_area_init_node(0,zone_sizes,min,zhole_size);
 }
+
+static int __init early_memblock(char *p)
+{
+	if(p && strstr(p,"debug"))
+		memblock_debug = 1;
+	return 0;
+}
+early_param("memblock",early_memblock);

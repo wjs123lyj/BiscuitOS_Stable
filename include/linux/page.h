@@ -1,21 +1,23 @@
 #ifndef _PAGE_H_
 #define _PAGE_H_
 
-typedef unsigned long pteval_t;
+typedef unsigned int pteval_t;
 /*
  * These are used to make use of C type-checking...
+ * In order to simulate the 32-bit address in 64-bit machine,
+ * we use unsigned int to replace unsigned long.
  */
 typedef struct { pteval_t pte;} pte_t;
-typedef struct { unsigned long pmd;} pmd_t;
-typedef struct { unsigned long pgd[2];} pgd_t;
-typedef struct { unsigned long pgprot;} pgprot_t;
+typedef struct { unsigned int pmd;} pmd_t;
+typedef struct { unsigned int pgd[2];} pgd_t;
+typedef struct { unsigned int pgprot;} pgprot_t;
 
 #define pte_val(x)    do {} while(0) //((x).pte)
 #define pgprot_val(x) ((x).pgprot)
 
 #define __pte(x)      ((pte_t) {(x)})
 #define __pgprot(x)   ((pgprot_t) {(x)})
-
+#define __pmd(x)      ((pmd_t) { (x) } )
 
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (unsigned int)(1UL << PAGE_SHIFT)

@@ -31,6 +31,9 @@ enum stat_item {
 	NR_SLUB_STAT_ITEMS
 };
 
+#ifndef ZERO_SIZE_PTR
+#define ZERO_SIZE_PTR ((void *)16)
+#endif
 
 #define KMALLOC_MIN_SIZE 8
 #define KMALLOC_SHIFT_LOW  ilog2(KMALLOC_MIN_SIZE)
@@ -212,7 +215,7 @@ extern void *__kmalloc(size_t size,gfp_t flags);
 /*
  * kmalloc!!!!
  */
-inline void *kmalloc(size_t size,gfp_t flags)
+static inline void *kmalloc(size_t size,gfp_t flags)
 {
 	if(__builtin_constant_p(size))
 	{
@@ -241,7 +244,7 @@ static inline void *kmem_cache_alloc_node_trace(
 	return kmem_cache_alloc_node(s,gfpflags,node);
 }
 extern void *__kmalloc_node(size_t size,gfp_t flags,int node);
-inline void *kmalloc_node(size_t size,gfp_t flags,int node)
+static inline void *kmalloc_node(size_t size,gfp_t flags,int node)
 {
 	if(__builtin_constant_p(size) &&
 			size <= SLUB_MAX_SIZE && !(flags & SLUB_DMA))

@@ -12,6 +12,10 @@ typedef short           s16;
 typedef int             s32;
 typedef long long       s64;
 
+typedef unsigned char  __u8;
+typedef unsigned short __u16;
+typedef unsigned int   __u32;
+
 typedef unsigned int phys_addr_t;
 typedef unsigned int mem_addr_t;
 typedef unsigned int gfp_t;
@@ -27,6 +31,7 @@ typedef phys_addr_t resource_size_t;
 typedef unsigned long __kernel_size_t;
 
 typedef __kernel_size_t size_t;
+
 
 /*
  * Use unsigned int to act physical memory.
