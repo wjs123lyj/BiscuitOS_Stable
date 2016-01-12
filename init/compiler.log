@@ -1,18 +1,26 @@
 ../lib/mm/memblock.c: In function ‘memblock_double_array’:
-../lib/mm/memblock.c:403:20: warning: assignment makes pointer from integer without a cast
+../lib/mm/memblock.c:400:20: warning: assignment makes pointer from integer without a cast
    addr = new_array = NULL ? MEMBLOCK_ERROR : __pa(new_array);
                     ^
-../lib/mm/memblock.c:403:8: warning: assignment makes integer from pointer without a cast
+../lib/mm/memblock.c:400:8: warning: assignment makes integer from pointer without a cast
    addr = new_array = NULL ? MEMBLOCK_ERROR : __pa(new_array);
         ^
-../lib/mm/memblock.c:413:12: warning: assignment makes pointer from integer without a cast
+../lib/mm/memblock.c:410:12: warning: assignment makes pointer from integer without a cast
   new_array = __va(addr);
             ^
-../lib/mm/memblock.c:418:4: warning: format ‘%p’ expects a matching ‘void *’ argument [-Wformat=]
+../lib/mm/memblock.c:415:4: warning: format ‘%p’ expects a matching ‘void *’ argument [-Wformat=]
     (void *)(unsigned long)(addr + new_size - 1));
     ^
+../lib/mm/page_alloc.c: In function ‘zone_pcp_init’:
+../lib/mm/page_alloc.c:344:19: error: ‘boot_pageset’ undeclared (first use in this function)
+  zone->pageset = &boot_pageset;
+                   ^
+../lib/mm/page_alloc.c:344:19: note: each undeclared identifier is reported only once for each function it appears in
+../lib/mm/page_alloc.c:349:5: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+     (void *)zone_batchsize(zone));
+     ^
 ../lib/mm/page_alloc.c: In function ‘show_free_areas’:
-../lib/mm/page_alloc.c:2234:5: warning: too many arguments for format [-Wformat-extra-args]
+../lib/mm/page_alloc.c:2277:5: warning: too many arguments for format [-Wformat-extra-args]
      (void *)(unsigned long)global_page_state(NR_BOUNCE));
      ^
 ../lib/kernel/setup.c: In function ‘lookup_machine_type’:

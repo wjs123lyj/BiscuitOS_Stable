@@ -41,5 +41,10 @@ static inline unsigned long page_order(struct page *page)
 #define ZONE_RECLAIM_NOSCAN        -2
 #define ZONE_RECLAIM_FULL          -1
 #define ZONE_RECLAIM_SOME           0
-#define ZONE_RECLAIM_SUCCESS        1 
+#define ZONE_RECLAIM_SUCCESS        1
+
+static inline void mminit_validate_memmodel_limits(unsigned long *start_pfn,
+		unsigned long *end_pfn)
+{
+}
 #endif

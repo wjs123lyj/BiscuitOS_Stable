@@ -7,6 +7,10 @@
 #include "../../include/asm/errno-base.h"
 #include "../../include/linux/memory.h"
 #include "../../include/linux/debug.h"
+#include "../../include/linux/kmemleak.h"
+#include "../../include/linux/page.h"
+#include "../../include/linux/slab.h"
+#include "../../include/linux/kmemleak.h"
 
 unsigned long max_low_pfn;
 unsigned long min_low_pfn;
@@ -14,13 +18,14 @@ unsigned long max_pfn;
 
 extern void *phys_to_mem(phys_addr_t addr);
 
+/* always use node 0 for bootmem on this numa platform */
 #define bootmem_arch_preferred_node(__bdata,size,align,goal,limit)     \
 	(NODE_DATA(0)->bdata)
 /*
  * Bootmem_data 
  */
 #ifndef CONFIG_NO_BOOTMEM
-struct bootmem_data bootmem_node_data[MAX_NUMNODES];
+struct bootmem_data bootmem_node_data[MAX_NUMNODES] __initdata;
 #endif
 #ifndef ARCH_LOW_ADDRESS_LIMIT
 #define ARCH_LOW_ADDRESS_LIMIT  0xffffffffUL
@@ -51,10 +56,9 @@ static unsigned long __init align_off(struct bootmem_data *bdata,
 	/* Same as align_idx for byte offsets */
 	return ALIGN(base + off, align) - base;
 }
-/*
- * free in bitmap.
- */
-static void __init __free(struct bootmem_data *bdata,
+
+
+static void __init __free(bootmem_data_t *bdata,
 		unsigned long sidx,unsigned long eidx)
 {
 	unsigned long idx;
@@ -71,9 +75,7 @@ static void __init __free(struct bootmem_data *bdata,
 		if(!test_and_clear_bit(idx,bdata->node_bootmem_map))
 			BUG();
 }
-/*
- * reserved in bitmap.
- */
+
 static int __init __reserve(struct bootmem_data *bdata,unsigned long sidx,
 		unsigned long eidx,int flags)
 {
@@ -86,24 +88,20 @@ static int __init __reserve(struct bootmem_data *bdata,unsigned long sidx,
 			eidx + bdata->node_min_pfn,
 			flags);
 
-	for(idx = sidx ; idx < eidx ; idx++)
-	{
-		if(test_and_set_bit(idx,bdata->node_bootmem_map))
-		{
-			if(exclusive)
-			{
+	for(idx = sidx ; idx < eidx ; idx++) 
+		if(test_and_set_bit(idx,bdata->node_bootmem_map)) {
+			if(exclusive) {
 				__free(bdata,sidx,idx);
 				return -EBUSY;
 			}
 			bdebug("silent double reserve of PFN %lx\n",
 					idx + bdata->node_min_pfn);
 		}
-	}
+
 	return 0;
 }
-/*
- * Mark bootmem in some node.
- */
+
+
 static int __init mark_bootmem_node(bootmem_data_t *bdata,
 		unsigned long start,unsigned long end,
 		int reserve,int flags)
@@ -112,7 +110,7 @@ static int __init mark_bootmem_node(bootmem_data_t *bdata,
 
 	bdebug("nid=%td start=%lx end=%lx reserve=%d flags=%x\n",
 			bdata - bootmem_node_data,start,end,reserve,flags);
-
+	
 	BUG_ON(start < bdata->node_min_pfn);
 	BUG_ON(end > bdata->node_low_pfn);
 
@@ -135,8 +133,7 @@ static int __init mark_bootmem(unsigned long start,unsigned long end,
 	bootmem_data_t *bdata;
 
 	pos = start;
-	list_for_each_entry(bdata,&bdata_list,list)
-	{
+	list_for_each_entry(bdata,&bdata_list,list) {
 		int err;
 		unsigned long max;
 
@@ -162,12 +159,21 @@ static int __init mark_bootmem(unsigned long start,unsigned long end,
 	}
 	BUG();
 }
+
 /*
- * Free some area of bootmem.
+ * free_bootmem - mark a page range as usable.
+ * @addr: starting address of the range.
+ * @size: size of the range in bytes.
+ * 
+ * Partial pages will be considered reserved and left as they are.
+ *
+ * The range must be contiguous but may span node boundaries.
  */
 void __init free_bootmem(unsigned long addr,unsigned long size)
 {
 	unsigned long start,end;
+
+	kmemleak_free_part((const void *)__va(addr),size);
 
 	start = PFN_UP(addr);
 	end   = PFN_DOWN(addr + size);
@@ -175,7 +181,14 @@ void __init free_bootmem(unsigned long addr,unsigned long size)
 	mark_bootmem(start,end,0,0);
 }
 /*
- * Reserve some area of bootmem.
+ * reserve_bootmem - mark a page range as usable.
+ * @addr: starting address of the range
+ * @size: size of the range in bytes
+ * @flags: reservation flags(see linux/bootmem.h)
+ *
+ * Partial pages will be reserved.
+ *
+ * The range must be contiguous but may span node boundaries.
  */
 int __init reserve_bootmem(unsigned long addr,unsigned long size,
 		int flags)
@@ -187,15 +200,22 @@ int __init reserve_bootmem(unsigned long addr,unsigned long size,
 
 	return mark_bootmem(start,end,1,flags);
 }
-/*
- * allocate bootmem core.
- */
+
 static void * __init alloc_bootmem_core(struct bootmem_data *bdata,
 		unsigned long size,unsigned long align,
 		unsigned long goal,unsigned long limit)
 {
 	unsigned long fallback = 0;
 	unsigned long min,max,start,sidx,midx,step;
+
+	mm_debug("nid=%p size=%p[%p pages]align=%p goal=%p limit=%p\n",
+			(void *)(bdata - bootmem_node_data),(void *)size,
+				(void *)(PAGE_ALIGN(size) >> PAGE_SHIFT),
+				(void *)align,(void *)goal,(void *)limit);
+
+	BUG_ON(!size);
+	BUG_ON(align & (align - 1));
+	BUG_ON(limit && goal + size > limit);
 
 	if(!bdata->node_bootmem_map)
 		return NULL;
@@ -221,8 +241,7 @@ static void * __init alloc_bootmem_core(struct bootmem_data *bdata,
 	sidx = start - bdata->node_min_pfn;
 	midx = max - bdata->node_min_pfn;
 
-	if(bdata->hint_idx > sidx)
-	{
+	if(bdata->hint_idx > sidx) {
 		/*
 		 * Handle the valid case of sidx being zero and still
 		 * catch the fallback below.
@@ -231,8 +250,7 @@ static void * __init alloc_bootmem_core(struct bootmem_data *bdata,
 		sidx = align_idx(bdata,bdata->hint_idx,step);
 	}
 
-	while(1)
-	{
+	while(1) {
 		int merge;
 		void *region;
 		unsigned long eidx,i,start_off,end_off;
@@ -271,16 +289,21 @@ find_block:
 		 */
 		if(__reserve(bdata,PFN_DOWN(start_off) + merge,
 					PFN_UP(end_off),BOOTMEM_EXCLUSIVE))
-			mm_err("Err[%s - %d]\n",__FUNCTION__,__LINE__);
-		region = (void *)(unsigned long)phys_to_virt(PFN_PHYS(bdata->node_min_pfn) + 
-				start_off);
+			BUG();
+
+		region = (void *)(unsigned long)phys_to_virt(
+				 PFN_PHYS(bdata->node_min_pfn) + start_off);
 		/*
 		 * In order to ignore the Virtual Memory,we indicate that
 		 * will get virtual memory address when you request memory from system.
 		 */
 		memset(phys_to_mem(virt_to_phys(region)),0,size);
-
-		return phys_to_mem(virt_to_phys(region));
+		/*
+		 * The min_count is set to 0 so that bootmem allocated blocks
+		 * are never reported as leaks.
+		 */
+		kmemleak_alloc(region,size,0,0);
+		return region;
 	}
 	if(fallback)
 	{
@@ -290,18 +313,26 @@ find_block:
 	}	
 	return NULL;
 }
-static void * __init alloc_arch_preferred_bootmem(struct bootmem_data *bdata,
+
+static void __init * __init alloc_arch_preferred_bootmem(
+		struct bootmem_data *bdata,
 		unsigned long size,unsigned long align,
 		unsigned long goal,unsigned long limit)
 {
-	struct bootmem_data *p_bdata;
+	if(WARN_ON_ONCE(slab_is_available()))
+		return kzalloc(size,GFP_NOWAIT);
 
-	p_bdata = bootmem_arch_preferred_node(bdata,size,align,goal,limit);
+	{
+		struct bootmem_data *p_bdata;
 
-	if(p_bdata)
-		return alloc_bootmem_core(p_bdata,size,align,
-				goal,limit);
+		p_bdata = bootmem_arch_preferred_node(bdata,size,align,goal,limit);
+
+		if(p_bdata)
+			return alloc_bootmem_core(p_bdata,size,align,
+					goal,limit);
+	}
 }
+
 static void * __init ___alloc_bootmem_nopanic(unsigned long size,
 		unsigned long align,unsigned long goal,
 		unsigned long limit)
@@ -330,8 +361,10 @@ restart:
 		goal = 0;
 		goto restart;
 	}
+
 	return NULL;
 }
+
 static void * __init ___alloc_bootmem(unsigned long size,unsigned long align,
 		unsigned long goal,unsigned long limit)
 {
@@ -345,6 +378,7 @@ static void * __init ___alloc_bootmem(unsigned long size,unsigned long align,
 	mm_err("Out of memory\n");
 	return NULL;
 }
+
 static void * __init ___alloc_bootmem_node(struct bootmem_data *bdata,
 		unsigned long size,unsigned long align,
 		unsigned long goal,unsigned long limit)
@@ -362,12 +396,27 @@ static void * __init ___alloc_bootmem_node(struct bootmem_data *bdata,
 	return ___alloc_bootmem(size,align,goal,limit);
 }
 /*
- * __alloc_bootmem_node - allocate boot memory from a specific node
+ * __alloc_bootmem_node - alloc boot memory from a specific node
+ * @pgdat: node to allocate from
+ * @size:size of the request in bytes.
+ * @align: alignment of the region.
+ * @goal:preferred starting address of the region.
+ *
+ * The goal is dropped if it can not be satisified and the allocation will
+ * fall back to memory below @goal.
+ *
+ * Allocation may fall back to any node in the system if the specified node
+ * can not hold the requested memory.
+ *
+ * The function panics if the request can not be satisfied.
  */
 void * __init __alloc_bootmem_node(struct pglist_data *pgdat,
 		unsigned long size,unsigned long align,unsigned long goal)
 {
 	void *ptr;
+
+	if(WARN_ON_ONCE(slab_is_available()))
+		return kzalloc_node(size,GFP_NOWAIT,pgdat->node_id);
 
 	ptr = ___alloc_bootmem_node(pgdat->bdata,size,align,goal,0);
 

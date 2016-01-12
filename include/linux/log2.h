@@ -1,5 +1,49 @@
 #ifndef _LOG2_H_
 #define _LOG2_H_
+#include "types.h"
+#include "bitops.h"
+
+/*
+ * Deal with unrepresentable constant logarithms.
+ */
+static inline int ____ilog2_NaN(void)
+{
+	return 0;
+}
+
+/*
+ * non-constant log of base 2 calculators
+ * - the arch may override thest in asm/bitops.h if they can be implemented
+ * more efficiently than using fls() and fls64()
+ * - the arch is not required to handle n == 0 if implementing the fallback.
+ */
+static inline __attribute__((const))
+int __ilog2_u32(u32 n)
+{
+	return fls(n) - 1;
+}
+static inline __attribute__((const))
+int __ilog2_u64(u64 n)
+{
+	return fls64(n) - 1;
+}
+/*
+ * round up to nearest power of two
+ */
+static inline __attribute__((const))
+unsigned long __roundup_pow_of_two(unsigned long n)
+{
+	return 1UL << fls_long(n - 1);
+}
+
+/*
+ * round down to nearest power of two
+ */
+static inline __attribute__((const))
+unsigned long __rounddown_pow_of_two(unsigned long n)
+{
+	return 1UL << (fls_long(n) - 1);
+}
 
 /**
  * ilog2 - log of base 2 of 32-bit or a 64-bit unsigned value
@@ -11,9 +55,6 @@
  *
  * selects the appropriately-sized optimised version depending on sizeof(n)
  */
-// Need debug
-#define ilog2(n) 0
-#if 0
 #define ilog2(n)				\
 (						\
 	__builtin_constant_p(n) ? (		\
@@ -88,7 +129,19 @@
 	__ilog2_u32(n) :			\
 	__ilog2_u64(n)				\
  )
-#endif
 
-
+/*
+ * rounddown_pow_of_two - round the given value down to nearest power of two
+ * @n - parameter
+ * round the given value down to the nearest power of two
+ * - the result is undefined when n == 0
+ * - the can be used to initialise global variables from constant data.
+ */
+#define rounddown_pow_of_two(n)      \
+(                           \
+		__builtin_constant_p(n) ? (    \
+			(n == 1) ? 0 :        \
+			(1UL << ilog2(n)));     \
+		__rounddown_pow_of_two(n)       \
+)
 #endif

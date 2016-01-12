@@ -8,6 +8,7 @@
 #include "page_cgroup.h"
 #include "nodemask.h"
 #include "spinlock_types.h"
+#include "wait.h"
 
 enum zone_type {
 
@@ -231,12 +232,13 @@ typedef struct pglist_data {
 #ifndef CONFIG_NO_CGROUP_MEM_RES_CTLR
 	struct page_cgroup *node_page_cgroup;
 #endif
+	wait_queue_head_t kswapd_wait;
 
 } pg_data_t;
 
 extern struct pglist_data contig_pglist_data;
 
-#define NODE_DATA(nide) (&(contig_pglist_data))
+#define NODE_DATA(nid) (&(contig_pglist_data))
 static inline int zone_movable_is_highmem(void)
 {
 #if defined(CONFIG_HIGHMEM) && defined(CONFIG_ARCH_POPULATES_NODE_MAP)
@@ -376,6 +378,6 @@ extern struct pglist_data *first_online_pgdat(void);
 		else
 
 
-
+#define sparse_init() do {} while(0)
 #endif
 

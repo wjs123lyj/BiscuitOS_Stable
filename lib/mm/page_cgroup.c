@@ -69,5 +69,8 @@ fail:
 	mm_err("please try cgroup_disabled=memory boot operation\n");
 	mm_err("Out of memory\n");
 }
-
+void __meminit pgdat_page_cgroup_init(struct pglist_data *pgdat)
+{
+	return;
+}
 

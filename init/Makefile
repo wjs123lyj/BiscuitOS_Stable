@@ -9,6 +9,7 @@ SRCS = main.c \
 	   ../lib/mm/init-mm.c \
 	   ../lib/boot_arch.c \
 	   ../lib/kernel/init.c \
+	   ../lib/kernel/wait.c \
 	   ../lib/kernel/sort.c \
 	   ../lib/mm/tlb.c \
 	   ../lib/mm/traps.c \

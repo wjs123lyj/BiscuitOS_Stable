@@ -1,5 +1,6 @@
 #ifndef _BITOPS_H_
 #define _BITOPS_H_ 1
+#include "types.h"
 
 #define BITS_PER_LONG   32
 
@@ -25,5 +26,9 @@ extern int find_next_bit(unsigned int *addr,unsigned long size,
 static inline int fls(int x)
 {
 	return (sizeof(int) * 8) - __builtin_clz(x);
+}
+static inline int fls64(u64 w)
+{
+	return (sizeof(u64) * 8) - __builtin_clzll(w);
 }
 #endif

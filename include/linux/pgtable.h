@@ -141,8 +141,8 @@ extern struct mm_struct init_mm;
 		__pmdp[1] = __pmd(0);   \
 	} while(0)
 
-	
 
+#define pte_val(x)	  (unsigned long)(((pte_t *)(phys_to_mem(__pa(x))))->pte)
 
 #define pgd_addr_end(addr,end) \
 ({     unsigned long __boundary = ((addr) + PGDIR_SIZE) & PGDIR_MASK; \
@@ -162,12 +162,10 @@ static inline pte_t *pmd_page_vaddr(pmd_t *pmd)
 /*
  * Get the virtual address of page that pmd pointes.
  */
-#define pte_index(x) (((addr) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1))
+#define pte_index(x) (((x) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1))
 
 #define pte_offset_kernel(pmd,addr) (pmd_page_vaddr(pmd) + pte_index(addr))
 
-#define pfn_pte(pfn,prot) (pte_t)(unsigned long)((unsigned long)((pfn) << \
-			PAGE_SHIFT) | (unsigned long)prot)
 
 /*
  * The virtuall address of KERNEL MODULE.
@@ -207,6 +205,7 @@ static inline int pte_hidden(pte_t pte)
 #define pte_clear(q,w,e) do {} while(0)
 
 #define pte_pfn(pte)  (pte_val(pte) >> PAGE_SHIFT)
+#define pfn_pte(pfn,prot)  __pte(((pfn) << PAGE_SHIFT) | pgprot_val(prot))  
 
 /*
  * Convert a physical address to a Page Frame Number and back.
@@ -266,7 +265,12 @@ static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 #define SUPERSECTION_SIZE    (1UL << SUPERSECTION_SHIFT)
 #define SUPERSECTION_MASK    (~(SUPERSECTION_SIZE - 1))
 
-extern void set_pte_ext(phys_addr_t addr,unsigned long pte,int e);
+static inline void set_pte_ext(pte_t *ptep,pte_t pte,int e)
+{
+	pte_t *__ptr =
+		(pte_t *)(unsigned long)phys_to_mem(__pa(ptep));
+    __ptr[0] = pte;
+}
 
 static inline void __sync_icache_dcache(pte_t pteval)
 {

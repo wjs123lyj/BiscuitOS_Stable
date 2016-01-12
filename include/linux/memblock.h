@@ -50,7 +50,6 @@ struct memblock {
 #define top_mem (CONFIG_BANK0_START + CONFIG_BANK0_SIZE)
 
 extern struct memblock memblock;
-extern struct list_head bdata_list;
 extern struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 extern struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 

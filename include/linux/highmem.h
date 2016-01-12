@@ -14,7 +14,7 @@
 /*
  * The virtual address of PKMAP,this is one way of mapping highmem.
  */
-#define PKMAP_BASE       (unsigned long)(PAGE_OFFSET - PMD_SIZE)
+#define PKMAP_BASE       (PAGE_OFFSET - PMD_SIZE)
 #define LAST_PKMAP       PTRS_PER_PTE
 #define LAST_PKMAP_MASK  (LAST_PKMAP - 1)
 #define PKMAP_NR(virt)   (((virt) - PKMAP_BASE) >> PAGE_SHIFT)

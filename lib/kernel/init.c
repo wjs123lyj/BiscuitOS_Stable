@@ -97,8 +97,7 @@ void __init find_limits(unsigned int *min,unsigned int *max_low,
 	*min = 0xFFFFFFFF;
 	*max_low = *max_high = 0;
 
-	for_each_bank(i,mi)
-	{
+	for_each_bank(i,mi) {
 		struct membank *bank = &mi->bank[i];
 		unsigned int start,end;
 
@@ -115,6 +114,9 @@ void __init find_limits(unsigned int *min,unsigned int *max_low,
 			*max_low = end;
 	}
 }
+static void arm_memory_present(void)
+{
+}
 /*
  * Bootmem init
  */
@@ -124,16 +126,24 @@ void __init bootmem_init(void)
 
 	max_low = max_high = 0;
 
-	/*
-	 * Get the limit of lowmem and highmem.
-	 */
 	find_limits(&min,&max_low,&max_high);
-	/*
-	 * Init all arm bootmem.
-	 */
+	
 	arm_bootmem_init(min,max_low);
+
 	/*
-	 * Now free the memory.
+	 * Sparsemem tries to allocate bootmem in memory_present().
+	 * so must be done after the fixed reservations.
+	 */
+	arm_memory_present();
+
+	/*
+	 * sparse_init() needs the bootmem allocator up and running.
+	 */
+	sparse_init();
+	/*
+	 * Now free the memory - free_area_init_node needs
+	 * that sparse mem_map arrays initalized by sparse_init()
+	 * for memmap_init_zone(),otherwise all PFNs are invalid.
 	 */
 	arm_bootmem_free(min,max_low,max_high);
 	

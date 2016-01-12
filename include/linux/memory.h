@@ -52,4 +52,10 @@ extern unsigned long totalhigh_pages;
  * Extern function.
  */
 extern int __pte_alloc_kernel(pmd_t *pmd,unsigned long address);
+
+/*
+ * Cache flushing area - ROM
+ */
+#define FLUSH_BASE_PHYS   0x00000000
+#define FLUSH_BASE        0xdf000000
 #endif

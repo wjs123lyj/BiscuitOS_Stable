@@ -23,6 +23,8 @@
 #include "../../include/asm/head.h"
 #include "../../include/linux/cachetype.h"
 #include "../../include/linux/pgalloc.h"
+#include "../../include/linux/memory.h"
+#include "../../include/linux/pgalloc.h"
 
 
 extern void *vectors_page;
@@ -588,16 +590,6 @@ static pte_t * __init early_pte_alloc(pmd_t *pmd,unsigned long addr,
 	return pte_offset_kernel(pmd,addr);
 }
 /*
- * pte_set
- */
-void set_pte_ext(phys_addr_t addr,unsigned long pte,int e)
-{
-	unsigned int *p;
-
-	p = phys_to_mem(virt_to_phys(pte));
-	*p = addr;
-}
-/*
  * Alloc and init pte. 
  */
 void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,
@@ -605,12 +597,9 @@ void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,
 		const struct mem_type *type)
 {
 	pte_t *pte = early_pte_alloc(pmd,addr,type->prot_l1);
-	
+	pte_t a = __pte(0);
 	do {
-		/* Core Deal */
-		/* Need debug */
-		//set_pte_ext(pfn_pte(pfn,0),(unsigned long)pte,0);
-		/* --------- */
+		set_pte_ext(pte,pfn_pte(pfn,__pgprot(type->prot_pte)),0);
 		pfn++;
 	} while(pte++,addr += PAGE_SIZE,addr != end);
 }
@@ -629,8 +618,7 @@ void alloc_init_section(pgd_t *pgd,unsigned long addr,
 	 * L1 entries,whereas PGDs refer to a group of L1 entries making
 	 * up one logical pointer to an L2 table.
 	 */
-	if(0) {
-//	if(((addr | end | phys) & ~SECTION_MASK) == 0) {
+	if(((addr | end | phys) & ~SECTION_MASK) == 0) {
 		pmd_t *p = pmd;
 
 		if(addr & SECTION_SIZE)
@@ -642,7 +630,7 @@ void alloc_init_section(pgd_t *pgd,unsigned long addr,
 			 * to store pmd_val.
 			 */
 			pmd_t *pmd_p = 
-				(pmd_t *)(unsigned long)phys_to_mem((unsigned long)pmd);
+				(pmd_t *)(unsigned long)phys_to_mem(__pa(pmd));
 			*pmd_p = __pmd(phys | type->prot_sect);
 			phys += SECTION_SIZE;
 		} while(pmd++,addr += SECTION_SIZE , addr != end);
@@ -759,7 +747,7 @@ static void __init create_mapping(struct map_desc *md)
 				(void *)__pfn_to_phys(md->pfn),(void *)addr);
 		return;
 	}
-
+	
 	pgd = pgd_offset_k(addr);
 	end = addr + length;
 	do {
@@ -794,7 +782,6 @@ void __init map_lowmem(void)
 		md.virtual = phys_to_virt(start);
 		md.length  = end - start;
 		md.type    = MT_MEMORY;
-
 		create_mapping(&md);
 	}
 }
@@ -805,27 +792,67 @@ void __init map_lowmem(void)
  * called function.This means you can't use any function or debugging
  * method which may touch any device,otherwise the kernel _will_crash.
  */
-static void __init devicemaps_init(void)
+static void __init devicemaps_init(struct machine_desc *mdesc)
 {
+	struct map_desc map;
 	unsigned int addr;
-	struct map_desc md;
 
+	/*
+	 * Allocate the vector page early.
+	 */
 	vectors_page = early_alloc(PAGE_SIZE);
 
 	for(addr = VMALLOC_END ; addr ; addr += PGDIR_SIZE)
-		//pmd_clear(pmd_off_k(addr));
-		;
+		pmd_clear(pmd_off_k(addr));
+		
 
 	/*
 	 * Mapping Descrp of Vector.
 	 */
-	md.pfn = phys_to_pfn(virt_to_phys(vectors_page));
-	md.virtual = 0xffff0000;
-	md.length  = PAGE_SIZE;
-	md.type    = 0;
+#ifdef FLUSH_BASE
+	map.pfn = __phys_to_pfn(FLUSH_BASE_PHYS);
+	map.virtual = FLUSH_BASE;
+	map.length = SZ_1M;
+	map.type = MT_CACHECLEAN;
+	create_mapping(&map);
+#endif
+#ifdef FLUSH_BASE_MINICACHE
+	map.pfn = __phys_to_pfn(FLUSH_BASE_PHYS + SZ_1M);
+	map.virtual = FLUSH_BASE_MINICACHE;
+	map.length = SZ_1M;
+	map.type = MT_MINICLEAN;
+	create_mapping(&map);
+#endif
 
-	create_mapping(&md);
+	/*
+	 * Create a mapping for the machine vectors at the high-vectors
+	 * location (0xffff0000).If we aren't using high-vectors,also
+	 * create a mapping at the low-vectors virtual address.
+	 */
+	map.pfn = __phys_to_pfn(virt_to_phys(vectors_page));
+	map.virtual = 0xffff0000;
+	map.length  = PAGE_SIZE;
+	map.type    = MT_HIGH_VECTORS;
+	create_mapping(&map);
 
+	if(!vectors_high()) {
+		map.virtual = 0;
+		map.type = MT_LOW_VECTORS;
+		create_mapping(&map);
+	}
+
+	/*
+	 * Ask the machine support to map in the statically mapped devices.
+	 */
+	if(mdesc->map_io)
+		mdesc->map_io();
+
+	/*
+	 * Finally flush the caches and tlb to ensure that we're in a
+	 * consistent state wrt the writebuffer.This also ensures that
+	 * any write-allocated cache lines in the vector page are written
+	 * back.After this point,we can start to touch devices again.
+	 */
 	local_flush_tlb_all();
 	flush_cache_all();
 }
@@ -836,7 +863,7 @@ static void __init kmap_init(void)
 {
 #ifdef CONFIG_HIGHMEM
 	pkmap_page_table = early_pte_alloc(pmd_off_k(PKMAP_BASE),
-			PKMAP_BASE,0);
+			PKMAP_BASE,_PAGE_KERNEL_TABLE);
 #endif
 }
 /*
@@ -851,9 +878,10 @@ void __init paging_init(struct machine_desc *mdesc)
 	sanity_check_meminfo();
 	prepare_page_table();
 	map_lowmem();
-	devicemaps_init();
+	devicemaps_init(mdesc);
 	kmap_init();
-	top_pmd = pmd_off_k(0xFFFF0000);
+
+	top_pmd = pmd_off_k(0xffff0000);
 	
 	/*
 	 * Allocate the zero page.
