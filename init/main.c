@@ -8,6 +8,8 @@ extern struct mm_struct init_mm;
 #ifdef CONFIG_DEBUG_PAGEALLOC
 int debug_pagealloc_enabled = 0;
 #endif
+
+enum system_states system_state __read_mostly;
 /* Extern for uboot */
 extern void u_boot_start(void);
 /*
@@ -73,6 +75,7 @@ void __init parse_early_param(void)
 	done = 1;
 }
 
+
 static void start_kernel(void)
 {
 	char *command_line;
@@ -80,7 +83,6 @@ static void start_kernel(void)
 	smp_setup_processor_id();
 
 	setup_arch(&command_line);
-	mm_debug("cmd_line start %s\n",command_line);
 	mm_init_owner(&init_mm,&init_task);
 	build_all_zonelist(NULL);
 	page_alloc_init();

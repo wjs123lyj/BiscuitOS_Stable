@@ -122,7 +122,8 @@ struct machine_desc *lookup_machine_type(unsigned int nr)
 	
 	if(nr == machine->nr) {
 		/* In order to simulate boot params in RAM */
-		machine->boot_params = phys_to_mem(machine->boot_params);
+		machine->boot_params =
+			(unsigned long)phys_to_mem(machine->boot_params);
 
 		return machine;
 	}
@@ -137,29 +138,33 @@ static void __init request_standard_resource(struct machine_desc *mdesc)
 {
 	struct memblock_region *region;
 	struct resource *res;
+	int i = 0;
 
 	kernel_code.start  = (unsigned long)__executable_start;
 	kernel_code.end    = (unsigned long)(_etext - 1);
 	kernel_data.start  = (unsigned long)_edata;
 	kernel_data.end    = (unsigned long)(_end - 1);
 
-	for_each_memblock(memory,region)
-	{
-		res = (struct resource *)(unsigned long)alloc_bootmem_low(sizeof(*res));
+	for_each_memblock(memory,region) {
+		res = (struct resource *)(unsigned long)(
+				phys_to_mem(__pa(alloc_bootmem_low(2 * sizeof(*res)))));
 		res->name = "SystemRAM";
 		res->start = __pfn_to_phys(memblock_region_memory_base_pfn(region));
 		res->end   = __pfn_to_phys(memblock_region_memory_end_pfn(region));
 		res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-
+	
 		request_resource(&iomem_resource,res);
-
+		
 		if(kernel_code.start >= res->start &&
-				kernel_code.end <= res->end)
+				kernel_code.end <= res->end) {
 			request_resource(res,&kernel_code);
+		}
 		if(kernel_code.start >= res->start &&
-				kernel_code.end <= res->end)
+				kernel_code.end <= res->end) {
 			request_resource(res,&kernel_data);
+		}
 	}
+
 	if(mdesc->video_start)
 	{
 		video_ram.start = mdesc->video_start;
@@ -335,7 +340,7 @@ static void __init cacheid_init(void)
 	unsigned int cachetype = read_cpuid_cachetype();
 	unsigned int arch = cpu_architecture();
 
-	mm_debug("CACHE type %p\n",(void *)cachetype);
+	mm_debug("CACHE type %d\n",cachetype);
 	if(arch >= CPU_ARCH_ARMv6) {
 		if((cachetype & (7 << 29)) == 4 << 29) {
 			/* ARMv7 register format */
@@ -407,9 +412,7 @@ static void __init setup_processor(void)
 	cpu_proc_init();
 #endif
 }
-/*
- * setup_arch
- */
+
 void __init setup_arch(char **cmdline_p)
 {
 
@@ -429,10 +432,8 @@ void __init setup_arch(char **cmdline_p)
 		reboot_setup("s");
 
 	if(__atags_pointer)
-		//tags = phys_to_virt(__atags_pointer);
 		tags = (struct tag *)(unsigned long)__atags_pointer;
 	else if(mdesc->boot_params)
-		//tags = phys_to_virt(mdesc->boot_params);
 		tags = (struct tag *)(unsigned long)mdesc->boot_params;
 #if defined(CONFIG_DEPRECATED_PARAM_STRUCT)
 	/*
@@ -475,11 +476,12 @@ void __init setup_arch(char **cmdline_p)
 	
 	paging_init(mdesc);
 
-//	request_standard_resource(mdesc);
+	request_standard_resource(mdesc);
 
 	reserve_crashkernel();
-	/* User debug */
-	/* End debug */
+
+	if(mdesc->init_early)
+		mdesc->init_early();
 }
 
 int cpu_architecture(void)

@@ -25,6 +25,7 @@
 #include "../../include/linux/pgalloc.h"
 #include "../../include/linux/memory.h"
 #include "../../include/linux/pgalloc.h"
+#include "../../include/linux/cacheflush.h"
 
 
 extern void *vectors_page;
@@ -883,13 +884,13 @@ void __init paging_init(struct machine_desc *mdesc)
 
 	top_pmd = pmd_off_k(0xffff0000);
 	
-	/*
-	 * Allocate the zero page.
-	 */
+	/* Allocate the zero page. */
 	zero_page = early_alloc(PAGE_SIZE);
 	
 	bootmem_init();
+
 	empty_zero_page = virt_to_page(zero_page);
+	__flush_dcache_page(NULL,empty_zero_page);
 }
 
 /*

@@ -214,6 +214,33 @@ struct zone {
 	spinlock_t lru_lock;
 	
 	unsigned long lowmem_reserve[MAX_NR_ZONES];
+	/*
+	 * wait_table  -- the array holding the hash table
+	 * wait_table_hash_nr_entries -- the size of the hash table array
+	 * wait_table_bits -- wait_table_size == (1 << wait_table)
+	 * 
+	 * The purpose of all these is to keep track of the people
+	 * waiting for a page to become available and make them
+	 * runnable again when possible.The trouble is that this
+	 * consumes a lot of space,epecially when so few things
+	 * wait on pages at a given time.So instead of using
+	 * per-page waitqueues,we use a waitqueue hash table.
+	 *
+	 * The bucket discipline is to sleep on the same queue when
+	 * colliding and wake all in that wait queue when removing.
+	 * When something wakes,it must check to be sure its page is
+	 * truly available,a la thundering herd.The cost of a 
+	 * collision is great,but given the expected load of the
+	 * table,they should be so rare as to be outweighed by the 
+	 * benefits from the saved space.
+	 *
+	 * __wait_on_page_locked() and unlock_page() in mm/filemap.c are the 
+	 * primary users of these fields,and in mm/page_alloc.c
+	 * free_area_init_core() performs the initialization of them.
+	 */
+	wait_queue_head_t *wait_table;
+	unsigned long wait_table_hash_nr_entries;
+	unsigned long wait_table_bits;
 };
 
 typedef struct pglist_data {

@@ -1,7 +1,7 @@
 #include "../../include/linux/kernel.h"
 #include "../../include/linux/mmzone.h"
 
-int page_group_by_mobility_disabled;
+int page_group_by_mobility_disabled __read_mostly;
 
 static inline int zref_in_nodemask(struct zoneref *zref,nodemask_t *nodes)
 {

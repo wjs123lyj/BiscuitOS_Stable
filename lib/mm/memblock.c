@@ -397,7 +397,7 @@ static int __init_memblock memblock_double_array(struct memblock_type *type)
 	 */
 	if(use_slab) {
 		new_array = kmalloc(new_size,GFP_KERNEL);
-		addr = new_array = NULL ? MEMBLOCK_ERROR : __pa(new_array);
+		addr = new_array == NULL ? MEMBLOCK_ERROR : __pa(new_array);
 	} else
 		addr = memblock_find_base(new_size,sizeof(phys_addr_t),0,
 				MEMBLOCK_ALLOC_ACCESSIBLE);
@@ -407,11 +407,12 @@ static int __init_memblock memblock_double_array(struct memblock_type *type)
 				(void *)type->max,(void *)(type->max * 2));
 		return -1;
 	}
-	new_array = __va(addr);
+	new_array = (struct memblock_region *)__va(addr);
 
 	mm_debug("memblock:%s array is doubled to %p at[%p - %p]\n",
 			memblock_type_name(type),
 			(void *)(type->max * 2),
+			(void *)(unsigned long)addr,
 			(void *)(unsigned long)(addr + new_size - 1));
 
 	/*

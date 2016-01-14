@@ -63,11 +63,6 @@
  */
 #define CONFIG_MM_OWNER
 /*
- * Simulate the state of system
- */
-#define SYSTEM_BOOTING 1
-#define system_state SYSTEM_BOOTING
-/*
  * Configure the size of CACHE_L1.
  */
 #define CONFIG_ARM_L1_CACHE_SHIFT 5

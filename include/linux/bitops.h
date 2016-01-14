@@ -31,4 +31,16 @@ static inline int fls64(u64 w)
 {
 	return (sizeof(u64) * 8) - __builtin_clzll(w);
 }
+static inline unsigned fls_long(unsigned long l)
+{
+	if(sizeof(l) == 4)
+		return fls(l);
+	return fls64(l);
+}
+
+#define __fls(x) (fls(x) - 1)
+#define ffs(x) ({unsigned long ___t = (x); fls(___t & -___t);})
+#define __ffs(x) (ffs(x) - 1)
+#define ffz(x) __ffs(~(x))
+
 #endif

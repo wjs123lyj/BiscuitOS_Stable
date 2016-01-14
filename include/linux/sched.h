@@ -30,4 +30,12 @@ static inline int rt_task(struct task_struct *p)
  */
 #define PF_MEMALLOC      0x000000800  /* Allocating memory */
 
+#ifndef CONFIG_MM_OWNER
+static inline void mm_init_owner(struct mm_struct *mm,struct task_struct *p)
+{
+}
+
+#endif
+
+
 #endif

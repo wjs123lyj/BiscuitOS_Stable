@@ -29,6 +29,15 @@
 #define false 0
 #define bool   int
 
+/* Values used for system_state */
+enum system_states {
+	SYSTEM_BOOTING,
+	SYSTEM_RUNNING,
+	SYSTEM_HALT,
+	SYSTEM_POWER_OFF,
+	SYSTEM_RESTART,
+	SYSTEM_SUSPEND_DISK,
+} system_state;
 
 #define ULONG_MAX (~0UL)
 

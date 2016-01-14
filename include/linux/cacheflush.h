@@ -8,4 +8,5 @@
  * see data written in the specified area.
  */
 #define clean_dcache_area(start,size) do {} while(0)
+#define __flush_dcache_page(x,p)        do {} while(0)
 #endif

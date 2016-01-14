@@ -222,7 +222,7 @@ static void * __init alloc_bootmem_core(struct bootmem_data *bdata,
 
 	min = bdata->node_min_pfn;
 	max = bdata->node_low_pfn;
-
+	
 	goal >>= PAGE_SHIFT;
 	limit >>= PAGE_SHIFT;
 
@@ -230,7 +230,7 @@ static void * __init alloc_bootmem_core(struct bootmem_data *bdata,
 		max = limit;
 	if(max <= min)
 		return NULL;
-
+	
 	step = max(align >> PAGE_SHIFT,1UL);
 
 	if(goal && min < goal && goal < max)
@@ -238,9 +238,10 @@ static void * __init alloc_bootmem_core(struct bootmem_data *bdata,
 	else
 		start = ALIGN(min,step);
 
+
 	sidx = start - bdata->node_min_pfn;
 	midx = max - bdata->node_min_pfn;
-
+	
 	if(bdata->hint_idx > sidx) {
 		/*
 		 * Handle the valid case of sidx being zero and still
@@ -262,25 +263,23 @@ find_block:
 		if(sidx >= midx || eidx > midx)
 			break;
 
-		for(i = sidx ; i < eidx ; i++)
-		{
-			if(test_bit(i,bdata->node_bootmem_map))
-			{
+		for(i = sidx ; i < eidx ; i++) 
+			if(test_bit(i,bdata->node_bootmem_map)) {
 				sidx = align_idx(bdata,i,step);
 				if(sidx == i)
 					sidx += step;
 				goto find_block;
 			}
-		}
+		
 		if(bdata->last_end_off & (PAGE_SIZE - 1) &&
 				PFN_DOWN(bdata->last_end_off) + 1 == sidx)
 			start_off = align_off(bdata,bdata->last_end_off,align);
 		else
 			start_off = PFN_PHYS(sidx);
-
+		
 		merge = PFN_DOWN(start_off) < sidx;
 		end_off = start_off + size;
-
+			
 		bdata->last_end_off = end_off;
 		bdata->hint_idx = PFN_UP(end_off);
 
@@ -290,9 +289,10 @@ find_block:
 		if(__reserve(bdata,PFN_DOWN(start_off) + merge,
 					PFN_UP(end_off),BOOTMEM_EXCLUSIVE))
 			BUG();
-
+		
 		region = (void *)(unsigned long)phys_to_virt(
 				 PFN_PHYS(bdata->node_min_pfn) + start_off);
+	
 		/*
 		 * In order to ignore the Virtual Memory,we indicate that
 		 * will get virtual memory address when you request memory from system.
@@ -326,7 +326,7 @@ static void __init * __init alloc_arch_preferred_bootmem(
 		struct bootmem_data *p_bdata;
 
 		p_bdata = bootmem_arch_preferred_node(bdata,size,align,goal,limit);
-
+		
 		if(p_bdata)
 			return alloc_bootmem_core(p_bdata,size,align,
 					goal,limit);

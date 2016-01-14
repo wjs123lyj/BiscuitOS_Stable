@@ -74,8 +74,7 @@ static inline int page_to_nid(struct page *page)
 
 static inline struct zone *page_zone(struct page *page)
 {
-//	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
-	return NULL;
+	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
 }
 
 static inline pmd_t *pmd_off(pgd_t *pgd,unsigned long virt)

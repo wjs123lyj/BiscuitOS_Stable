@@ -86,43 +86,47 @@ enum pageflags {
 /*
  * Macro to crate function definitions for page flags.
  */
-#define TESTPAGEFLAG(uname,lname)        \
+#define TESTPAGEFLAGS(uname,lname)        \
 static inline int Page##uname(struct page *page)    \
-{   return test_bit(PG_##lname,&page->flags);} 
-
+{                                                          \
+	return test_bit(PG_##lname,&page->flags);        \
+}
 
 #define SETPAGEFLAG(uname,lname)         \
 static inline void SetPage##uname(struct page *page)       \
-{	set_bit(PG_##lname,&page->flags);}
+{	                                   \
+	set_bit(PG_##lname,&page->flags);       \
+}
 
-
-#define CLEARPAGEFLAG(uname,lname)              \
+#define CLEARPAGEFLAGS(uname,lname)              \
 static inline void ClearPage##uname(struct page *page)    \
-{   clear_bit(PG_##lname,&page->flags);}
-
+{                                                          \
+	clear_bit(PG_##lname,&page->flags);                   \
+}
 
 #define __SETPAGEFLAG(uname,lname)            \
 static inline void __SetPage##uname(struct page *page)         \
-{	set_bit(PG_##lname,&page->flags);}
-
-#define __CLEARPAGEFLAG(uname,lname)    \
-static inline void __ClearPage##uname(struct page *page)     \
-{	clear_bit(PG_##lname,&page->flags);}
+{														\
+	set_bit(PG_##lname,&page->flags);            \
+}
 
 #define TESTSETFLAG(uname,lname)                 \
 static inline int TestSetPage##uname(struct page *page)     \
-{	return test_and_set_bit(PG_##lname,&page->flags);}
-
+{														\
+	return test_and_set_bit(PG_##lname,&page->flags);   \
+}
 
 #define TESTCLEARFLAG(uname,lname)              \
 static inline int TestClearPage##uname(struct page *page)  \
-{   return test_and_clear_bit(PG_##lname,&page->flags);}
-
+{                                                   \
+	return test_and_clear_bit(PG_##lname,&page->flags); \
+}
 
 #define __TESTCLEARFLAG(uname,lname)          \
 static inline int __TestClearPage##uname(struct page *page)  \
-{   return test_and_clear_bit(PG_##lname,&page->flags);}
-
+{                                                  \
+	return test_and_clear_bit(PG_##lname,&page->flags);  \
+}
 
 #define PAGEFLAG(uname,lname) TESTPAGEFLAG(uname,lname)      \
 	SETPAGEFLAG(uname,lname)  CLEARPAGEFLAG(uname,lname)
@@ -132,23 +136,21 @@ static inline int __TestClearPage##uname(struct page *page)  \
 
 #define PAGEFLAG_FALSE(uname)      \
 static inline int Page##uname(struct page *page)     \
-{   return 0;}
-
+{                     \
+	return 0;   \
+}
 
 #define TESTSCFLAG(uname,lname)   \
 	TESTSETFLAG(uname,lname)  TESTCLEARFLAG(uname,lname)
 
-struct page;     /* forward declaration */
-
+/* PageLocked() , TestSetPageLocked() */
+TESTPAGEFLAG(Locked,locked) TESTSETFLAG(Locked,locked)
+/* PageError() , SetPageError() , ClearPageError() TestClearPageError() */
+PAGEFLAG(Error,error) TESTCLEARFLAG(Error,error)
+/* PageReserved(),SetPageReserved(),ClearPageReserved(),__ClearPageReserved() */
 PAGEFLAG(Reserved,reserved) __CLEARPAGEFLAG(Reserved,reserved)
 
-#ifdef CONFIG_MMU
-PAGEFLAG(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)    
-	TESTSCFLAG(Mlocked,mlocked) __TESTCLEARFLAG(Mlocked,mlocked)
-#else
-PAGEFLAG_FALSE(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)
-	TESTCLEARFLAG_FALSE(Mlocked) __TESTCLEARFLAGS_FALSE(Mlocked)
-#endif
+struct page;
 
 
 #ifdef CONFIG_MMU
@@ -163,6 +165,7 @@ PAGEFLAG_FALSE(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)
 #define __PG_COMPOUND_LOCK   0
 #endif
 
+#define __PG_HWPOISON        0
 /*
  * Flags checked when a page is freed.Pages being freed should not have
  * these flags set.It they are,there is a problem.
@@ -194,45 +197,5 @@ PAGEFLAG_FALSE(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)
  * there has been a kernel bug or struct page corruption.
  */
 #define PAGE_FLAGS_CHECK_AT_PREP     ((1 << NR_PAGEFLAGS) - 1)
-
-/*
- * System with lots of page flags available.This allows separate
- * flags for PageHead() and PageTail() checks of compound pages so 
- * that bit tests can be used in performance sensitive paths.PageCompound
- * is generally not used in hot code paths.
- */
-#ifdef CONFIG_PAGEFLAGS_EXTENDED
-__PAGEFLAG(Tail,tail)
-
-#else
-
-
-/*
- * PG_reclaim is used in combination with PG_compound to mark the 
- * head and tail of a compound page.This saves one page flag
- * but makes it impossible to use compound pages for the page cache.
- * The PG_reclaim bit would have to be used for reclaim or readahead
- * if compound pages enter the page cache.
- *
- * PG_compound & PG_reclaim     => Tail page
- * PG_compound & ~PG_recaim     => Head page
- */
-#define PG_head_tail_mask ((1L << PG_compound) | (1L << PG_reclaim))
-	
-static inline void __ClearPageTail(struct page *page)
-{
-	page->flags &= ~PG_head_tail_mask;
-}
-#endif
-
-#ifdef CONFIG_MEMORY_FAILURE
-PAGEFLAG(HWPoison,hwpoison)
-TESTSCFLAG(HWPoison,hwpoison)
-#define __PG_HWPOISON (1UL << PG_hwpoison)
-#else
-PAGEFLAG_FALSE(HWPoison)
-#define __PG_HWPOISON 0
-#endif
-
 #endif
 

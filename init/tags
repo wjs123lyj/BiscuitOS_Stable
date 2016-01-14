@@ -13,6 +13,7 @@ OBJS	Makefile	/^OBJS = ${SRCS:.c=.o}$/;"	m
 SRCS	Makefile	/^SRCS = main.c \\$/;"	m
 TARGET	Makefile	/^TARGET=align$/;"	m
 U_boot	main.c	/^__attribute__((constructor)) __uboot U_boot(void)$/;"	f
+__read_mostly	main.c	/^enum system_states system_state __read_mostly;$/;"	v	typeref:enum:system_state
 __setup_end	main.c	/^static struct obs_kernel_param *__setup_end = &__setup_early_vmalloc + 8;$/;"	v	typeref:struct:obs_kernel_param	file:
 __setup_start	main.c	/^static struct obs_kernel_param *__setup_start = &__setup_early_vmalloc;$/;"	v	typeref:struct:obs_kernel_param	file:
 boot_command_line	main.c	/^char __initdata boot_command_line[COMMAND_LINE_SIZE];$/;"	v

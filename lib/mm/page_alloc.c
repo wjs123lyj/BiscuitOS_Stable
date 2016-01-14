@@ -25,6 +25,9 @@
 #include "../../include/linux/debug_locks.h"
 #include "../../include/linux/spinlock.h"
 #include "../../include/linux/wait.h"
+#include "../../include/linux/percpu-defs.h"
+#include "../../include/linux/log2.h"
+#include "../../include/asm/errno-base.h"
 
 
 /*
@@ -41,6 +44,25 @@
 #define ALLOC_HARDER              0x10 /* try to alloc harder */
 #define ALLOC_HIGH                0x20 /* __GFP_HIGH set */
 #define ALLOC_CPUSET              0x40 /* check for correct cpuset */
+
+/*
+ * Boot pageset table.One per cpu which is going to be used for all
+ * zones and all nodes.The parameters will be set in such a way
+ * that an item put on a list will immediately be handed over to 
+ * the buddy list.This is safe since pageset manipulation is done
+ * with interrupts disabled.
+ *
+ * The boot_pagesets must be kept even after bootup is complete for
+ * unused processors and/or zones.They do play a role for bootstrapping
+ * hotplugged processor.
+ *
+ * zoneinfo_show() and maybe other function do not check if the
+ * processor is online before following the pageset pointer.
+ * Other parts of the kernel may not check if the zone is available.
+ */
+static DEFINE_PER_CPU(struct per_cpu_pageset,boot_pageset);
+
+
 /*
  * Memory init data
  */
@@ -163,12 +185,90 @@ static int fallbacks[MIGRATE_TYPES][MIGRATE_TYPES - 1] = {
 		MIGRATE_RESERVE,MIGRATE_RESERVE,MIGRATE_RESERVE
 	}, /* Never used */
 };
+
 /*
- * No header.
+ * Helper functions to size the waitqueue hash table.
+ * Essentially these want to choose hash table sizes sufficiently
+ * large so that collisions trying to wait on pages are rare.
+ * But in fact,the number of active page waitqueues on typical
+ * systems is ridiculously low,less than 200.So this is even
+ * conservative,even though it seems large.
+ *
+ * The constant PAGES_PER_WAITQUEUE specifies the ratio of pages to 
+ * waitqueues,i.e.the size of the waitq table given the number of pages.
  */
+#define PAGES_PER_WAITQUEUE      256
+
+static inline unsigned long wait_table_hash_nr_entries(unsigned long pages)
+{
+	unsigned long size = 1;
+
+	pages /= PAGES_PER_WAITQUEUE;
+
+	while(size < pages)
+		size <<= 1;
+
+	/*
+	 * Once we have dozens or even hundreds of threads sleeping
+	 * on IO we've got bigger problems than wait queue collision.
+	 * Limit the size of the wait table to a reasonable size.
+	 */
+	size = min(size,4096UL);
+
+	return max(size,4UL);
+}
+
+/*
+ * This is an integer logarithm so that shifts can be used later
+ * to extract the more random high bits form the multiplicative
+ * hash function before the remainder is taken.
+ */
+static inline unsigned long wait_table_bits(unsigned long size)
+{
+	return ffz(~size);
+}
+
 static int zone_wait_table_init(struct zone *zone,
 		unsigned long zone_size_pages) 
 {
+	int i;
+	struct pglist_data *pgdat = zone->zone_pgdat;
+	size_t alloc_size;
+
+	/*
+	 * The per-page waitqueue mechanism uses hashed waitqueues
+	 * per zone.
+	 */
+	zone->wait_table_hash_nr_entries = 
+		wait_table_hash_nr_entries(zone_size_pages);
+	zone->wait_table_bits = 
+		wait_table_bits(zone->wait_table_hash_nr_entries);
+	alloc_size = zone->wait_table_hash_nr_entries
+					* sizeof(wait_queue_head_t);
+
+	if(!slab_is_available()) {
+		zone->wait_table = (wait_queue_head_t *)(unsigned long)
+			(phys_to_mem(__pa(alloc_bootmem_node(pgdat,alloc_size))));
+	} else {
+		/*
+		 * This case means that a zone whose size was 0 gets new memory
+		 * via memory hot-add.
+		 * But it may be the case that a new node was hot-added.In
+		 * this case vmalloc() will not be able to use this new node's
+		 * memory - this wait_table must be initialized to use this new 
+		 * node itself as well.
+		 * To use this new node's memory,further consideration will be
+		 * necessary.
+		 */
+		zone->wait_table = 
+			(wait_queue_head_t *)(unsigned long)vmalloc(alloc_size);
+	}
+	if(!zone->wait_table)
+		return -ENOMEM;
+
+	for(i = 0 ; i < zone->wait_table_hash_nr_entries ; ++i)
+		init_waitqueue_head(zone->wait_table + i);
+
 	return 0;
 }
 /*
@@ -187,8 +287,13 @@ static inline int pfn_to_bitidx(struct zone *zone,unsigned long pfn)
 	pfn = pfn - zone->zone_start_pfn;
 	return (pfn >> pageblock_order) * NR_PAGEBLOCK_BITS;
 }
+
 /*
- * Set the request group of flags for a pageblock_nr_pages block of pages
+ * set_pageblock_flags_group - Set the requested group of flags for a 
+ * @page: The page within the block of interest.
+ * @start_bitidx: The first bit of interest.
+ * @end_bitidx: The last bit of interest.
+ * @flags:The flags to set.
  */
 void set_pageblock_flags_group(struct page *page,unsigned long flags,
 		int start_bitidx,int end_bitidx)
@@ -198,21 +303,18 @@ void set_pageblock_flags_group(struct page *page,unsigned long flags,
 	unsigned long pfn,bitidx;
 	unsigned long value = 1;
 
-	zone = NULL;//page_zone(page);
+	zone = page_zone(page);
 	pfn  = page_to_pfn(page);
 	bitmap = get_pageblock_bitmap(zone,pfn);
 	bitidx = pfn_to_bitidx(zone,pfn);
 	VM_BUG_ON(pfn < zone->zone_start_pfn);
 	VM_BUG_ON(pfn >= zone->zone_start_pfn + zone->spanned_pages);
 
-	for(; start_bitidx <= end_bitidx ; start_bitidx++ , value <<= 1)
-	{
-		if(flags & value)
-		{
+	for(; start_bitidx <= end_bitidx ; start_bitidx++ , value <<= 1) {
+		if(flags & value) {
 			set_bit(bitidx + start_bitidx,bitmap);
 		}
-		else
-		{
+		else {
 			clear_bit(bitidx + start_bitidx,bitmap);
 		}
 	}
@@ -224,6 +326,7 @@ static void set_pageblock_migratetype(struct page *page,int migratetype)
 {
 	if(unlikely(page_group_by_mobility_disabled))
 		migratetype = MIGRATE_UNMOVABLE;
+
 	set_pageblock_flags_group(page,(unsigned long)migratetype,
 			PB_migrate,PB_migrate_end);
 }
@@ -244,16 +347,13 @@ void __meminit memmap_init_zone(unsigned long size,int nid,unsigned long zone,
 		highest_memmap_pfn = end_pfn - 1;
 
 	z = &NODE_DATA(nid)->node_zones[zone];
-
-	for(pfn = start_pfn ; pfn < end_pfn ; pfn++)
-	{
+	for(pfn = start_pfn ; pfn < end_pfn ; pfn++) {
 		/*
 		 * There can be holes in boot-time mem_map[]s
 		 * handed to this function.They do not exist 
 		 * on hotplugged memory.
 		 */
-		if(context == MEMMAP_EARLY)
-		{
+		if(context == MEMMAP_EARLY) {
 			if(!early_pfn_valid(pfn))
 				continue;
 			if(!early_pfn_in_nid(pfn,nid))
@@ -283,7 +383,14 @@ void __meminit memmap_init_zone(unsigned long size,int nid,unsigned long zone,
 				&& (pfn < z->zone_start_pfn + z->spanned_pages)
 				&& !(pfn & (pageblock_nr_pages - 1)))
 			set_pageblock_migratetype(page,MIGRATE_MOVABLE);
+		
 		INIT_LIST_HEAD(&page->lru);
+#ifdef WANT_PAGE_VIRTUAL
+		/* The shift won't overflow because ZONE_NORMAL is below 4G */
+		if(!is_highmem_idx(zone))
+			set_page_address(page,__va(pfn << PAGE_SHIFT));
+
+#endif
 	}
 }
 #ifndef __HAVE_ARCH_MEMMAP_INIT
@@ -346,7 +453,7 @@ static __meminit void zone_pcp_init(struct zone *zone)
 	if(zone->present_pages)
 		mm_debug("%s zone:%p pages,LIFO batch:%p\n",
 				zone->name,(void *)(zone->present_pages),
-				(void *)zone_batchsize(zone));
+				(void *)(unsigned long)zone_batchsize(zone));
 
 }
 
@@ -373,8 +480,7 @@ static void __meminit zone_init_free_lists(struct zone *zone)
 {
 	int order,t;
 
-	for_each_migratetype_order(order,t)
-	{
+	for_each_migratetype_order(order,t) {
 		INIT_LIST_HEAD(&zone->free_area[order].free_list[t]);
 		zone->free_area[order].nr_free = 0;
 	}
@@ -403,7 +509,6 @@ __meminit int init_currently_empty_zone(struct zone *zone,
 			(unsigned long)zone_idx(zone),
 			(void *)zone_start_pfn,(void *)(zone_start_pfn + size));
 
-	/* Initialize the Buddy allocator */
 	zone_init_free_lists(zone);
 
 	return 0;
@@ -434,15 +539,15 @@ static void __init setup_usemap(struct pglist_data *pgdat,
 	unsigned long usemapsize = usemap_size(zonesize);
 
 	zone->pageblock_flags = NULL;
-
 	if(usemapsize)
 		/*
-		 * In order to simulate physcail address and virtual address,we lead 
-		 * into
-		 * virtual memory address.we can use virtual memory address directly.
+		 * In order to simulate physcail address and virtual address,
+		 * we lead into virtual memory address.we can use virtual memory 
+		 * address directly.
 		 */
-		zone->pageblock_flags = (unsigned long *)(unsigned long)alloc_bootmem_node(
-				pgdat,usemapsize);
+		zone->pageblock_flags = 
+			(unsigned long *)(unsigned long)phys_to_mem(
+					__pa(alloc_bootmem_node(pgdat,usemapsize)));
 }
 extern void __meminit pgdat_page_cgroup_init(struct pglist_data *pgdat);
 /*
@@ -499,9 +604,7 @@ void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		if(!is_highmem_idx(j))
 			nr_kernel_pages += realsize;
 		nr_all_pages += realsize;
-		/*
-		 * initialize the zone.
-		 */
+		
 		zone->spanned_pages = size;
 		zone->present_pages = realsize;
 		zone->name = zone_names[j];
@@ -511,9 +614,7 @@ void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		zone->zone_pgdat = pgdat;
 		
 		zone_pcp_init(zone);
-
-		for_each_lru(l) 
-		{
+		for_each_lru(l) {
 			INIT_LIST_HEAD(&zone->lru[l].list);
 			zone->reclaim_stat.nr_saved_scan[l] = 0;
 		}
@@ -526,11 +627,12 @@ void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		zone->flags = 0;
 		if(!size)
 			continue;
+
 		set_pageblock_order(pageblock_default_order());
 		setup_usemap(pgdat,zone,size);
-		
 		ret = init_currently_empty_zone(zone,zone_start_pfn,
 				size,MEMMAP_EARLY);
+		BUG_ON(ret);
 		memmap_init(size,nid,j,zone_start_pfn);
 		zone_start_pfn += size;
 	}
@@ -692,7 +794,7 @@ static __init_refok int __build_all_zonelist(void *data)
 void build_all_zonelist(void *data)
 {
 	set_zonelist_order();
-	
+
 	if(system_state == SYSTEM_BOOTING)
 	{
 		__build_all_zonelist(NULL);
@@ -2257,7 +2359,7 @@ void show_free_areas(void)
 			 "slab_unreclaimable:%p\n"
 			 "mapped:%p\n"
 			 "shmem:%p\n"
-			 "pagetables:%p\n",
+			 "pagetables:%p\n"
 			 "bounce:%p\n",
 			 (void *)(unsigned long)global_page_state(NR_ACTIVE_ANON),
 			 (void *)(unsigned long)global_page_state(NR_INACTIVE_ANON),
@@ -2274,6 +2376,7 @@ void show_free_areas(void)
 			 (void *)(unsigned long)global_page_state(NR_SLAB_UNRECLAIMABLE),
 			 (void *)(unsigned long)global_page_state(NR_FILE_MAPPED),
 			 (void *)(unsigned long)global_page_state(NR_SHMEM),
+			 (void *)(unsigned long)global_page_state(NR_PAGETABLE),
 			 (void *)(unsigned long)global_page_state(NR_BOUNCE));
 
 	for_each_populated_zone(zone)

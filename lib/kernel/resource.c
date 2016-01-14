@@ -2,6 +2,7 @@
 #include "../../include/asm/errno-base.h"
 #include "../../include/linux/ioport.h"
 #include "../../include/asm/io.h"
+#include "../../include/linux/debug.h"
 
 
 struct resource ioport_resource = {
@@ -27,7 +28,7 @@ static struct resource * __request_resource(struct resource *root,
 	resource_size_t start = new->start;
 	resource_size_t end   = new->end;
 	struct resource *tmp,**p;
-	
+
 	if(end < start)
 		return root;
 	if(start < root->start)
@@ -35,19 +36,18 @@ static struct resource * __request_resource(struct resource *root,
 	if(end > root->end)
 		return root;
 	p = &root->child;
-	for(;;)
-	{
+	for(;;) {
 		tmp = *p;
-		if(!tmp || tmp->start > end)
-		{
+		if(!tmp || tmp->start > end) {
 			new->sibling = tmp;
 			*p = new;
 			new->parent = root;
 			return NULL;
 		}
 		p = &tmp->sibling;
-		if(tmp->end < start)
+		if(tmp->end < start) {
 			continue;
+		}
 		return tmp;
 	}
 }
@@ -60,7 +60,6 @@ static struct resource * __request_resource(struct resource *root,
 struct resource *request_resource_conflict(struct resource *root,struct resource *new)
 {
 	struct resource *conflict;
-
 	conflict = __request_resource(root,new);
 	return conflict;
 }
@@ -71,7 +70,6 @@ struct resource *request_resource_conflict(struct resource *root,struct resource
 int request_resource(struct resource *root,struct resource *new)
 {
 	struct resource *conflict;
-
 	conflict = request_resource_conflict(root,new);
 	return conflict ? -EBUSY:0;
 }

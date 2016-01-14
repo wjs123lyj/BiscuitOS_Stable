@@ -914,6 +914,20 @@ static inline void *__vmalloc_node_flags(unsigned long size,
 #endif
 }
 /*
+ * vmalloc - allocate virtually contiguous memory
+ * @size: allocation size
+ * Allocate enough pages to cover @size from the page level
+ * allocator and map them into contiguous kernel virtual space.
+ *
+ * For tight control over page level allocator and protection flags
+ * use __vmalloc() instead.
+ */
+void *vmalloc(unsigned long size)
+{
+	return __vmalloc_node_flags(size,-1,GFP_KERNEL | __GFP_HIGHMEM);
+}
+
+/*
  * Allocate virtually contiguous memory with zero fill
  */
 void *vzalloc(unsigned long size)
