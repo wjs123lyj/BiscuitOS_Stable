@@ -11,6 +11,8 @@ SRCS = main.c \
 	   ../lib/kernel/init.c \
 	   ../lib/kernel/wait.c \
 	   ../lib/kernel/sort.c \
+	   ../lib/kernel/hexdump.c \
+	   ../lib/kernel/vsprintf.c \
 	   ../lib/mm/tlb.c \
 	   ../lib/mm/traps.c \
 	   ../lib/mm/highmem.c \

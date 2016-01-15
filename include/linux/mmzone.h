@@ -3,6 +3,7 @@
 
 #include "bitops.h"
 #include "highmem.h"
+#include "bounds.h"
 #include "pageblock-flags.h"
 #include "list.h"
 #include "page_cgroup.h"

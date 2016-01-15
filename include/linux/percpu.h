@@ -76,4 +76,22 @@ extern size_t *pcpu_group_sizes __read_mostly;
 
 #define per_cpu_ptr(ptr,cpu) (ptr)
 
+/*
+ * Macro which verifies @ptr is a percpu pointer without evaluation
+ * @ptr.This is to be used in percpu accessors to verify that the 
+ * input parameter is a percpu pointer.
+ */
+#define __verify_pcpu_ptr(ptr)     do {    \
+	const void *__vpp_verify = (typeof(ptr))NULL;   \
+	(void)__vpp_verify;                              \
+} while(0)
+
+#define VERIFY_PERCPU_PTR(__p) ({     \
+		__verify_pcpu_ptr((__p));        \
+		(typeof(*(__p)) *)(__p);      \
+})
+
+
+#define per_cpu(var,cpu)    (*((void)(cpu),VERIFY_PERCPU_PTR(&(var))))
+
 #endif

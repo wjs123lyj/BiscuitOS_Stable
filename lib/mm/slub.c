@@ -2048,7 +2048,7 @@ static int __init setup_slub_min_order(char *str)
 
 	return 1;
 }
-__setup("slub_min_order=",setup_slub_min_order);
+__setup("slub_min_order",setup_slub_min_order);
 
 static int __init setup_slub_max_order(char *str)
 {
@@ -2065,7 +2065,7 @@ static int __init setup_slub_min_objects(char *str)
 
 	return 1;
 }
-__setup("slub_min_objects=",setup_slub_min_objects);
+__setup("slub_min_objects",setup_slub_min_objects);
 
 static int __init setup_slub_nomerge(char *str)
 {

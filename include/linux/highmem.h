@@ -20,12 +20,6 @@
 #define PKMAP_NR(virt)   (((virt) - PKMAP_BASE) >> PAGE_SHIFT)
 #define PKMAP_ADDR(nr)   (PKMAP_BASE + ((nr) << PAGE_SHIFT))
 
-#ifndef CONFIG_HIGHMEM
-#define MAX_NR_ZONES  2
-#else
-#define MAX_NR_ZONES  3
-#endif
-
 #define kmap_prot    PAGE_KERNEL
 
 DECLARE_PER_CPU(int,__kmap_atomic_idx);

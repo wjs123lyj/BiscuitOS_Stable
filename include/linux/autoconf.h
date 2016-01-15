@@ -126,4 +126,9 @@
  * ARCHv7
  */
 #define __LINUX_ARM_ARCH__ 7
+/*
+ * CMDLINE
+ */
+#define CONFIG_CMDLINE  \
+		"console=ttySAC0,115200 root=/dev/ram init=linuxrc initrd=0x51000000,6M ramdisk_size=6144 vmalloc=256M mminit_loglevel=4"
 #endif

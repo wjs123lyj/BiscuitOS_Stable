@@ -27,7 +27,6 @@
 #include "../../include/linux/tlbflush.h"
 #include "../../include/linux/mutex.h"
 
-
 /**** Global kva allocator ****/
 
 #define VM_LAZY_FREE         0x01

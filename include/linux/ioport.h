@@ -25,4 +25,14 @@ struct resource {
 #define IORESOURCE_BUS         0x00001000
 
 #define IORESOURCE_BUSY        0x80000000
+
+#define IORESOURCE_PREFETCH    0x00002000
+
+#define IORESOURCE_MEM_64      0x00100000
+#define IORESOURCE_WINDOW      0x00200000
+#define IORESOURCE_MUXED       0x00400000
+
+#define IORESOURCE_DISABLED    0x10000000
+
+
 #endif

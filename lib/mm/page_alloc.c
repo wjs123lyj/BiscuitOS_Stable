@@ -28,6 +28,8 @@
 #include "../../include/linux/percpu-defs.h"
 #include "../../include/linux/log2.h"
 #include "../../include/asm/errno-base.h"
+#include "../../include/linux/bounds.h"
+#include "../../include/linux/mempolicy.h"
 
 
 /*
@@ -146,9 +148,7 @@ struct pglist_data contig_pglist_data = {
 #define __ClearPageHead(x) 0
 #define PageCompound(x) 0
 #define set_pageblock_order(x) do {} while(0)
-/*
- * The name of zone.
- */
+
 static char *const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_ZONE_DMA
 	"DMA",
@@ -645,22 +645,12 @@ static void set_zonelist_order(void)
 {
 	current_zonelist_order = ZONELIST_ORDER_ZONE;
 }
-/*
- * Check the highest zone.
- */
-static inline void check_highest_zone(int k)
-{
-}
-/*
- * Check whether zone has populated.
- */
+
 inline int populated_zone(struct zone *zone)
 {
 	return (!!zone->present_pages);
 }
-/*
- * Set the zoneref for zone.
- */
+
 static void zoneref_set_zone(struct zone *zone,struct zoneref *zoneref)
 {
 	zoneref->zone = zone;
@@ -676,23 +666,23 @@ static int build_zonelists_node(struct pglist_data *pgdat,
 {
 	struct zone *zone;
 
+	BUG_ON(zone_type >= MAX_NR_ZONES);
 	zone_type++;
 
 	do {
 		zone_type--;
 		zone = pgdat->node_zones + zone_type;
-		if(populated_zone(zone)) 
-		{
+		if(populated_zone(zone)) {
 			zoneref_set_zone(zone,
 					&zonelist->_zonerefs[nr_zones++]);
 			check_highest_zone(zone_type);
-		} 
+		}
+
 	} while(zone_type);
 	return nr_zones;
 }
-/*
- * build zonelist
- */
+
+
 static void build_zonelists(struct pglist_data *pgdat)
 {
 	int node,local_node;
@@ -700,9 +690,10 @@ static void build_zonelists(struct pglist_data *pgdat)
 	struct zonelist *zonelist;
 
 	local_node = pgdat->node_id;
-
+	
 	zonelist = &pgdat->node_zonelists[0];
 	j = build_zonelists_node(pgdat,zonelist,0,MAX_NR_ZONES - 1);
+
 	/*
 	 * Now we build the zonelist so that it contains the zones
 	 * of all the other nodes.
@@ -711,19 +702,18 @@ static void build_zonelists(struct pglist_data *pgdat)
 	 * right after the local ones are those from 
 	 * node N + 1 (modulo N)
 	 */
-	for(node = local_node + 1 ; node < MAX_NUMNODES ; node++)
-	{
+	for(node = local_node + 1 ; node < MAX_NUMNODES ; node++) {
 		if(!node_online(node))
 			continue;
 		j = build_zonelists_node(NODE_DATA(node),zonelist,j,
 				MAX_NR_ZONES - 1);
 	}
-	for(node = 0 ; node < local_node ; node++)
-	{
+	for(node = 0 ; node < local_node ; node++) {
 		if(!node_online(node))
 			continue;
 		j = build_zonelists_node(NODE_DATA(node),zonelist,j,MAX_NR_ZONES - 1);
 	}
+
 	zonelist->_zonerefs[j].zone = NULL;
 	zonelist->_zonerefs[j].zone_idx = 0;
 }
@@ -765,25 +755,51 @@ unsigned int nr_free_pagecache_pages(void)
 {
 	return nr_free_zone_pages(gfp_zone(GFP_HIGHUSER_MOVABLE));
 }
-/*
- * build all zonelist
- */
+
+static void setup_pageset(struct per_cpu_pageset *p,unsigned long batch)
+{
+	struct per_cpu_pages *pcp;
+	int migratetype;
+
+	memset(p,0,sizeof(*p));
+
+	pcp = &p->pcp;
+	pcp->count = 0;
+	pcp->high = 6 * batch;
+	pcp->batch = max(1UL, 1 * batch);
+	for(migratetype = 0 ; migratetype < MIGRATE_PCPTYPES ; migratetype++)
+		INIT_LIST_HEAD(&pcp->lists[migratetype]);
+}
+
+
+/* return values in  ...just for stop_machine() */
 static __init_refok int __build_all_zonelist(void *data)
 {
 	int nid;
 	int cpu;
 
-	for_each_online_node(nid)
-	{	
+	for_each_online_node(nid) {	
 		struct pglist_data *pgdat = NODE_DATA(nid);
-		/*
-		 * Connect between zone and zonelist->zoneref.
-		 */
+		
 		build_zonelists(pgdat);
-		/*
-		 * Set zonelist.zlcache.
-		 */
 		build_zonelist_cache(pgdat);
+	}
+
+	/*
+	 * Initialize the boot_pagesets that are going to be used
+	 * for bootstrapping processors.The real pagesets for
+	 * each zone will be allocated later when the per cpu
+	 * allocator is available.
+	 * 
+	 * boot_pagesets are used also for bootstrapping offline
+	 * cpus if the system is already booted because the pagesets
+	 * are needed to initialize allocators on a specific cpu too.
+	 * F.e. the percpu allocator needs the page allocator which
+	 * needs the percpu allocator in order to allocate its pagesets
+	 * (a chicken-egg dilemma).
+	 */
+	for_each_possible_cpu(cpu) {
+		setup_pageset(&per_cpu(boot_pageset,cpu),0);
 	}
 	return 0;
 }

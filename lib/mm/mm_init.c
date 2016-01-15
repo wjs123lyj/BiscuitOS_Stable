@@ -4,6 +4,7 @@
 #include "../../include/linux/internal.h"
 #include "../../include/linux/debug.h"
 #include "../../include/linux/mm.h"
+#include "../../include/linux/init.h"
 
 int mminit_loglevel;
 
@@ -13,8 +14,7 @@ int mminit_loglevel;
 void mminit_verify_zonelist(void)
 {
 	int nid;
-
-	mminit_loglevel = MMINIT_VERIFY;
+	
 	if(mminit_loglevel < MMINIT_VERIFY)
 		return;
 
@@ -59,3 +59,10 @@ void __meminit mminit_verify_page_links(struct page *page,enum zone_type zone,
 	BUG_ON(page_zonenum(page) != zone);
 	BUG_ON(page_to_pfn(page) != pfn);
 }
+
+static __init int set_mminit_loglevel(char *str)
+{
+	get_option(&str,&mminit_loglevel);
+	return 0;
+}
+early_param("mminit_loglevel",set_mminit_loglevel);

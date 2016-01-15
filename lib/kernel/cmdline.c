@@ -49,7 +49,7 @@ int get_option(char **str,int *pint)
 
 	if(!cur || !(*cur))
 		return 0;
-//	*pint = simple_strtol(cur,str,0);
+	*pint = simple_strtol(cur,str,0);
 	if(cur == *str)
 		return 0;
 	if(**str == ',') {

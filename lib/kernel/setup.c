@@ -103,8 +103,6 @@ struct machine_desc *machine_desc __initdata;
 static const char *machine_name;
 unsigned int cacheid __read_mostly;
 static char __initdata cmd_line[COMMAND_LINE_SIZE];
-#define CONFIG_CMDLINE  \
-	"console=ttySAC0,115200 root=/dev/ram init=linuxrc initrd=0x51000000,6M ramdisk_size=6144 vmalloc=256M"
 
 static char default_command_line[COMMAND_LINE_SIZE] __initdata = 
 				CONFIG_CMDLINE;

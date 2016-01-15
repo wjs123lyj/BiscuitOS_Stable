@@ -19,6 +19,9 @@ typedef unsigned int   __u32;
 typedef unsigned int phys_addr_t;
 typedef unsigned int mem_addr_t;
 typedef unsigned int gfp_t;
+
+typedef long ptrdiff_t;
+
 typedef struct {
 	int counter;
 } atomic_t;
