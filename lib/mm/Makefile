@@ -1,4 +1,32 @@
-all:
-	ctags -R
-clean:
-	ctags -R
+obj-y += bootmem.o
+obj-y += debug-pagealloc.o
+obj-y += fork.o
+obj-y += highmem.o
+obj-y += init-mm.o
+obj-y += kasprintf.o
+obj-y += kmemcheck.o
+obj-y += memblock.o
+obj-y += memcontrol.o
+obj-y += memory.o
+obj-y += mmap.o
+obj-y += mm_init.o
+obj-y += mmu.o
+obj-y += mmzone.o
+obj-y += nommu.o
+obj-y += page_alloc.o
+obj-y += page_cgroup.o
+obj-y += percpu.o
+obj-y += percpu.o
+obj-y += pte.o
+obj-y += radix-tree.o
+obj-y += rbtree.o
+obj-y += sched.o
+obj-y += slub.o
+obj-y += swap.o 
+obj-y += swap_state.o
+obj-y += tlb.o 
+obj-y += traps.o
+obj-y += util.o
+obj-y += vmalloc.o
+obj-y += vmscan.o 
+obj-y += vmstat.o

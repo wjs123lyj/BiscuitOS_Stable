@@ -814,7 +814,7 @@ void __init arm_bootmem_free(unsigned long min,unsigned long max_low,
 {
 	unsigned long zone_sizes[MAX_NR_ZONES],zhole_size[MAX_NR_ZONES];
 	struct memblock_region *reg;
-
+	
 	/*
 	 * Initialise the zones.
 	 */

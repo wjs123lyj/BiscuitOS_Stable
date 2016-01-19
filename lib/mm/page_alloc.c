@@ -30,6 +30,8 @@
 #include "../../include/asm/errno-base.h"
 #include "../../include/linux/bounds.h"
 #include "../../include/linux/mempolicy.h"
+#include "../../include/linux/stop_machine.h"
+#include "../../include/linux/topology.h"
 
 
 /*
@@ -163,7 +165,6 @@ static char *const zone_names[MAX_NR_ZONES] = {
 	"MOVABLE",
 };
 static inline void cpuset_init_mems_allowed(void) {}
-static inline void cpuset_init_current_mems_allowed(void) {}
 static int page_alloc_cpu_notify(void) {}
 static inline void trace_mm_page_free_trace(struct page *p,int order) {}
 
@@ -682,6 +683,10 @@ static int build_zonelists_node(struct pglist_data *pgdat,
 	return nr_zones;
 }
 
+#ifdef CONFIG_NUMA
+
+
+#else
 
 static void build_zonelists(struct pglist_data *pgdat)
 {
@@ -717,6 +722,7 @@ static void build_zonelists(struct pglist_data *pgdat)
 	zonelist->_zonerefs[j].zone = NULL;
 	zonelist->_zonerefs[j].zone_idx = 0;
 }
+#endif
 /*
  * non-NUMA variant of zonelist performance cache - just NULL zlcache_ptr.
  */
@@ -732,14 +738,12 @@ static unsigned int nr_free_zone_pages(int offset)
 	struct zoneref *z;
 	struct zone *zone;
 
-	/*
-	 * Just pick one node,since fallback list is circular.
-	 */
+	/* Just pick one node,since fallback list is circular. */
 	unsigned int sum = 0;
+
 	struct zonelist *zonelist = node_zonelist(numa_node_id(),GFP_KERNEL);
 	
-	for_each_zone_zonelist(zone,z,zonelist,offset)
-	{
+	for_each_zone_zonelist(zone,z,zonelist,offset) {
 		unsigned long size = zone->present_pages;
 		unsigned long high = high_wmark_pages(zone);
 
@@ -773,7 +777,7 @@ static void setup_pageset(struct per_cpu_pageset *p,unsigned long batch)
 
 
 /* return values in  ...just for stop_machine() */
-static __init_refok int __build_all_zonelist(void *data)
+static __init_refok int __build_all_zonelists(void *data)
 {
 	int nid;
 	int cpu;
@@ -807,15 +811,20 @@ static __init_refok int __build_all_zonelist(void *data)
  * Called with zonelist_mutex held always
  * Unless system_state == SYSTEM_BOOTING.
  */
-void build_all_zonelist(void *data)
+void build_all_zonelists(void *data)
 {
 	set_zonelist_order();
 
-	if(system_state == SYSTEM_BOOTING)
-	{
-		__build_all_zonelist(NULL);
+	if(system_state == SYSTEM_BOOTING) {
+		__build_all_zonelists(NULL);
 		mminit_verify_zonelist();
 		cpuset_init_current_mems_allowed();
+	} else {
+		/* we have to stop all cpus to guarantee there is no user
+		 * of zonelist.
+		 */
+		stop_machine(__build_all_zonelists,NULL,NULL);
+		/* cpuset refresh routine should be here. */
 	}
 	vm_total_pages = nr_free_pagecache_pages();
 	/*
@@ -829,6 +838,7 @@ void build_all_zonelist(void *data)
 		page_group_by_mobility_disabled = 1;
 	else
 		page_group_by_mobility_disabled = 0;
+
 	mm_debug("Built %i zonelist in %s order,mobility grouping %s."
 			"Total pages : %ld\n",
 			nr_online_nodes,

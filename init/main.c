@@ -84,8 +84,11 @@ static void start_kernel(void)
 
 	setup_arch(&command_line);
 	mm_init_owner(&init_mm,&init_task);
-	build_all_zonelist(NULL);
+	build_all_zonelists(NULL);
 	page_alloc_init();
+
+	mm_debug("Kernel command line:%s\n",boot_command_line);
+	parse_early_param();
 	mm_init();
 }
 

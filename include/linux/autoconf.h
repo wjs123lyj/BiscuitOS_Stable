@@ -55,6 +55,14 @@
  */
 #define CONFIG_HIGHMEM
 /*
+ * Configure to support DMA
+ */
+//#define CONFIG_DMA
+/*
+ * Configure to support DMA32
+ */
+//#define CONFIG_DMA32
+/*
  * Configure to support FLAT MEMORY.
  */
 #define CONFIG_FLAT_NODE_MEM_MAP
@@ -131,4 +139,10 @@
  */
 #define CONFIG_CMDLINE  \
 		"console=ttySAC0,115200 root=/dev/ram init=linuxrc initrd=0x51000000,6M ramdisk_size=6144 vmalloc=256M mminit_loglevel=4"
+/*
+ * Configure the number of CPU.
+ */
+#define CONFIG_NR_CPUS 1
+
+
 #endif

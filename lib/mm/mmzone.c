@@ -25,6 +25,7 @@ struct zoneref *next_zones_zonelist(struct zoneref *z,
 		while(zonelist_zone_idx(z) > highest_zoneidx ||
 				(z->zone && ! zref_in_nodemask(z,nodes)))
 			z++;
+
 	*zone = zonelist_zone(z);
 	return z;
 }

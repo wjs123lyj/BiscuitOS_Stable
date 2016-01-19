@@ -3,6 +3,7 @@
 #include "nodemask.h"
 #include "mmzone.h"
 #include "debug.h"
+#include "topology.h"
 /*
  * Plain integer GFP bitmasks.Do not use this directly.
  */
@@ -49,10 +50,6 @@
 #define __GFP_DMA  ((gfp_t)___GFP_DMA)
 #define __GFP_DMA32   ((gfp_t)___GFP_DMA32)
 #define __GFP_MOVABLE ((gfp_t)___GFP_MOVABLE)
-#define GFP_ZONEMASK  (__GFP_DMA | __GFP_HIGHMEM | __GFP_DMA32 | __GFP_MOVABLE)
-#define GFP_HIGHUSER_MOVABLE (__GFP_WAIT | __GFP_IO | __GFP_FS | \
-		__GFP_HARDWALL | __GFP_HIGHMEM | \
-		__GFP_MOVABLE)
 #define __GFP_ZERO  ((gfp_t)___GFP_ZERO)
 #define __GFP_NOMEMALLOC ((gfp_t)___GFP_NOMEMALLOC)
 #define __GFP_COMP  ((gfp_t)___GFP_COMP)
@@ -60,11 +57,6 @@
 
 #define __GFP_NO_KSWAPD  (gfp_t)___GFP_NO_KSWAPED
 
-/* Control allocation constraints */
-#define GFP_CONSTRAINT_MASK  (__GFP_HARDWALL | __GFP_THISNODE)
-
-/* Do not use these with a slab allocator */
-#define GFP_SLAB_BUG_MASK   (__GFP_DMA32 | __GFP_HIGHMEM | ~__GFP_BITS_MASK)
 
 #ifdef CONFIG_ZONE_DMA
 #define OPT_ZONE_DMA ZONE_DMA
@@ -82,15 +74,64 @@
 #define OPT_ZONE_DMA32 ZONE_NORMAL
 #endif
 
-#define GFP_THISNODE  ((gfp_t)0)
+/*
+ * This may seem redundant,but it's a way of annotating false positive vs.
+ * allocations that simply cannot be support.
+ */
 
+#define __GFP_BITS_SHIFT    23 /* Room for 23 __GFP_FOO bits */
+#define __GFP_BITS_MASK     ((gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
+
+#define GFP_ZONEMASK  (__GFP_DMA | __GFP_HIGHMEM | __GFP_DMA32 | __GFP_MOVABLE)
 /* This equals 0,but use constants in case they ever change */
 #define GFP_NOWAIT  (GFP_ATOMIC & ~__GFP_HIGH)    
 #define GFP_ATOMIC  (__GFP_HIGH)
+#define GFP_NOIO    (__GFP_HIGH)
+#define GFP_NOFS    (__GFP_WAIT | __GFP_IO)
 #define GFP_KERNEL  (__GFP_WAIT | __GFP_IO | __GFP_FS)
+#define GFP_TEMPORARY (__GFP_WAIT | __GFP_IO | __GFP_FS | \
+		               __GFP_RECLAIMABLE)
+#define GFP_USER    (__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL)
+#define GFP_HIGHUSER  (__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL | \
+		               __GFP_HIGHMEM)
+#define GFP_HIGHUSER_MOVABLE (__GFP_WAIT | __GFP_IO | __GFP_FS | \
+		                     __GFP_HARDWALL | __GFP_HIGHMEM | \
+		                     __GFP_MOVABLE)
+#define GFP_IOFS    (__GFP_IO | __GFP_FS)
+#define GFP_TRANSHUGE (GFP_HIGHUSER_MOVABLE | __GFP_COMP | \
+		               __GFP_NOMEMALLOC | __GFP_NORETRY | __GFP_NOWARN | \
+		               __GFP_NO_KSWAPD)
+
+#ifdef CONFIG_NUMA
+#define GFP_THISNODE (__GFP_THISNODE | __GFP_NOWARN | __GFP_NORETRY)
+#else
+#define GFP_THISNODE ((gfp_t)0)
+#endif
+
+/* This is mask makes up all the page movable related flags */
+#define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE | __GFP_MOVABLE)
+
+/* Control page allocator reclaim behavior */
+#define GFP_RECLAIM_MASK (__GFP_WAIT | __GFP_HIGH | __GFP_IO | __GFP_FS | \
+		                  __GFP_NOWARN | __GFP_REPEAT | __GFP_NOFAIL | \
+		                  __GFP_NORETRY | __GFP_NOMEMALLOC)
+
+/* Control allocation constraints */
+#define GFP_CONSTRAINT_MASK (__GFP_HARDWALL | __GFP_THISNODE)
 
 /* Control slab gfp mask during early boot */
 #define GFP_BOOT_MASK (__GFP_BITS_MASK & ~(__GFP_WAIT | __GFP_IO | __GFP_FS))
+
+/* Do not use these with a slab allocator */
+#define GFP_SLAB_BUG_MASK (__GFP_DMA32 | __GFP_HIGHMEM | ~__GFP_BITS_MASK)
+
+/* Flag - indicates that the buffer will be suitable for DMA.Ignored on some
+ * platforms,used as appropriate on others */
+#define GFP_DMA  __GFP_DMA
+
+/* 4GB DMA on some platforms */
+#define GFP_DMA32  __GFP_DMA32
+
 
 /*
  * GFP_ZONE_TABLE is a word size bitstring that is used for looking up the
@@ -99,7 +140,7 @@
  * __GFP_DMA,__GFP_DMA32,__GFP__MOVABLE and __GFP_HIGHMEM.
  *
  * The zone fallback order is MOVABLE=>HIGHMEM=>NORMAL=>DMA32=>DMA.
- * But GFP_MOVABLE os not only a zone specifier but also an allocation
+ * But GFP_MOVABLE is not only a zone specifier but also an allocation
  * policy.Therefore __GFP_MOVABLE plus another zone selector is valid.
  * Only 1 bit of the lowest 3 bits(DMA,DMA32,HIGHMEM) can be set to "1".
  *
@@ -128,36 +169,55 @@
 		(ZONE_NORMAL << 0 * ZONES_SHIFT)   \
 		| (OPT_ZONE_DMA << ___GFP_DMA * ZONES_SHIFT) \
 		| (OPT_ZONE_HIGHMEM << ___GFP_HIGHMEM * ZONES_SHIFT) \
-		| (OPT_ZONE_DMA32 << ___GFP_MOVABLE * ZONES_SHIFT)  \
+		| (OPT_ZONE_DMA32 << ___GFP_DMA32 * ZONES_SHIFT)  \
 		| (ZONE_NORMAL << ___GFP_MOVABLE * ZONES_SHIFT)   \
 		| (OPT_ZONE_DMA << (___GFP_MOVABLE | ___GFP_DMA) * ZONES_SHIFT)  \
 		| (ZONE_MOVABLE << (___GFP_MOVABLE | ___GFP_HIGHMEM) * ZONES_SHIFT) \
 		| (OPT_ZONE_DMA32 << (___GFP_MOVABLE | ___GFP_DMA32) * ZONES_SHIFT) \
 		) 
-/*
- * This mask makes up all the page movable related flags.
- */
-#define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE | __GFP_MOVABLE)
-/*
- * Control page allocator reclaim behavior.
- */
-#define GFP_RECLAIM_MASK (__GFP_WAIT | __GFP_HIGH | __GFP_IO | __GFP_FS | \
-		__GFP_NOWARN | __GFP_REPEAT | __GFP_NOFAIL | \
-		__GFP_NORETRY | __GFP_NOMEMALLOC)
 
-#define __GFP_BITS_SHIFT    23 /* Room for 23 __GFP_FOO bits */
-#define __GFP_BITS_MASK     ((gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
+/*
+ * GFP_ZONE_BAD is a bitmap for all combinations of __GFP_DMA,__GFP_DMA32
+ * __GFP_HIGHMEM and __GFP_MOVABLE that are not permitted.One flag per
+ * entry starting with bit 0.Bit is set if the combination is not
+ * allowed.
+ */
+#define GFP_ZONE_BAD (   \
+		  1 << (___GFP_DMA | ___GFP_HIGHMEM)                  \
+		| 1 << (___GFP_DMA | ___GFP_DMA32)               \
+		| 1 << (___GFP_DMA32 | ___GFP_HIGHMEM)                   \
+		| 1 << (___GFP_DMA | ___GFP_DMA32 | ___GFP_HIGHMEM)       \
+		| 1 << (___GFP_MOVABLE | ___GFP_HIGHMEM | ___GFP_DMA)   \
+		| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA)    \
+		| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_HIGHMEM)    \
+		| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_HIGHMEM) \
+)
+
 
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
 	enum zone_type z;
 	int bit = (int)(flags & GFP_ZONEMASK);
-
+	
 	z = (GFP_ZONE_TABLE >> (bit * ZONES_SHIFT)) &
 			((1 << ZONES_SHIFT) - 1);
 
+	if(__builtin_constant_p(bit))
+		BUILD_BUG_ON((GFP_ZONE_BAD >> bit) & 1);
+	else {
+#ifdef CONFIG_DEBUG_VM
+		BUG_ON((GFP_ZONE_BAD >> bit) & 1);
+#endif
+	}
 	return z;		
 }
+
+/*
+ * There is only page-allocator function,and two main namespaces to 
+ * it.The alloc_page*() variants return "struct page *" and as such
+ * can allocate highmem pages,the *get*page*() variants return
+ * virtual kernel addresses to the allocated page(s).
+ */
 static inline int gfp_zonelist(gfp_t flags)
 {
 	if(NUMA_BUILD && unlikely(flags & __GFP_THISNODE))
@@ -166,11 +226,16 @@ static inline int gfp_zonelist(gfp_t flags)
 }
 /*
  * We get the zone list from the current node and the gfp_mask.
+ * This zoen list contains a maximum of MAXNODES * MAX_NR_ZONES zones.
+ * There are two zonelists per node,one for all zones with memory and 
+ * one containing just zones from the node the zonelist belongs to.
+ *
+ * For the normal case of non-DISCONTIGMEM system the NODE_DATA() gets
+ * optimized to &contig_page_data at compile_time.
  */
 static inline struct zonelist *node_zonelist(int nid,gfp_t flags)
 {
-	return ((struct pglist_data *)NODE_DATA(nid))->node_zonelists + 
-		gfp_zonelist(flags);
+	return NODE_DATA(nid)->node_zonelists + gfp_zonelist(flags);
 }
 /*
  * Convert GFP flags to their corresponding migrate type.
@@ -195,7 +260,6 @@ extern void free_pages(unsigned long addr,unsigned int order);
 static inline void arch_free_page(struct page *page,int order) {}
 #endif
 
-#define numa_node_id() 0
 
 extern struct page *__alloc_pages_nodemask(gfp_t gfp_mask,
 		unsigned int order,struct zonelist *zonelist,nodemask_t *nodemask);

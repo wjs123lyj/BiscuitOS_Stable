@@ -160,9 +160,8 @@ void __init bootmem_init(void)
 	max_low_pfn = max_low - PHYS_PFN_OFFSET;
 	max_pfn     = max_high - PHYS_PFN_OFFSET;
 }
-/*
- * Free memmap.
- */
+
+
 static inline void free_memmap(unsigned long start_pfn,unsigned long end_pfn)
 {
 	struct page *start_pg,*end_pg;
@@ -174,6 +173,9 @@ static inline void free_memmap(unsigned long start_pfn,unsigned long end_pfn)
 	start_pg = pfn_to_page(start_pfn - 1) + 1;
 	end_pg   = pfn_to_page(end_pfn);
 
+	mm_debug("mem_map %p\n",mem_map);
+	mm_debug("start_pg %p flags \n",pfn_to_page(start_pfn));
+	mm_debug("start_pg %p end_pg %p\n",start_pg,end_pg);
 	/*
 	 * Convert to physical addresses,and
 	 * round start upwards and end downwards.
@@ -200,12 +202,11 @@ static void __init free_unused_memmap(struct meminfo *mi)
 	 * This relies on each bank being in address order.
 	 * The banks are sorted previously in bootmem_init().
 	 */
-	for_each_bank(i,mi)
-	{
+	for_each_bank(i,mi) {
 		struct membank *bank = &mi->bank[i];
 
 		bank_start = bank_pfn_start(bank);
-
+		
 		/*
 		 * If we had a previous bank,and there is a space
 		 * between the current bank and the previous.free it.

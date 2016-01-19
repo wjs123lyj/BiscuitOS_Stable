@@ -1,4 +1,20 @@
-all:
-	ctags -R
-clean:
-	ctags -R
+obj-y += atags.o
+obj-y += cmdline.o
+obj-y += compat.o
+obj-y += cpuset.o
+obj-y += ctype.o
+obj-y += do_mounts.o
+obj-y += head.o
+obj-y += hexdump.o
+obj-y += init.o
+obj-y += init.o
+obj-y += init_task.o
+obj-y += mach-6410.o
+obj-y += params.o
+obj-y += reboot.o
+obj-y += resource.o
+obj-y += setup.o
+obj-y += sort.o
+obj-y += string.o
+obj-y += vsprintf.o
+obj-y += wait.o

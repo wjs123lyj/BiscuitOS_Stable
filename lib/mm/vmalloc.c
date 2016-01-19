@@ -26,6 +26,7 @@
 #include "../../include/linux/rcutiny_plugin.h"
 #include "../../include/linux/tlbflush.h"
 #include "../../include/linux/mutex.h"
+#include "../../include/linux/threads.h"
 
 /**** Global kva allocator ****/
 
@@ -51,7 +52,6 @@
 #define VMAP_BLOCK_SIZE  (VMAP_BBMAP_BITS * PAGE_SIZE)
 
 
-#define NR_CPUS 1
 
 struct vmap_block_queue {
 	spinlock_t lock;

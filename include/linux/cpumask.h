@@ -1,6 +1,11 @@
 #ifndef _CPUMASK_H_
 #define _CPUMASK_H_
 
+#include "bitops.h"
+#include "threads.h"
+
+typedef struct cpumask {DECLARE_BITMAP(bits,NR_CPUS);} cpumask_t;
+
 #define cpu_online_mask 0
 #define cpu_possible_mask 0
 
