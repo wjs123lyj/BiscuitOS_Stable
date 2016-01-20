@@ -1,7 +1,7 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/wait.h"
-#include "../../include/linux/spinlock.h"
-#include "../../include/linux/list.h"
+#include "linux/kernel.h"
+#include "linux/wait.h"
+#include "linux/spinlock.h"
+#include "linux/list.h"
 
 
 void __init_waitqueue_head(wait_queue_head_t *q,struct lock_class_key *key)

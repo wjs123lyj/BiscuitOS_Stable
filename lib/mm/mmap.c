@@ -1,7 +1,7 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/mman.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/pgtable.h"
+#include "linux/kernel.h"
+#include "linux/mman.h"
+#include "linux/page.h"
+#include "linux/pgtable.h"
 
 /*
  * Description of effects of mapping type and prot in current implementation.

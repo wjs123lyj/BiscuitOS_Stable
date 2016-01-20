@@ -1,9 +1,9 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/setup.h"
-#include "../../include/asm/arch.h"
-#include "../../include/asm/map.h"
-#include "../../include/asm/mach-types.h"
-#include "../../include/linux/page.h"
+#include "linux/kernel.h"
+#include "linux/setup.h"
+#include "asm/arch.h"
+#include "asm/map.h"
+#include "asm/mach-types.h"
+#include "linux/page.h"
 
 extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
 

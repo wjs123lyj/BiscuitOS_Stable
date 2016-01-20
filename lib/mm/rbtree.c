@@ -1,5 +1,5 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/rbtree.h"
+#include "linux/kernel.h"
+#include "linux/rbtree.h"
 
 static void __rb_rotate_right(struct rb_node *node,struct rb_root *root)
 {

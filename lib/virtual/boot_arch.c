@@ -1,6 +1,6 @@
-#include "../include/linux/kernel.h"
-#include "../include/linux/setup.h"
-#include "../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/setup.h"
+#include "linux/debug.h"
 
 unsigned int MEM0_OFFSET;
 #ifdef CONFIG_BOTH_BANKS

@@ -1,11 +1,11 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/mmzone.h"
-#include "../../include/linux/mm_types.h"
-#include "../../include/linux/mm.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/atomic.h"
-#include "../../include/linux/spinlock.h"
-#include "../../include/linux/mm_inline.h"
+#include "linux/kernel.h"
+#include "linux/mmzone.h"
+#include "linux/mm_types.h"
+#include "linux/mm.h"
+#include "linux/debug.h"
+#include "linux/atomic.h"
+#include "linux/spinlock.h"
+#include "linux/mm_inline.h"
 
 /*
  * This path almost never happens for VM activity - pages are normally

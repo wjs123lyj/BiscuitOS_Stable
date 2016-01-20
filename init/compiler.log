@@ -1,0 +1,5 @@
+gcc: error: ../lib/bitmap.c: 没有那个文件或目录
+gcc: error: ../lib/debug.c: 没有那个文件或目录
+gcc: error: ../lib/boot_arch.c: 没有那个文件或目录
+gcc: error: ../lib/register_simulate.c: 没有那个文件或目录
+gcc: error: ../lib/uboot.c: 没有那个文件或目录

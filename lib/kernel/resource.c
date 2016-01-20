@@ -1,8 +1,8 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/asm/errno-base.h"
-#include "../../include/linux/ioport.h"
-#include "../../include/asm/io.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "asm/errno-base.h"
+#include "linux/ioport.h"
+#include "asm/io.h"
+#include "linux/debug.h"
 
 
 struct resource ioport_resource = {

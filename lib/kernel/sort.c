@@ -1,4 +1,4 @@
-#include "../../include/linux/kernel.h"
+#include "linux/kernel.h"
 
 static void u32_swap(void *a,void *b,int size)
 {

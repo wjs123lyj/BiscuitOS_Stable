@@ -1,7 +1,7 @@
-#include "../../include/linux/kernel.h"
+#include "linux/kernel.h"
 #ifdef CONFIG_HEAD_FILE_CHECK
 /* Input the header file */
-#include "../../include/linux/debug.h"
+#include "linux/debug.h"
 int do_check(void)
 {
 	/*

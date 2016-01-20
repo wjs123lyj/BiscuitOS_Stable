@@ -1,5 +1,5 @@
-#include "../include/linux/kernel.h"
-#include "../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/debug.h"
 
 extern void __uboot virtual_memory_init(void);
 extern void __uboot setup_bootparams(void);

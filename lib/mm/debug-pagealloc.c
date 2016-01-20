@@ -1,7 +1,7 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/mm_types.h"
-#include "../../include/linux/page-debug-flags.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/mm_types.h"
+#include "linux/page-debug-flags.h"
+#include "linux/debug.h"
 
 extern int debug_pagealloc_enabled;
 

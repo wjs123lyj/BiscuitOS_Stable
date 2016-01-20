@@ -1,5 +1,5 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/ctype.h"
+#include "linux/kernel.h"
+#include "linux/ctype.h"
 
 const unsigned char _ctype[] = {
 	_C,_C,_C,_C,_C,_C,_C,_C,				/* 0-7 */

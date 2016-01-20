@@ -1,1 +1,5 @@
-obj-y += main.o
+CURRENT_SOURCE := main.c
+
+all:
+	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
+OBJS_PATH = ../${OBJS_DIR}

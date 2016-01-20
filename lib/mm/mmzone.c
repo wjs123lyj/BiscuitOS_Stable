@@ -1,5 +1,5 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/mmzone.h"
+#include "linux/kernel.h"
+#include "linux/mmzone.h"
 
 int page_group_by_mobility_disabled __read_mostly;
 

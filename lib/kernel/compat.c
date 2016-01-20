@@ -1,7 +1,7 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/setup.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/setup.h"
+#include "linux/page.h"
+#include "linux/debug.h"
 
 struct param_struct {
 	union {

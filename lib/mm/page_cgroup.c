@@ -1,10 +1,10 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/nodemask.h"
-#include "../../include/linux/mmzone.h"
-#include "../../include/asm/errno-base.h"
-#include "../../include/asm/dma.h"
-#include "../../include/linux/debug.h"
-#include "../../include/linux/memcontrol.h"
+#include "linux/kernel.h"
+#include "linux/nodemask.h"
+#include "linux/mmzone.h"
+#include "asm/errno-base.h"
+#include "asm/dma.h"
+#include "linux/debug.h"
+#include "linux/memcontrol.h"
 
 static void __meminit __init_page_cgroup(struct page_cgroup *pc,
 		unsigned long pfn)

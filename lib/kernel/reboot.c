@@ -1,4 +1,4 @@
-#include "../../include/linux/kernel.h"
+#include "linux/kernel.h"
 
 int __init reboot_setup(char *str)
 {

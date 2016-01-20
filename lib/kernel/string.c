@@ -1,6 +1,6 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/ctype.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/ctype.h"
+#include "linux/debug.h"
 
 
 /*

@@ -1,5 +1,5 @@
-#include "../include/linux/kernel.h"
-#include "../include/asm/system.h"
+#include "linux/kernel.h"
+#include "asm/system.h"
 
 /*
  * Coprocessor Registion - CP15

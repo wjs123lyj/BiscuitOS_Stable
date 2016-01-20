@@ -1,5 +1,5 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/setup.h"
+#include "linux/kernel.h"
+#include "linux/setup.h"
 
 
 #define BOOT_PARAMS_SIZE   1536

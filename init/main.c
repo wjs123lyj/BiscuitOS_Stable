@@ -1,7 +1,7 @@
-#include "../include/linux/kernel.h"
-#include "../include/linux/debug.h"
-#include "../include/linux/setup.h"
-#include "../include/linux/init.h"
+#include "linux/kernel.h"
+#include "linux/debug.h"
+#include "linux/setup.h"
+#include "linux/init.h"
 
 extern struct task_struct init_task;
 extern struct mm_struct init_mm;

@@ -1,1 +1,5 @@
-obj-y += uboot.o
+CURRENT_SOURCE := uboot.c
+
+all:
+	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
+OBJS_PATH = ../${OBJS_DIR}

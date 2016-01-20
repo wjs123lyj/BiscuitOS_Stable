@@ -1,9 +1,9 @@
-#include "../include/linux/kernel.h"
-#include "../include/linux/mmzone.h"
-#include "../include/linux/bootmem.h"
-#include "../include/linux/setup.h"
-#include "../include/linux/memblock.h"
-#include "../include/linux/atomic.h"
+#include "linux/kernel.h"
+#include "linux/mmzone.h"
+#include "linux/bootmem.h"
+#include "linux/setup.h"
+#include "linux/memblock.h"
+#include "linux/atomic.h"
 
 
 extern struct memblock memblock;

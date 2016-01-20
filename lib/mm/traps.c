@@ -1,6 +1,6 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/page.h"
+#include "linux/debug.h"
 
 void *vectors_page;
 

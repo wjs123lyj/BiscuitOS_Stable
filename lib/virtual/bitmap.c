@@ -1,5 +1,5 @@
-#include "../include/linux/debug.h"
-#include "../include/linux/bitops.h"
+#include "linux/debug.h"
+#include "linux/bitops.h"
 
 /*
  * Test and set bit.

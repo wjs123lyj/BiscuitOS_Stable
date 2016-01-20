@@ -1,9 +1,9 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/page.h"
-#include "../../include/asm/errno-base.h"
-#include "../../include/linux/mm_types.h"
-#include "../../include/linux/pgalloc.h"
-#include "../../include/linux/spinlock.h"
+#include "linux/kernel.h"
+#include "linux/page.h"
+#include "asm/errno-base.h"
+#include "linux/mm_types.h"
+#include "linux/pgalloc.h"
+#include "linux/spinlock.h"
 
 struct page *mem_map;
 

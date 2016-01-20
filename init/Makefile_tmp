@@ -1,61 +1,56 @@
 CC=gcc
 FLAGS=-g -pg
 DEBUG_FLAGS=-C -E -g -Wfatal-errors 
-SRCS = main.c \
-	   ../lib/mm/memblock.c \
-	   ../lib/bitmap.c \
-	   ../lib/mm/mmu.c \
-	   ../lib/debug.c \
-	   ../lib/mm/init-mm.c \
-	   ../lib/boot_arch.c \
-	   ../lib/kernel/init.c \
-	   ../lib/kernel/wait.c \
-	   ../lib/kernel/sort.c \
-	   ../lib/kernel/hexdump.c \
-	   ../lib/kernel/vsprintf.c \
-	   ../lib/mm/tlb.c \
-	   ../lib/mm/traps.c \
-	   ../lib/mm/highmem.c \
-	   ../lib/mm/memory.c \
-	   ../lib/mm/page_alloc.c \
-	   ../lib/mm/bootmem.c \
-	   ../lib/mm/fork.c \
-	   ../lib/kernel/setup.c \
-	   ../lib/kernel/cmdline.c \
-       ../lib/mm/mm_init.c  \
-	   ../lib/mm/mmzone.c  \
-	   ../lib/mm/vmscan.c \
-	   ../lib/kernel/init_task.c \
-	   ../lib/mm/nommu.c  \
-	   ../lib/kernel/resource.c \
-	   ../lib/kernel/atags.c \
-	   ../lib/kernel/reboot.c \
-	   ../lib/kernel/string.c \
-	   ../lib/kernel/mach-6410.c \
-	   ../lib/kernel/compat.c \
-	   ../lib/kernel/ctype.c \
-	   ../lib/kernel/params.c \
-	   ../lib/mm/debug-pagealloc.c \
-	   ../lib/mm/memcontrol.c     \
-	   ../lib/mm/mmap.c    \
-	   ../lib/mm/page_cgroup.c  \
-       ../lib/mm/pte.c   \
-	   ../lib/mm/vmstat.c \
-	   ../lib/mm/swap.c \
-	   ../lib/mm/sched.c  \
-	   ../lib/mm/slub.c   \
-	   ../lib/mm/swap_state.c \
-	   ../lib/mm/rbtree.c  \
-	   ../lib/mm/radix-tree.c  \
-	   ../lib/mm/percpu.c   \
-	   ../lib/mm/kmemcheck.c   \
-	   ../lib/mm/vmalloc.c  \
-	   ../lib/kernel/head.c  \
-	   ../lib/kernel/do_mounts.c  \
-	   ../lib/register_simulate.c  \
-	   ../lib/uboot.c  \
-	   ../lib/mm/test.c
+DIR_KERNEL := ../lib/kernel
+DIR_MM    := ../lib/mm
+SRCS := main.c
 
+SRCS += ${DIR_KERNEL}/atags.c \
+		${DIR_KERNEL}/cmdline.c  \
+		${DIR_KERNEL}/compat.c   \
+		${DIR_KERNEL}/cpuset.c   \
+		${DIR_KERNEL}/ctype.c    \
+		${DIR_KERNEL}/do_mounts  \
+		${DIR_KERNEL}/head.c     \
+		${DIR_KERNEL}/hexdump.c  \
+		${DIR_KERNEL}/init.c     \
+		${DIR_KERNEL}/init_task.c   \
+		${DIR_KERNEL}/mach-6410.c   \
+		${DIR_KERNEL}/params.c      \
+		${DIR_KERNEL}/reboot.c      \
+		${DIR_KERNEL}/resource.c    \
+		${DIR_KERNEL}/setup.c       \
+		${DIR_KERNEL}/sort.c        \
+		${DIR_KERNEL}/string.c      \
+		${DIR_KERNEL}/vsprintf.c    \
+		${DIR_KERNEL}/wait.c    \
+
+SRCS += ${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
+		${DIR_MM}/
 
 INC= -I./
 TARGET=align

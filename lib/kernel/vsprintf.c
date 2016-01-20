@@ -1,11 +1,11 @@
 #define _UNUSE_STD_
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/types.h"
-#include "../../include/linux/page.h"
-#include "../../include/asm/sections.h"
-#include "../../include/linux/acenv.h"
-#include "../../include/linux/ioport.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/types.h"
+#include "linux/page.h"
+#include "asm/sections.h"
+#include "linux/acenv.h"
+#include "linux/ioport.h"
+#include "linux/debug.h"
 #include <string.h>
 
 /* Works only for digits and letters,but small and fast */

@@ -1,20 +1,23 @@
-obj-y += atags.o
-obj-y += cmdline.o
-obj-y += compat.o
-obj-y += cpuset.o
-obj-y += ctype.o
-obj-y += do_mounts.o
-obj-y += head.o
-obj-y += hexdump.o
-obj-y += init.o
-obj-y += init.o
-obj-y += init_task.o
-obj-y += mach-6410.o
-obj-y += params.o
-obj-y += reboot.o
-obj-y += resource.o
-obj-y += setup.o
-obj-y += sort.o
-obj-y += string.o
-obj-y += vsprintf.o
-obj-y += wait.o
+CURRENT_SOURCE := init.c
+CURRENT_SOURCE += ctype.c
+CURRENT_SOURCE += atags.c
+CURRENT_SOURCE += cmdline.c
+CURRENT_SOURCE += compat.c
+CURRENT_SOURCE += cpuset.c
+CURRENT_SOURCE += do_mounts.c
+CURRENT_SOURCE += head.c
+CURRENT_SOURCE += hexdump.c
+CURRENT_SOURCE += init_task.c
+CURRENT_SOURCE += mach-6410.c
+CURRENT_SOURCE += params.c
+CURRENT_SOURCE += reboot.c
+CURRENT_SOURCE += resource.c
+CURRENT_SOURCE += setup.c
+CURRENT_SOURCE += sort.c
+CURRENT_SOURCE += string.c
+CURRENT_SOURCE += vsprintf.c
+CURRENT_SOURCE += wait.c
+
+all:
+	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
+OBJS_PATH = ../../${OBJS_DIR}

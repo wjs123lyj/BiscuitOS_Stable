@@ -1,11 +1,11 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/kmap_types.h"
-#include "../../include/linux/fixmap.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/list.h"
-#include "../../include/linux/highmem.h"
-#include "../../include/linux/mm.h"
-#include "../../include/linux/hash.h"
+#include "linux/kernel.h"
+#include "linux/kmap_types.h"
+#include "linux/fixmap.h"
+#include "linux/page.h"
+#include "linux/list.h"
+#include "linux/highmem.h"
+#include "linux/mm.h"
+#include "linux/hash.h"
 
 pte_t *pkmap_page_table;
 

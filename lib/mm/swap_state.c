@@ -1,8 +1,8 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/page.h"
-#include "../../include/linux/swap.h"
-#include "../../include/linux/fs.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/page.h"
+#include "linux/swap.h"
+#include "linux/fs.h"
+#include "linux/debug.h"
 
 static struct {
 	unsigned long add_total;

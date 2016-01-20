@@ -1,4 +1,8 @@
-obj-y += bitmap.o
-obj-y += boot_arch.o
-obj-y += debug.o
-obj-y += register_simulate.o
+CURRENT_SOURCE := bitmap.c
+CURRENT_SOURCE += boot_arch.c
+CURRENT_SOURCE += debug.c
+CURRENT_SOURCE += register_simulate.c
+
+all:
+	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
+OBJS_PATH = ../../${OBJS_DIR}

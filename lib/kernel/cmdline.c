@@ -1,4 +1,4 @@
-#include "../../include/linux/kernel.h"
+#include "linux/kernel.h"
 
 /*
  * memparse - parse a string with mem suffixes into a number

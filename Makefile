@@ -1,21 +1,24 @@
-obj-y :=
-obj-m :=
-SUBDIRS := main \
-		   lib \
+SUBDIRS := init \
+		   lib  \
 		   uboot \
+		   obj \
 
 
-FLAGS := -g -pg
+FLAGS := -g -pg -I../include
 DEBUG_FLAGS := -C -E -g -Wfatal-errors
-SRCS :=
 CC   := gcc
-export CC DEBUG_FLAGS SRCS obj-y obj-m
+OBJS_DIR = obj
+BIN = mainapp
+BIN_DIR = bin
+
+
+export CC DEBUG_FLAGS FLAGS OBJS_DIR BIN BIN_DIR 
 
 all: $(SUBDIRS)
 $(SUBDIRS) : ECHO
-	make -C $@
+	@make -C $@
 
 ECHO:
-	@echo $(SUBDIRS)
-	@echo begin compile
-
+	@echo ==============================================
+	@echo            Staring Compile.....
+	@echo ==============================================

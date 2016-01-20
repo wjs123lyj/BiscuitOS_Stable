@@ -1,9 +1,9 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/irqflags.h"
-#include "../../include/linux/moduleparam.h"
-#include "../../include/linux/mutex.h"
-#include "../../include/asm/errno-base.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/irqflags.h"
+#include "linux/moduleparam.h"
+#include "linux/mutex.h"
+#include "asm/errno-base.h"
+#include "linux/debug.h"
 
 /* Protect all paramenters,and incidentally kmalloced_param list. */
 static int param_lock;

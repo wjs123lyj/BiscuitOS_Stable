@@ -1,8 +1,8 @@
-#include "../../include/linux/kernel.h"
-#include "../../include/linux/radix-tree.h"
-#include "../../include/linux/gfp.h"
-#include "../../include/linux/rcupdate.h"
-#include "../../include/linux/debug.h"
+#include "linux/kernel.h"
+#include "linux/radix-tree.h"
+#include "linux/gfp.h"
+#include "linux/rcupdate.h"
+#include "linux/debug.h"
 
 
 #define RADIX_TREE_MAP_SHIFT     3
