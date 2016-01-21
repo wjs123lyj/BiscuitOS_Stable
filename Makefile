@@ -1,6 +1,10 @@
 SUBDIRS := init \
-		   lib  \
 		   uboot \
+		   kernel \
+		   arch \
+		   mm \
+		   lib \
+		   tools \
 		   obj \
 
 
@@ -16,7 +20,7 @@ export CC DEBUG_FLAGS FLAGS OBJS_DIR BIN BIN_DIR
 
 all: $(SUBDIRS)
 $(SUBDIRS) : ECHO
-	@make -C $@
+	@make -s -C $@
 
 ECHO:
 	@echo ==============================================

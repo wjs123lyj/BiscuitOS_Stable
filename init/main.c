@@ -35,13 +35,13 @@ void __init smp_setup_processor_id(void)
 
 /* For debug */
 extern struct obs_kernel_param __setup_early_vmalloc;
-static struct obs_kernel_param *__setup_start = &__setup_early_vmalloc - 5;
-static struct obs_kernel_param *__setup_end = &__setup_early_vmalloc + 9;
+static struct obs_kernel_param *__setup_start = &__setup_early_vmalloc - 7;
+static struct obs_kernel_param *__setup_end = &__setup_early_vmalloc + 2;
 /* Check for early params. */
 static int __init do_early_param(char *param,char *val)
 {
 	struct obs_kernel_param *p;
-
+	
 	for(p = __setup_start; p < __setup_end ; p++) {
 		if((p->early && strcmp(param,p->str) == 0) ||
 				(strcmp(param,"console") == 0 &&

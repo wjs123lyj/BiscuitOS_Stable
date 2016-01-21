@@ -4,6 +4,7 @@
 extern void __uboot virtual_memory_init(void);
 extern void __uboot setup_bootparams(void);
 extern void __uboot init_CP15(void);
+
 /*
  * This file is used to simulate the uboot that pass tag to kernel.
  */

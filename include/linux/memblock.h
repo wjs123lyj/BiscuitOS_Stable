@@ -2,7 +2,26 @@
 #define _MEMBLOCK_H_
 
 #include "pfn.h"
+/*
+ * Manange an region.
+ */
+struct memblock_region {
+	unsigned long base;
+	unsigned long size;
+};
 
+struct memblock_type {
+	unsigned long cnt;
+	unsigned long max;
+	struct memblock_region *regions;
+};
+struct memblock {
+	unsigned long current_limit;
+	unsigned long memory_size;
+	struct memblock_type memory;
+	struct memblock_type reserved;
+};
+extern struct memblock memblock;
 /*
  * This is open source,you can modify it or copy it.
  */
@@ -26,30 +45,10 @@
 			region < (memblock.memblock_type.regions + \
 				memblock.memblock_type.cnt); \
 			region++)
-/*
- * Manange an region.
- */
-struct memblock_region {
-	unsigned long base;
-	unsigned long size;
-};
-
-struct memblock_type {
-	unsigned long cnt;
-	unsigned long max;
-	struct memblock_region *regions;
-};
-struct memblock {
-	unsigned long current_limit;
-	unsigned long memory_size;
-	struct memblock_type memory;
-	struct memblock_type reserved;
-};
 
 
 #define top_mem (CONFIG_BANK0_START + CONFIG_BANK0_SIZE)
 
-extern struct memblock memblock;
 extern struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 extern struct memblock_region default_memory[INIT_MEMBLOCK_REGIONS + 1];
 

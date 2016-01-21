@@ -1,11 +1,14 @@
-LSUBDIR := kernel 
-LSUBDIR += mm
-LSUBDIR += virtual
-		
-export CC DEBUG_FLAGS FLAGS
+CURRENT_SOURCE := sort.c
+CURRENT_SOURCE += cmdline.c
+CURRENT_SOURCE += ctype.c
+CURRENT_SOURCE += hexdump.c
+CURRENT_SOURCE += string.c
+CURRENT_SOURCE += vsprintf.c
+CURRENT_SOURCE += radix-tree.c
+CURRENT_SOURCE += rbtree.c
 
-all:    ${LSUBDIR}
-${LSUBDIR} : ECHO
-	@make -C $@
 
-ECHO:
+
+OBJS_PATH = ../${OBJS_DIR}
+all:    
+	@cp ${CURRENT_SOURCE} ${OBJS_PATH} 

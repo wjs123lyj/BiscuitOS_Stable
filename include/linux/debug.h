@@ -9,6 +9,7 @@
 #define mm_debug
 #endif
 
+#define mm_notice
 #define bdebug printf
 #define mm_err printf
 #define panic printf

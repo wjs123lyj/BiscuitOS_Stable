@@ -11,6 +11,7 @@
 #include "linux/page.h"
 #include "linux/slab.h"
 #include "linux/kmemleak.h"
+#include "linux/internal.h"
 
 unsigned long max_low_pfn;
 unsigned long min_low_pfn;
@@ -180,6 +181,12 @@ void __init free_bootmem(unsigned long addr,unsigned long size)
 
 	mark_bootmem(start,end,0,0);
 }
+static unsigned long __init bootmap_bytes(unsigned long pages)
+{
+	unsigned long bytes = (pages + 7) / 8;
+
+	return ALIGN(bytes,sizeof(long));
+}
 /*
  * reserve_bootmem - mark a page range as usable.
  * @addr: starting address of the range
@@ -331,6 +338,16 @@ static void __init * __init alloc_arch_preferred_bootmem(
 			return alloc_bootmem_core(p_bdata,size,align,
 					goal,limit);
 	}
+}
+/*
+ * bootmem_bootmap_pages - calculate bitmap size in pages
+ * @pages:number of pages the bitmap has to represent.
+ */
+unsigned long __init bootmem_bootmap_pages(unsigned long pages)
+{
+	unsigned long bytes = bootmap_bytes(pages);
+
+	return PAGE_ALIGN(bytes) >> PAGE_SHIFT;
 }
 
 static void * __init ___alloc_bootmem_nopanic(unsigned long size,
@@ -549,4 +566,67 @@ unsigned long __init free_all_bootmem(void)
 		total_pages += free_all_bootmem_core(bdata);
 
 	return total_pages;
+}
+
+static void link_bootmem(struct bootmem_data *bdata)
+{
+	struct list_head *iter;
+
+	list_for_each(iter,&bdata_list) {
+		bootmem_data_t *ent;
+
+		ent = list_entry(iter,struct bootmem_data,list);
+
+		if(bdata->node_min_pfn < ent->node_min_pfn)
+			break;
+	}
+	list_add_tail(&bdata->list,iter);
+}
+
+/*
+ * Init bootmem in core
+ */
+unsigned long __init init_bootmem_core(struct bootmem_data *bdata,
+		unsigned long mapstart,unsigned long start,unsigned long end)
+{
+	unsigned long mapsize;
+
+	mminit_validate_memmodel_limits(&start,&end);
+	/*
+	 * In order to use memory directly,we simualte memory.
+	 */
+	bdata->node_bootmem_map = phys_to_mem(PFN_PHYS(mapstart));
+	bdata->node_min_pfn = start;
+	bdata->node_low_pfn = end;
+	link_bootmem(bdata);
+	
+	/*
+	 * Initially all pages are reaserved -setup_arch() has to 
+	 * register free RAM areas explicitly.
+	 */
+	mapsize = bootmap_bytes(end - start);
+	memset(bdata->node_bootmem_map,0xFF,mapsize);
+
+	bdebug("nid=%d start=%p map=%p end=%p mapsize=%p\n",
+			(unsigned int)(bdata - bootmem_node_data),
+			(void *)start,(void *)mapstart,
+			(void *)end,(void *)mapsize);
+
+	return mapsize;
+}
+
+
+/*
+ * init_bootmem_node -register a node as boot memory
+ * @pgdat: node to register
+ * @freepfn: pfn where the bitmap for this node is to be placed.
+ * @startpfn: first pfn on the node.
+ * @endpfn: first pfn after the node.
+ *
+ * Returns the number of bytes needed to hold the bitmap for this node.
+ */
+long __init init_bootmem_node(struct pglist_data *pgdat,
+		unsigned long freepfn,unsigned long start_pfn,unsigned long end_pfn)
+{
+	return init_bootmem_core(pgdat->bdata,freepfn,start_pfn,end_pfn);
 }

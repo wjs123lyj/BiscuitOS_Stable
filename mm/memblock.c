@@ -35,7 +35,7 @@ void *pfn_to_mem(unsigned int idx)
 /*
  * Initialize the structure of memblock.
  */
-void __init memblock_init(void)
+void memblock_init(void)
 {
 	static int init_done __init_data = 0;
 
@@ -129,22 +129,7 @@ static phys_addr_t __init memblock_align_down(phys_addr_t addr,
 	return (addr & ~(size - 1));
 }
 
-static unsigned long __init bootmap_bytes(unsigned long pages)
-{
-	unsigned long bytes = (pages + 7) / 8;
 
-	return ALIGN(bytes,sizeof(long));
-}
-/*
- * bootmem_bootmap_pages - calculate bitmap size in pages
- * @pages:number of pages the bitmap has to represent.
- */
-unsigned long __init bootmem_bootmap_pages(unsigned long pages)
-{
-	unsigned long bytes = bootmap_bytes(pages);
-
-	return PAGE_ALIGN(bytes) >> PAGE_SHIFT;
-}
 /*
  * Check whether the two region is overlaps in address.
  */
@@ -549,7 +534,7 @@ long __init_memblock memblock_add(phys_addr_t base,phys_addr_t size)
 /*
  * Add a region of reserve in top APT
  */
-int memblock_reserve(phys_addr_t base,phys_addr_t size)
+long __init_memblock memblock_reserve(phys_addr_t base,phys_addr_t size)
 {
 	struct memblock_type *reg = &memblock.reserved;
 
@@ -598,267 +583,10 @@ phys_addr_t memblock_alloc(phys_addr_t size,phys_addr_t align)
 {
 	return memblock_alloc_base(size,align,MEMBLOCK_ALLOC_ACCESSIBLE);
 }
-static void link_bootmem(struct bootmem_data *bdata)
-{
-	struct list_head *iter;
 
-	list_for_each(iter,&bdata_list) {
-		bootmem_data_t *ent;
 
-		ent = list_entry(iter,struct bootmem_data,list);
 
-		if(bdata->node_min_pfn < ent->node_min_pfn)
-			break;
-	}
-	list_add_tail(&bdata->list,iter);
-}
-/*
- * Init bootmem in core
- */
-static unsigned long __init init_bootmem_core(struct bootmem_data *bdata,
-		unsigned long mapstart,unsigned long start,unsigned long end)
-{
-	unsigned long mapsize;
 
-	mminit_validate_memmodel_limits(&start,&end);
-	/*
-	 * In order to use memory directly,we simualte memory.
-	 */
-	bdata->node_bootmem_map = phys_to_mem(PFN_PHYS(mapstart));
-	bdata->node_min_pfn = start;
-	bdata->node_low_pfn = end;
-	link_bootmem(bdata);
-	
-	/*
-	 * Initially all pages are reaserved -setup_arch() has to 
-	 * register free RAM areas explicitly.
-	 */
-	mapsize = bootmap_bytes(end - start);
-	memset(bdata->node_bootmem_map,0xFF,mapsize);
-
-	bdebug("nid=%d start=%p map=%p end=%p mapsize=%p\n",
-			(unsigned int)(bdata - bootmem_node_data),
-			(void *)start,(void *)mapstart,
-			(void *)end,(void *)mapsize);
-
-	return mapsize;
-}
-/*
- * init_bootmem_node -register a node as boot memory
- * @pgdat: node to register
- * @freepfn: pfn where the bitmap for this node is to be placed.
- * @startpfn: first pfn on the node.
- * @endpfn: first pfn after the node.
- *
- * Returns the number of bytes needed to hold the bitmap for this node.
- */
-static long __init init_bootmem_node(struct pglist_data *pgdat,
-		unsigned long freepfn,unsigned long start_pfn,unsigned long end_pfn)
-{
-	return init_bootmem_core(pgdat->bdata,freepfn,start_pfn,end_pfn);
-}
-/*
- * Initialize the arm bootmem
- */
-void arm_bootmem_init(unsigned int start_pfn,
-		unsigned int end_pfn)
-{
-	struct memblock_region *reg;
-	unsigned int boot_pages;
-	phys_addr_t bitmap;
-	pg_data_t *pgdat;
-
-	/*
-	 * Allocate the bootmem bitmap page.This must be in a region
-	 * of memory which has already mapped.
-	 */
-	boot_pages = bootmem_bootmap_pages(end_pfn - start_pfn);
-	bitmap = memblock_alloc_base(boot_pages << PAGE_SHIFT,L1_CACHE_BYTES,
-			__pfn_to_phys(end_pfn));
-	
-	/*
-	 * Initialise the bootmem allocator,handing the 
-	 * memory banks over to bootmem.
-	 */
-	node_set_online(0);
-	pgdat = NODE_DATA(0);
-	init_bootmem_node(pgdat,__phys_to_pfn(bitmap),start_pfn,end_pfn);
-
-	/*
-	 * Free the lowmem regions from memblock into bootmem.
-	 */
-	for_each_memblock(memory,reg)
-	{
-		unsigned long start = memblock_region_memory_base_pfn(reg);
-		unsigned long end   = memblock_region_memory_end_pfn(reg);
-
-		if(end > end_pfn)
-			end = end_pfn;
-		if(start > end)
-			break;
-		
-		free_bootmem(__pfn_to_phys(start),(end - start) << PAGE_SHIFT);
-	}
-	/*
-	 * Reserve the lowmem memblock reserved regions in bootmem.
-	 */
-	for_each_memblock(reserved,reg)
-	{
-		unsigned long start = memblock_region_reserved_base_pfn(reg);
-		unsigned long end = memblock_region_reserved_end_pfn(reg);
-		
-		if(end > end_pfn)
-			end = end_pfn;
-		if(start > end)
-			break;
-		
-		reserve_bootmem(__pfn_to_phys(start),
-				(end - start) << PAGE_SHIFT,BOOTMEM_DEFAULT);	
-	}
-}
-/*
- * Calculate the pages of pglist_data
- */
-static void calculate_node_totalpages(struct pglist_data *pgdat,
-		unsigned long *zone_sizes,unsigned long *zhole_size)
-{
-	unsigned long realpages,totalpages = 0;
-	enum zone_type i;
-
-	for(i = 0 ; i < MAX_NR_ZONES ; i++)
-	{
-		totalpages += zone_spanned_pages_in_node(pgdat->node_id,
-				i,zone_sizes);
-	}
-	pgdat->node_spanned_pages = totalpages;
-
-	realpages = totalpages;
-	for(i = 0 ; i < MAX_NR_ZONES ; i++)
-	{
-		realpages -= zone_absent_pages_in_node(pgdat->node_id,
-				i,zhole_size);
-	}
-	pgdat->node_present_pages = realpages;
-	mm_debug("On node %p totalpages %p\n",(void *)pgdat->node_id,
-			(void *)(unsigned long)realpages);
-}
-/*
- * Allocate node mem map.
- */
-static __init void alloc_node_mem_map(struct pglist_data *pgdat)
-{
-	/* Skip empty nodes. */
-	if(!pgdat->node_spanned_pages)
-		return;
-
-#ifdef CONFIG_FLAT_NODE_MEM_MAP
-	/* ia64 gets its own node_mem_map,before this,without bootmem */
-	if(!pgdat->node_mem_map) {
-		unsigned long size,start,end;
-		struct page *map;
-
-		/*
-		 * The zone's endpoints aren't required to be MAX_ORDER
-		 * aligned but the node_mem_map endpoints must be in order
-		 * for the buddy allocator to function correctly.
-		 */
-		start = pgdat->node_start_pfn & ~(MAX_ORDER_NR_PAGES - 1);
-		end   = pgdat->node_start_pfn + pgdat->node_spanned_pages;
-		end   = ALIGN(end,MAX_ORDER_NR_PAGES);
-		size  = (end - start) * sizeof(struct page);
-		map   = alloc_remap(pgdat->node_id,size);
-		if(!map)
-			map = (struct page *)(unsigned long)alloc_bootmem_node(pgdat,
-					size >> PAGE_SHIFT);
-		/*
-		 * In order to use node_mem_map directly,we use virtual memory address 
-		 * to replace the physcial address.Note,all address which allocate from
-		 * virtual memory use virtual memory address.
-		 */
-		pgdat->node_mem_map = 
-			(struct page *)(unsigned long)(phys_to_mem(__pa(map))) + 
-				(pgdat->node_start_pfn - start);
-	}
-#ifndef CONFIG_NEED_MULTIPLE_NODES
-	if(pgdat == NODE_DATA(0)) {
-		mem_map = 
-			(struct page *)(unsigned long)(
-					mem_to_phys(NODE_DATA(0)->node_mem_map));
-	}
-#endif
-#endif
-}
-
-static __init void free_area_init_node(int nid,unsigned long *zone_sizes,
-		unsigned long start_pfn,unsigned long *zhole_size)
-{
-	pg_data_t *pgdat = NODE_DATA(nid);
-
-	pgdat->node_id = nid;
-	pgdat->node_start_pfn = start_pfn;
-	calculate_node_totalpages(pgdat,zone_sizes,zhole_size);
-
-	alloc_node_mem_map(pgdat);
-#ifdef CONFIG_FLAT_NODE_MEM_MAP
-	mm_debug("free_area_init_node:node %lu,pgdat %p,node_mem_map %p\n",
-			pgdat->node_id,(void *)pgdat,(void *)pgdat->node_mem_map);
-#endif
-	free_area_init_core(pgdat,zone_sizes,zhole_size);
-}
-/*
- * ARM bootmem free
- * min,max_low and max_high in PFN.
- */
-void __init arm_bootmem_free(unsigned long min,unsigned long max_low,
-		unsigned long max_high)
-{
-	unsigned long zone_sizes[MAX_NR_ZONES],zhole_size[MAX_NR_ZONES];
-	struct memblock_region *reg;
-	
-	/*
-	 * Initialise the zones.
-	 */
-	memset(zone_sizes,0,sizeof(zone_sizes));
-
-	/*
-	 * The memory size has already been determmined.If we need
-	 * to do anything fancy with the allocation of this memory
-	 * to the zones,now is the time to do it.
-	 */
-	zone_sizes[0] = max_low - min;
-#ifdef CONFIG_HIGHMEM
-	zone_sizes[ZONE_HIGHMEM] = max_high - max_low;
-#endif
-	
-	/*
-	 * Calculate the size of the holes.
-	 * holes = node_size - sum(bank_size).
-	 */
-	memcpy(zhole_size,zone_sizes,sizeof(zone_sizes));
-	for_each_memblock(memory,reg) {
-		unsigned long start = memblock_region_memory_base_pfn(reg);
-		unsigned long end   = memblock_region_memory_end_pfn(reg);
-
-		if(start < max_low) {
-			unsigned long low_end = min(end,max_low);
-			zhole_size[0] -= low_end - start;
-		}
-#ifdef CONFIG_HIGHMEM
-		if(end > max_low)
-		{
-			unsigned long high_start = max(start,max_low);
-			zhole_size[1] -= end - high_start;
-		}
-#endif
-	}
-	/*
-	 * Adjust the sizes according to any special requirements for 
-	 * this machine type.
-	 */
-	arch_adjust_zones(zone_sizes,zhole_size);
-
-	free_area_init_node(0,zone_sizes,min,zhole_size);
-}
 
 static int __init early_memblock(char *p)
 {

@@ -82,7 +82,7 @@ static int parse_one(char *param,
 		}
 	}
 	if(handle_unknown) {
-		mm_debug("Inknown argument:calling %p\n",(void *)handle_unknown);
+		mm_notice("Inknown argument:calling %p\n",(void *)handle_unknown);
 		return handle_unknown(param,val);
 	}
 

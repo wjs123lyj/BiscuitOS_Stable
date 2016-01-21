@@ -2505,3 +2505,97 @@ void free_pages(unsigned long addr,unsigned int order)
 		//__free_pages(virt_to_page((void *)addr),order);
 	}
 }
+
+
+
+/*
+ * Allocate node mem map.
+ */
+static __init void alloc_node_mem_map(struct pglist_data *pgdat)
+{
+	/* Skip empty nodes. */
+	if(!pgdat->node_spanned_pages)
+		return;
+
+#ifdef CONFIG_FLAT_NODE_MEM_MAP
+	/* ia64 gets its own node_mem_map,before this,without bootmem */
+	if(!pgdat->node_mem_map) {
+		unsigned long size,start,end;
+		struct page *map;
+
+		/*
+		 * The zone's endpoints aren't required to be MAX_ORDER
+		 * aligned but the node_mem_map endpoints must be in order
+		 * for the buddy allocator to function correctly.
+		 */
+		start = pgdat->node_start_pfn & ~(MAX_ORDER_NR_PAGES - 1);
+		end   = pgdat->node_start_pfn + pgdat->node_spanned_pages;
+		end   = ALIGN(end,MAX_ORDER_NR_PAGES);
+		size  = (end - start) * sizeof(struct page);
+		map   = alloc_remap(pgdat->node_id,size);
+		if(!map)
+			map = (struct page *)(unsigned long)alloc_bootmem_node(pgdat,
+					size >> PAGE_SHIFT);
+		/*
+		 * In order to use node_mem_map directly,we use virtual memory address 
+		 * to replace the physcial address.Note,all address which allocate from
+		 * virtual memory use virtual memory address.
+		 */
+		pgdat->node_mem_map = 
+			(struct page *)(unsigned long)(phys_to_mem(__pa(map))) + 
+				(pgdat->node_start_pfn - start);
+	}
+#ifndef CONFIG_NEED_MULTIPLE_NODES
+	if(pgdat == NODE_DATA(0)) {
+		mem_map = 
+			(struct page *)(unsigned long)(
+					mem_to_phys(NODE_DATA(0)->node_mem_map));
+	}
+#endif
+#endif
+}
+
+
+/*
+ * Calculate the pages of pglist_data
+ */
+static void calculate_node_totalpages(struct pglist_data *pgdat,
+		unsigned long *zone_sizes,unsigned long *zhole_size)
+{
+	unsigned long realpages,totalpages = 0;
+	enum zone_type i;
+
+	for(i = 0 ; i < MAX_NR_ZONES ; i++)
+	{
+		totalpages += zone_spanned_pages_in_node(pgdat->node_id,
+				i,zone_sizes);
+	}
+	pgdat->node_spanned_pages = totalpages;
+
+	realpages = totalpages;
+	for(i = 0 ; i < MAX_NR_ZONES ; i++)
+	{
+		realpages -= zone_absent_pages_in_node(pgdat->node_id,
+				i,zhole_size);
+	}
+	pgdat->node_present_pages = realpages;
+	mm_debug("On node %p totalpages %p\n",(void *)pgdat->node_id,
+			(void *)(unsigned long)realpages);
+}
+
+__init void free_area_init_node(int nid,unsigned long *zone_sizes,
+		unsigned long start_pfn,unsigned long *zhole_size)
+{
+	pg_data_t *pgdat = NODE_DATA(nid);
+
+	pgdat->node_id = nid;
+	pgdat->node_start_pfn = start_pfn;
+	calculate_node_totalpages(pgdat,zone_sizes,zhole_size);
+
+	alloc_node_mem_map(pgdat);
+#ifdef CONFIG_FLAT_NODE_MEM_MAP
+	mm_debug("free_area_init_node:node %lu,pgdat %p,node_mem_map %p\n",
+			pgdat->node_id,(void *)pgdat,(void *)pgdat->node_mem_map);
+#endif
+	free_area_init_core(pgdat,zone_sizes,zhole_size);
+}

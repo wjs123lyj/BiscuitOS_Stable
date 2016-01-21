@@ -32,6 +32,7 @@ extern void *vectors_page;
 extern struct meminfo meminfo;
 extern pgprot_t protection_map[16];
 extern unsigned long long memparse(const char *ptr,char **retptr);
+long __init_memblock memblock_reserve(phys_addr_t base,phys_addr_t size);
 
 #define CPOLICY_UNCACHED        0
 #define CPOLICY_BUFFERED        1

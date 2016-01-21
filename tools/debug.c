@@ -5,8 +5,6 @@
 #include "linux/memblock.h"
 #include "linux/atomic.h"
 
-
-extern struct memblock memblock;
 extern struct meminfo meminfo;
 extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
 extern unsigned int memory_array1[CONFIG_BANK1_SIZE / BYTE_MODIFY];

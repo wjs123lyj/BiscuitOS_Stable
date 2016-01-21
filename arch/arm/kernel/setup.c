@@ -417,7 +417,7 @@ void __init setup_arch(char **cmdline_p)
 	struct tag *tags = (struct tag *)&init_tags;
 	struct machine_desc *mdesc;
 	char *from = default_command_line;
-
+	extern struct meminfo meminfo;
 	unwind_init();
 
 	setup_processor();
@@ -425,7 +425,7 @@ void __init setup_arch(char **cmdline_p)
 	mdesc = setup_machine(machine_arch_type);
 	machine_desc = mdesc;
 	machine_name = mdesc->name;
-
+	
 	if(mdesc->soft_reboot)
 		reboot_setup("s");
 
@@ -447,7 +447,7 @@ void __init setup_arch(char **cmdline_p)
 		tags = (struct tag *)&init_tags;
 
 
-	if(mdesc->fixup)
+	if(mdesc->fixup) 
 		mdesc->fixup(mdesc,tags,&from,&meminfo);
 
 	if(tags->hdr.tag == ATAG_CORE) {
@@ -467,7 +467,7 @@ void __init setup_arch(char **cmdline_p)
 	/* Populate cmd_line too for later use,preserving boot_command_line */
 	strcpy(cmd_line,boot_command_line);
 	*cmdline_p = cmd_line;
-	
+
 	parse_early_param();
 	
 	arm_memblock_init(&meminfo);

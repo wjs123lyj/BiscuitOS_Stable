@@ -5,4 +5,4 @@ CURRENT_SOURCE += register_simulate.c
 
 all:
 	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
-OBJS_PATH = ../../${OBJS_DIR}
+OBJS_PATH = ../${OBJS_DIR}

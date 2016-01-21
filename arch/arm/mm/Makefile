@@ -1,0 +1,10 @@
+CURRENT_SOURCE := init.c
+CURRENT_SOURCE += mmu.c
+CURRENT_SOURCE += highmem.c
+CURRENT_SOURCE += mmap.c
+CURRENT_SOURCE += nommu.c
+CURRENT_SOURCE += tlb.c
+
+all:
+	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
+OBJS_PATH = ../../../${OBJS_DIR}

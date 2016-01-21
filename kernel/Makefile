@@ -1,0 +1,10 @@
+CURRENT_SOURCE := params.c
+CURRENT_SOURCE += cpuset.c
+CURRENT_SOURCE += resource.c
+CURRENT_SOURCE += wait.c
+CURRENT_SOURCE += fork.c
+CURRENT_SOURCE += sched.c
+
+all:
+	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
+OBJS_PATH = ../${OBJS_DIR}

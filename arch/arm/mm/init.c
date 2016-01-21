@@ -14,13 +14,13 @@
 #include "linux/page-flags.h"
 #include "linux/vmstat.h"
 #include "linux/init.h"
+#include "asm/cache.h"
+#include "linux/bootmem.h"
 
-extern unsigned long max_pfn;
-extern unsigned long min_low_pfn;
-extern unsigned long max_low_pfn;
 
 static unsigned long phys_initrd_start __initdata = 0;
 static unsigned long phys_initrd_size  __initdata = 0;
+
 
 static int __init early_initrd(char *p)
 {
@@ -49,6 +49,61 @@ static int __init meminfo_cmp(const void *_a,const void *_b)
 	const struct membank *a = _a,*b = _b;
 	long cmp = bank_pfn_start(a) - bank_pfn_start(b);
 	return cmp < 0 ? -1 : cmp > 0 ? 1 : 0;
+}
+
+/*
+ * ARM bootmem free
+ * min,max_low and max_high in PFN.
+ */
+void __init arm_bootmem_free(unsigned long min,unsigned long max_low,
+		unsigned long max_high)
+{
+	unsigned long zone_sizes[MAX_NR_ZONES],zhole_size[MAX_NR_ZONES];
+	struct memblock_region *reg;
+	
+	/*
+	 * Initialise the zones.
+	 */
+	memset(zone_sizes,0,sizeof(zone_sizes));
+
+	/*
+	 * The memory size has already been determmined.If we need
+	 * to do anything fancy with the allocation of this memory
+	 * to the zones,now is the time to do it.
+	 */
+	zone_sizes[0] = max_low - min;
+#ifdef CONFIG_HIGHMEM
+	zone_sizes[ZONE_HIGHMEM] = max_high - max_low;
+#endif
+	
+	/*
+	 * Calculate the size of the holes.
+	 * holes = node_size - sum(bank_size).
+	 */
+	memcpy(zhole_size,zone_sizes,sizeof(zone_sizes));
+	for_each_memblock(memory,reg) {
+		unsigned long start = memblock_region_memory_base_pfn(reg);
+		unsigned long end   = memblock_region_memory_end_pfn(reg);
+
+		if(start < max_low) {
+			unsigned long low_end = min(end,max_low);
+			zhole_size[0] -= low_end - start;
+		}
+#ifdef CONFIG_HIGHMEM
+		if(end > max_low)
+		{
+			unsigned long high_start = max(start,max_low);
+			zhole_size[1] -= end - high_start;
+		}
+#endif
+	}
+	/*
+	 * Adjust the sizes according to any special requirements for 
+	 * this machine type.
+	 */
+	arch_adjust_zones(zone_sizes,zhole_size);
+
+	free_area_init_node(0,zone_sizes,min,zhole_size);
 }
 /*
  * Initialize memblock of ARM
@@ -484,7 +539,63 @@ void show_mem(void)
 	mm_debug("%p pages swap cached\n",(void *)(unsigned long)cached);
 }
 
+/*
+ * Initialize the arm bootmem
+ */
+void arm_bootmem_init(unsigned int start_pfn,
+		unsigned int end_pfn)
+{
+	struct memblock_region *reg;
+	unsigned int boot_pages;
+	phys_addr_t bitmap;
+	pg_data_t *pgdat;
 
+	/*
+	 * Allocate the bootmem bitmap page.This must be in a region
+	 * of memory which has already mapped.
+	 */
+	boot_pages = bootmem_bootmap_pages(end_pfn - start_pfn);
+	bitmap = memblock_alloc_base(boot_pages << PAGE_SHIFT,L1_CACHE_BYTES,
+			__pfn_to_phys(end_pfn));
+	
+	/*
+	 * Initialise the bootmem allocator,handing the 
+	 * memory banks over to bootmem.
+	 */
+	node_set_online(0);
+	pgdat = NODE_DATA(0);
+	init_bootmem_node(pgdat,__phys_to_pfn(bitmap),start_pfn,end_pfn);
+
+	/*
+	 * Free the lowmem regions from memblock into bootmem.
+	 */
+	for_each_memblock(memory,reg) {
+		unsigned long start = memblock_region_memory_base_pfn(reg);
+		unsigned long end   = memblock_region_memory_end_pfn(reg);
+
+		if(end > end_pfn)
+			end = end_pfn;
+		if(start > end)
+			break;
+		
+		free_bootmem(__pfn_to_phys(start),(end - start) << PAGE_SHIFT);
+	}
+	/*
+	 * Reserve the lowmem memblock reserved regions in bootmem.
+	 */
+	for_each_memblock(reserved,reg)	{
+		unsigned long start = memblock_region_reserved_base_pfn(reg);
+		unsigned long end = memblock_region_reserved_end_pfn(reg);
+		
+		if(end > end_pfn)
+			end = end_pfn;
+		if(start > end)
+			break;
+		
+		reserve_bootmem(__pfn_to_phys(start),
+				(end - start) << PAGE_SHIFT,BOOTMEM_DEFAULT);	
+	}
+}
 
 
 
