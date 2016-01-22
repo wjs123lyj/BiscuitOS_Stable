@@ -915,13 +915,13 @@ out:
 //	add_taint(TAINT_BAD_PAGE);
 }
 void __free_pages(struct page *page,unsigned long order);
+
 /*
  * Permit the bootmem allocator to evade page validation on high-order frees.
  */
 void __meminit __free_pages_bootmem(struct page *page,unsigned int order)
 {
-	if(order == 0)
-	{
+	if(order == 0) {
 		__ClearPageReserved(page);
 		set_page_count(page,0);
 		set_page_refcounted(page);
@@ -2534,8 +2534,8 @@ static __init void alloc_node_mem_map(struct pglist_data *pgdat)
 		size  = (end - start) * sizeof(struct page);
 		map   = alloc_remap(pgdat->node_id,size);
 		if(!map)
-			map = (struct page *)(unsigned long)alloc_bootmem_node(pgdat,
-					size >> PAGE_SHIFT);
+			map = (struct page *)(unsigned long)alloc_bootmem_node(pgdat,size);
+		
 		/*
 		 * In order to use node_mem_map directly,we use virtual memory address 
 		 * to replace the physcial address.Note,all address which allocate from
@@ -2565,19 +2565,17 @@ static void calculate_node_totalpages(struct pglist_data *pgdat,
 	unsigned long realpages,totalpages = 0;
 	enum zone_type i;
 
-	for(i = 0 ; i < MAX_NR_ZONES ; i++)
-	{
+	for(i = 0 ; i < MAX_NR_ZONES ; i++) 
 		totalpages += zone_spanned_pages_in_node(pgdat->node_id,
 				i,zone_sizes);
-	}
+	
 	pgdat->node_spanned_pages = totalpages;
 
 	realpages = totalpages;
 	for(i = 0 ; i < MAX_NR_ZONES ; i++)
-	{
 		realpages -= zone_absent_pages_in_node(pgdat->node_id,
 				i,zhole_size);
-	}
+	
 	pgdat->node_present_pages = realpages;
 	mm_debug("On node %p totalpages %p\n",(void *)pgdat->node_id,
 			(void *)(unsigned long)realpages);

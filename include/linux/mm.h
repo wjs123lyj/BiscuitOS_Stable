@@ -6,6 +6,7 @@
 #include "numa.h"
 #include "atomic.h"
 #include "debug.h"
+#include "page-flags.h"
 
 
 #define SECTIONS_WIDTH      0
@@ -16,8 +17,6 @@
 #define NODES_PGOFF         (SECTIONS_PGOFF - NODES_WIDTH)
 #define ZONES_PGOFF         (NODES_PGOFF - ZONES_WIDTH)
 
-#define PageTail(x) (x)
-#define PageHead(x) (1)
 /*
  * Define the bit shift to access each section.For non-existant
  * sections we define the shift as 0;that plus a 0 mask ensures
@@ -146,7 +145,20 @@ static inline pgoff_t page_index(struct page *page)
 	return page->index;
 }
 /*
- * Drop a ref,return true if the refcount fell to zero(the page has no users)
+ * Methods to modify the page usage count.
+ *
+ * What counts for a page usage:
+ * - cacahe mapping (page->mapping)
+ * - private data   (page->private)
+ * - page mapped in a task's page tables,each mapping
+ * is counted separately.
+ *
+ * Also,many kernel routines increase the page count before a critical
+ * routine so they can be sure the page doesn't go away from under them.
+ */
+
+/*
+ * Drop a ref,return true if the refcount fell the zero(the page has no users)
  */
 static inline int put_page_testzero(struct page *page)
 {

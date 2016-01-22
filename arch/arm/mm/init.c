@@ -182,7 +182,7 @@ void __init bootmem_init(void)
 	max_low = max_high = 0;
 
 	find_limits(&min,&max_low,&max_high);
-	
+
 	arm_bootmem_init(min,max_low);
 
 	/*
@@ -228,15 +228,12 @@ static inline void free_memmap(unsigned long start_pfn,unsigned long end_pfn)
 	start_pg = pfn_to_page(start_pfn - 1) + 1;
 	end_pg   = pfn_to_page(end_pfn);
 
-	mm_debug("mem_map %p\n",mem_map);
-	mm_debug("start_pg %p flags \n",pfn_to_page(start_pfn));
-	mm_debug("start_pg %p end_pg %p\n",start_pg,end_pg);
 	/*
 	 * Convert to physical addresses,and
 	 * round start upwards and end downwards.
 	 */
-	pg = PAGE_ALIGN(__pa(start_pg));
-	pgend = __pa(end_pg) & PAGE_MASK;
+	pg = PAGE_ALIGN(mem_to_phys(start_pg));
+	pgend = mem_to_phys(end_pg) & PAGE_MASK;
 
 	/*
 	 * If there are free pages between these,
@@ -557,7 +554,7 @@ void arm_bootmem_init(unsigned int start_pfn,
 	boot_pages = bootmem_bootmap_pages(end_pfn - start_pfn);
 	bitmap = memblock_alloc_base(boot_pages << PAGE_SHIFT,L1_CACHE_BYTES,
 			__pfn_to_phys(end_pfn));
-	
+
 	/*
 	 * Initialise the bootmem allocator,handing the 
 	 * memory banks over to bootmem.
@@ -580,6 +577,7 @@ void arm_bootmem_init(unsigned int start_pfn,
 		
 		free_bootmem(__pfn_to_phys(start),(end - start) << PAGE_SHIFT);
 	}
+	
 	/*
 	 * Reserve the lowmem memblock reserved regions in bootmem.
 	 */
@@ -596,12 +594,3 @@ void arm_bootmem_init(unsigned int start_pfn,
 				(end - start) << PAGE_SHIFT,BOOTMEM_DEFAULT);	
 	}
 }
-
-
-
-
-
-
-
-
-

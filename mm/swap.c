@@ -6,6 +6,7 @@
 #include "linux/atomic.h"
 #include "linux/spinlock.h"
 #include "linux/mm_inline.h"
+#include "asm/system.h"
 
 /*
  * This path almost never happens for VM activity - pages are normally

@@ -553,12 +553,10 @@ phys_addr_t __init __memblock_alloc_base(phys_addr_t size,phys_addr_t align,
 	 * small allocs quickly eat up the whole reserved array on sparc.
 	 */
 	size = memblock_align_up(size,align);
-
 	found = memblock_find_base(size,align,0,max);
 	if(found != MEMBLOCK_ERROR &&
 		memblock_add_region(&memblock.reserved,found,size) >= 0)
 		return found;
-	
 	return 0;
 }
 /*

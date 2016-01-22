@@ -50,7 +50,8 @@ extern void *phys_to_mem(phys_addr_t addr);
  * @page uses a virtual memory address.
  */
 #define pfn_to_page(pfn)     \
-	phys_to_mem(((phys_addr_t)(unsigned long)(mem_map +  \
+	(struct page *)(unsigned long)phys_to_mem(     \
+			((phys_addr_t)(unsigned long)(mem_map +  \
 			((pfn) - PHYS_PFN_OFFSET))))
 /*
  * Note: In order to ignore the Virtual Memory layer,we use the Virtual

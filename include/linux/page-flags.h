@@ -178,17 +178,6 @@ PAGEFLAG_FALSE(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)
 
 
 /*
- * PG_reclaim is used in combination with PG_compound to mark the
- * head and tail of a compound page.This saves one page flag
- * but makes it impossible to use compound pages for the page cache.
- * The PG_reclaim bit would have to be used for relaim or readahead
- * if compound pages enter the page cache.
- *
- * PG_compound & PG_reclaim     ==> Tail page
- * PG_compound & ~PG_reclaim    ==> Head page
- */
-#define PG_head_tail_mask    ((1L << PG_compound) | (1L << PG_reclaim))
-/*
  * Flags checked when a page is prepped for return by the page allocator.
  * Pages being prepped should not have any flags set.It they are set,
  * there has been a kernel bug or struct page corruption.
@@ -202,11 +191,29 @@ PAGEFLAG_FALSE(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)
  * is generally not used in hot code paths.
  */
 #ifdef CONFIG_PAGEFLAGS_EXTENDED
+/*
+ * System with lost of page flags available.This allows separate
+ * flags for PageHead() and PageTail() check of compound pages so that bit
+ * test can be used in performance sensitive paths.PageCompound is
+ * generally not used in hot code paths.
+ */
+__PAGEFLAG(Head,head) CLEARPAGEFLAG(Head,head)
 __PAGEFLAG(Tail,tail)
 
+static inline int PageCompound(struct page *page)
+{
+	return page->flags & ((1L << PG_head) | (1L << PG_tail));
+}
+
 #else
-
-
+/*
+ * Reduce page flag use as possible by overlapping
+ * compound page flags with the flags used for page cache pages.
+ * Possible because PageCompound is always set for compound pages and
+ * not for pages on the LRU and/or pagecache.
+ */
+TESTPAGEFLAG(Compound,compound)
+__PAGEFLAG(Head,compound)
 /*
  * PG_reclaim is used in combination with PG_compound to mark the 
  * head and tail of a compound page.This saves one page flag
@@ -218,7 +225,12 @@ __PAGEFLAG(Tail,tail)
  * PG_compound & ~PG_recaim     => Head page
  */
 #define PG_head_tail_mask ((1L << PG_compound) | (1L << PG_reclaim))
-	
+
+static inline int PageTail(struct page *page)
+{
+	return ((page->flags & PG_head_tail_mask) == PG_head_tail_mask);
+}
+
 static inline void __ClearPageTail(struct page *page)
 {
 	page->flags &= ~PG_head_tail_mask;

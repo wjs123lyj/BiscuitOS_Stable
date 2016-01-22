@@ -1,0 +1,56 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BITMAP_show	debug.c	/^void BITMAP_show(unsigned int *bitmap,unsigned long bits)$/;"	f
+BK_show	debug.c	/^void BK_show(char *s)$/;"	f
+B_show	debug.c	/^void B_show(char *s)$/;"	f
+CP15_C00	register_simulate.c	/^unsigned int CP15_C00 = 0; \/* ID register *\/$/;"	v
+CP15_C01	register_simulate.c	/^unsigned int CP15_C01 = 0; \/* Cache type register *\/$/;"	v
+CP15_C1	register_simulate.c	/^unsigned int CP15_C1 = 0;$/;"	v
+CP15_C2	register_simulate.c	/^unsigned int CP15_C2 = 0;$/;"	v
+CP15_C3	register_simulate.c	/^unsigned int CP15_C3 = 0;$/;"	v
+CP15_C4	register_simulate.c	/^unsigned int CP15_C4 = 0;$/;"	v
+CP15_C5	register_simulate.c	/^unsigned int CP15_C5 = 0;$/;"	v
+CP15_C6	register_simulate.c	/^unsigned int CP15_C6 = 0;$/;"	v
+CURRENT_SOURCE	Makefile	/^CURRENT_SOURCE := bitmap.c$/;"	m
+MEM0_OFFSET	boot_arch.c	/^unsigned int MEM0_OFFSET;$/;"	v
+MEM1_OFFSET	boot_arch.c	/^unsigned int MEM1_OFFSET;$/;"	v
+M_show	debug.c	/^void M_show(phys_addr_t start,phys_addr_t end)$/;"	f
+OBJS_PATH	Makefile	/^OBJS_PATH = ..\/${OBJS_DIR}$/;"	m
+R_show	debug.c	/^void R_show(char *s)$/;"	f
+ST_bootmem_data	debug.c	/^void ST_bootmem_data(struct bootmem_data *bdata)$/;"	f
+ST_node_zones	debug.c	/^void ST_node_zones(struct zone *zone,int nr)$/;"	f
+ST_page	debug.c	/^void ST_page(struct page *page)$/;"	f
+ST_pglist_data	debug.c	/^void ST_pglist_data(void)$/;"	f
+ST_zone	debug.c	/^void ST_zone(struct zone *zone)$/;"	f
+ST_zone_reclaim_stat	debug.c	/^void ST_zone_reclaim_stat(struct zone_reclaim_stat *zr)$/;"	f
+ST_zonelist	debug.c	/^void ST_zonelist(struct zonelist *zl)$/;"	f
+ST_zonelist_cache	debug.c	/^void ST_zonelist_cache(struct zonelist_cache *zc)$/;"	f
+V_show	debug.c	/^void V_show(void *addr,unsigned long size)$/;"	f
+__B_show	debug.c	/^void __B_show(unsigned long *bitmap,char *s)$/;"	f
+__R_show	debug.c	/^void __R_show(struct memblock_type *type,char *type_name,char *s)$/;"	f
+clear_bit	bitmap.c	/^void clear_bit(int nr,unsigned int *byte)$/;"	f
+do_check	test.c	/^int do_check(void)$/;"	f
+find_next_bit	bitmap.c	/^int find_next_bit(unsigned int *addr,unsigned long size,$/;"	f
+find_next_zero_bit	bitmap.c	/^int find_next_zero_bit(unsigned int *byte,$/;"	f
+get_cr1	register_simulate.c	/^u32 get_cr1(void)$/;"	f
+get_cr2	register_simulate.c	/^u32 get_cr2(void)$/;"	f
+high_to_low	debug.c	/^unsigned int high_to_low(unsigned int old)$/;"	f
+init_CP15	register_simulate.c	/^void __uboot init_CP15(void)$/;"	f
+kstrdup	util.c	/^char *kstrdup(const char *s,gfp_t gfp)$/;"	f
+mem_to_phys	boot_arch.c	/^phys_addr_t mem_to_phys(void *ad)$/;"	f
+memory_array0	boot_arch.c	/^unsigned int memory_array0[CONFIG_BANK0_SIZE \/ BYTE_MODIFY];$/;"	v
+memory_array1	boot_arch.c	/^unsigned int memory_array1[CONFIG_BANK1_SIZE \/ BYTE_MODIFY];	$/;"	v
+phys_to_mem	boot_arch.c	/^void *phys_to_mem(phys_addr_t addr)$/;"	f
+r1	register_simulate.c	/^static u32 r1;$/;"	v	file:
+r2	register_simulate.c	/^static u32 r2;$/;"	v	file:
+set_bit	bitmap.c	/^void set_bit(int nr,unsigned int *byte)$/;"	f
+set_cr1	register_simulate.c	/^void set_cr1(u32 value)$/;"	f
+set_cr2	register_simulate.c	/^void set_cr2(u32 value)$/;"	f
+test_and_clear_bit	bitmap.c	/^int test_and_clear_bit(int nr,unsigned int *byte)$/;"	f
+test_and_set_bit	bitmap.c	/^int test_and_set_bit(int nr,unsigned int *byte)$/;"	f
+test_bit	bitmap.c	/^int test_bit(int nr,unsigned int *byte)$/;"	f
+virtual_memory_init	boot_arch.c	/^void __uboot virtual_memory_init(void)$/;"	f

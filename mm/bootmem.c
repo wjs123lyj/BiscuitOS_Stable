@@ -299,7 +299,7 @@ find_block:
 		
 		region = (void *)(unsigned long)phys_to_virt(
 				 PFN_PHYS(bdata->node_min_pfn) + start_off);
-	
+		
 		/*
 		 * In order to ignore the Virtual Memory,we indicate that
 		 * will get virtual memory address when you request memory from system.
@@ -483,9 +483,7 @@ void * __init __alloc_bootmem_node_nopanic(struct pglist_data *pgdat,
 
 	return __alloc_bootmem_nopanic(size,align,goal);
 }
-/*
- * Free core.
- */
+
 static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
 {
 	int aligned;
@@ -509,30 +507,26 @@ static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
 			(void *)start,(void *)end,
 			(void *)(unsigned long)aligned);
 
-	while(start < end)
-	{
-		unsigned long *map,idx,vec;
+	while(start < end) {
+		unsigned int *map,idx,vec;
 
 		map = bdata->node_bootmem_map;
 		idx = start - bdata->node_min_pfn;
 		vec = ~map[idx / BITS_PER_LONG];
 
-		if(aligned && vec == ~0UL && start + BITS_PER_LONG < end)
-		{
-			int order = 0;//ilog2(BITS_PER_LONG);
+		if(aligned && vec == ~0UL && start + BITS_PER_LONG < end) {
+			int order = ilog2(BITS_PER_LONG);
 
 			__free_pages_bootmem(pfn_to_page(start),order);
 			count += BITS_PER_LONG;
-		} else
-		{
+		} else {
 			unsigned long off = 0;
 
-			while(vec && off < BITS_PER_LONG)
-			{
-				if(vec & 1)
-				{
+			while(vec && off < BITS_PER_LONG) {
+				if(vec & 1) {
 					page = pfn_to_page(start + off);
 					__free_pages_bootmem(page,0);
+					count++;
 				}
 				vec >>= 1;
 				off++;
@@ -562,7 +556,7 @@ unsigned long __init free_all_bootmem(void)
 	unsigned long total_pages = 0;
 	struct bootmem_data *bdata;
 
-	list_for_each_entry(bdata,&bdata_list,list)
+	list_for_each_entry(bdata,&bdata_list,list) 
 		total_pages += free_all_bootmem_core(bdata);
 
 	return total_pages;
@@ -599,7 +593,7 @@ unsigned long __init init_bootmem_core(struct bootmem_data *bdata,
 	bdata->node_min_pfn = start;
 	bdata->node_low_pfn = end;
 	link_bootmem(bdata);
-	
+
 	/*
 	 * Initially all pages are reaserved -setup_arch() has to 
 	 * register free RAM areas explicitly.

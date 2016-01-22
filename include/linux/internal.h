@@ -2,6 +2,7 @@
 #define _INTERNAL_H_    1
 #include "mm_types.h"
 #include "mm.h"
+#include "page-flags.h"
 
 /*
  * Memory initialisation debug and verification.
