@@ -215,8 +215,8 @@ static void * __init alloc_bootmem_core(struct bootmem_data *bdata,
 	unsigned long fallback = 0;
 	unsigned long min,max,start,sidx,midx,step;
 
-	mm_debug("nid=%p size=%p[%p pages]align=%p goal=%p limit=%p\n",
-			(void *)(bdata - bootmem_node_data),(void *)size,
+	mm_debug("nid=%d size=%p[%p pages]align=%p goal=%p limit=%p\n",
+			(unsigned int)(bdata - bootmem_node_data),(void *)size,
 				(void *)(PAGE_ALIGN(size) >> PAGE_SHIFT),
 				(void *)align,(void *)goal,(void *)limit);
 
@@ -305,6 +305,7 @@ find_block:
 		 * will get virtual memory address when you request memory from system.
 		 */
 		memset(phys_to_mem(virt_to_phys(region)),0,size);
+
 		/*
 		 * The min_count is set to 0 so that bootmem allocated blocks
 		 * are never reported as leaks.

@@ -145,7 +145,7 @@ static void __init request_standard_resource(struct machine_desc *mdesc)
 
 	for_each_memblock(memory,region) {
 		res = (struct resource *)(unsigned long)(
-				phys_to_mem(__pa(alloc_bootmem_low(2 * sizeof(*res)))));
+				phys_to_mem(__pa(alloc_bootmem_low(sizeof(*res)))));
 		res->name = "SystemRAM";
 		res->start = __pfn_to_phys(memblock_region_memory_base_pfn(region));
 		res->end   = __pfn_to_phys(memblock_region_memory_end_pfn(region));

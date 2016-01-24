@@ -150,6 +150,16 @@ PAGEFLAG_FALSE(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)
 	TESTCLEARFLAG_FALSE(Mlocked) __TESTCLEARFLAGS_FALSE(Mlocked)
 #endif
 
+#ifdef CONFIG_HIGHMEM
+/*
+ * Must use a macro here due to header dependency issues.page_zone() is not
+ * available at this point.
+ */
+#define PageHighMem(__p) is_highmem(page_zone(__p))
+
+#else
+PAGEFLAG_FALSE(HighMem)
+#endif
 
 #ifdef CONFIG_MMU
 #define __PG_MLOCKED         (1 << PG_mlocked)

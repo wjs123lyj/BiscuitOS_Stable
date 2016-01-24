@@ -28,4 +28,7 @@ static inline void kmemcheck_slab_alloc(struct kmem_cache *s,gfp_t gfpflags,
 		void *object,size_t size)
 {
 }
+static inline void kmemcheck_free_shadow(struct page *page,int order)
+{
+}
 #endif

@@ -316,10 +316,21 @@ static inline int is_vmalloc_addr(const void *x)
 	return 0;
 #endif
 }
+#ifdef CONFIG_DEBUG_PAGEALLOC
+extern int debug_pagealloc_enabled;
 
+extern void kernel_map_pages(struct page *page,int numpages,int enable);
 
+static inline void enable_debug_pagealloc(void)
+{
+	debug_pagealloc_enabled = 1;
+}
+#else
 
-
+static inline void kernel_map_pages(struct page *page,int numpages,int enable)
+{
+}
+#endif
 
 
 #endif

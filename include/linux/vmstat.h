@@ -54,4 +54,7 @@ static inline unsigned long zone_page_state(struct zone *zone,
 {
 	long x = atomic_long_read(&zone->vm_stat[item]);
 }
+static inline void __count_vm_event(int a)
+{
+}
 #endif

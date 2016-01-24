@@ -4,6 +4,7 @@
 #define local_irq_restore(x) do {} while(0)
 #define local_irq_enable()   do {} while(0)
 #define local_irq_disable()   do {} while(0)
+#define local_irq_save(x)     do {} while(0)
 #define irqs_disabled()       1
 
 #endif

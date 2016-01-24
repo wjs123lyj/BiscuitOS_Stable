@@ -22,12 +22,9 @@
 #include "linux/irqflags.h"
 #include "linux/printk.h"
 #include "linux/init.h"
+#include "linux/kmemcheck.h"
 
 
-
-void kmemcheck_free_shadow(struct page *page,int order)
-{
-}
 /*
  * Minimum number of partial slabs.These will be left on the partial
  * lists even if they are empty.kmem_cache_shrink may reclaim them.

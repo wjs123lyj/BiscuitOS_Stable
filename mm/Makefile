@@ -2,6 +2,7 @@ CURRENT_SOURCE := memblock.c
 CURRENT_SOURCE += bootmem.c
 CURRENT_SOURCE += page_alloc.c
 CURRENT_SOURCE += debug-pagealloc.c
+CURRENT_SOURCE += highmem.c
 CURRENT_SOURCE += init-mm.c
 CURRENT_SOURCE += kmemcheck.c
 CURRENT_SOURCE += memcontrol.c

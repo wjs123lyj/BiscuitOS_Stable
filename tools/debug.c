@@ -337,3 +337,31 @@ void V_show(void *addr,unsigned long size)
 	}
 }
 
+/*
+ * Get the binary
+ */
+void binary(unsigned int data)
+{
+	char value[33];
+	int i;
+	for(i = 0 ; i < 32 ; i++) {
+		if(data & 0x1)
+			value[31 - i] = '1';
+		else
+			value[31 - i] = '0';
+		data >>= 1;
+	}
+	value[32] = '\0';
+	mm_debug("binary %s\n",value);
+}
+void check(char *name)
+{
+	struct zone *zone = &NODE_DATA(0)->node_zones[0];
+
+	mm_debug("[%s]zone:%s pageblock_flags:%p \n",
+				name,zone->name,*zone->pageblock_flags);
+}
+void stop(void)
+{
+	while(1);
+}

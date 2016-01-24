@@ -81,7 +81,7 @@
 /*
  * Support page alloc debug.
  */
-#define CONFIG_DEBUG_PAGEALLOC
+//#define CONFIG_DEBUG_PAGEALLOC
 /*
  * Support page flags debug.
  */

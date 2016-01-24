@@ -3,6 +3,8 @@
 #include "linux/page-debug-flags.h"
 #include "linux/debug.h"
 
+
+#ifdef CONFIG_DEBUG_PAGEALLOC
 extern int debug_pagealloc_enabled;
 
 static inline set_page_poison(struct page *page)
@@ -119,3 +121,4 @@ void kernel_map_pages(struct page *page,int numpages,int enable)
 	else
 		poison_pages(page,numpages);
 }
+#endif

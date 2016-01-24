@@ -382,9 +382,9 @@ void __meminit memmap_init_zone(unsigned long size,int nid,unsigned long zone,
 		 */
 		if((z->zone_start_pfn <= pfn)
 				&& (pfn < z->zone_start_pfn + z->spanned_pages)
-				&& !(pfn & (pageblock_nr_pages - 1)))
+				&& !(pfn & (pageblock_nr_pages - 1))) {
 			set_pageblock_migratetype(page,MIGRATE_MOVABLE);
-		
+		}
 		INIT_LIST_HEAD(&page->lru);
 #ifdef WANT_PAGE_VIRTUAL
 		/* The shift won't overflow because ZONE_NORMAL is below 4G */
@@ -892,9 +892,8 @@ void dump_page(struct page *page)
 			(void *)page->mapping,(void *)page->index);
 	dump_page_flags(page->flags);
 }
-/*
- * Bad page.
- */
+
+
 static void bad_page(struct page *page)
 {
 	static unsigned long resume;
@@ -902,8 +901,7 @@ static void bad_page(struct page *page)
 	static unsigned long nr_unshown;
 
 	/* Don't complain about poisoned pages */
-	if(PageHWPoison(page))
-	{
+	if(PageHWPoison(page)) {
 		__ClearPageBuddy(page);
 		return;
 	}
@@ -945,13 +943,13 @@ void __meminit __free_pages_bootmem(struct page *page,unsigned int order)
 		__free_pages(page,order);
 	}
 }
+
 static inline int free_pages_check(struct page *page)
 {
 	if(unlikely(page_mapcount(page) |
-				(page->mapping != NULL) |
+				(page->mapping != NULL) | 
 				(atomic_read(&page->_count) != 0) |
-				(page->flags & PAGE_FLAGS_CHECK_AT_FREE)))
-	{
+				(page->flags & PAGE_FLAGS_CHECK_AT_FREE))) {
 		bad_page(page);
 		return 1;
 	}
@@ -968,7 +966,7 @@ static bool free_pages_prepare(struct page *page,unsigned int order)
 	int bad = 0;
 	
 	kmemcheck_free_shadow(page,order);
-
+	
 	if(PageAnon(page))
 		page->mapping = NULL;
 	for(i = 0 ; i < (1 << order) ; i++)
@@ -976,9 +974,7 @@ static bool free_pages_prepare(struct page *page,unsigned int order)
 	if(bad)
 		return false;
 
-	//if(!PageHighMem(page))
-	if(1)
-	{
+	if(!PageHighMem(page)) {
 		debug_check_no_locks_freed((void *)(unsigned long)page_address(page),
 				PAGE_SIZE << order);
 		debug_check_no_obj_freed((void *)(unsigned long)page_address(page),
@@ -990,7 +986,12 @@ static bool free_pages_prepare(struct page *page,unsigned int order)
 	return true;
 }
 /*
- * Return the request group of flags for the pageblock_nr_block of pages.
+ * get_pageblock_flags_group - Return the requested group of flags for the
+ * pageblock_nr_pages of pages.
+ * @page: The page within the block of interest.
+ * @start_bitidx: The first bit of interest to retrieve
+ * @end_bitidx: The last bit of interest
+ * returns pageblock_bits flags
  */
 unsigned long get_pageblock_flags_group(struct page *page,
 		int start_bitidx,int end_bitidx)
@@ -1001,7 +1002,8 @@ unsigned long get_pageblock_flags_group(struct page *page,
 	unsigned long flags = 0;
 	unsigned long value = 1;
 
-	zone = NULL;//page_zone(page);
+
+	zone = page_zone(page);
 	pfn  = page_to_pfn(page);
 	bitmap = get_pageblock_bitmap(zone,pfn);
 	bitidx = pfn_to_bitidx(zone,pfn);
@@ -1009,7 +1011,7 @@ unsigned long get_pageblock_flags_group(struct page *page,
 	for(; start_bitidx <= end_bitidx ; start_bitidx++ , value <<= 1)
 		if(test_bit(bitidx + start_bitidx,bitmap))
 			flags |= value;
-
+	
 	return flags;
 }
 /*
@@ -1019,7 +1021,6 @@ unsigned long get_pageblock_flags_group(struct page *page,
 static inline void free_page_mlock(struct page *page)
 {
 	__dec_zone_page_state(page,NR_MLOCK);
-//	__count_vm_event(UNEVICTABLE_MLOCKFREED);
 }
 static int page_is_consistent(struct zone *zone,struct page *page)
 {
@@ -1304,7 +1305,7 @@ static void free_pcppages_bulk(struct zone *zone,int count,
  */
 void free_hot_cold_page(struct page *page,int cold)
 {
-	struct zone *zone = NULL;//page_zone(page);
+	struct zone *zone = page_zone(page);
 	struct per_cpu_pages *pcp;
 	unsigned long flags;
 	int migratetype;
@@ -1315,10 +1316,10 @@ void free_hot_cold_page(struct page *page,int cold)
 
 	migratetype = get_pageblock_migratetype(page);
 	set_page_private(page,migratetype);
-//	loca_irq_save(flags);
-	if(unlikely(wasMlocked))
+	local_irq_save(flags);
+	if(unlikely(wasMlocked)) 
 		free_page_mlock(page);
-//	__count_vm_event(PGFREE);
+	
 	/*
 	 * We only track unmovable,reclaimable and movable on pcp lists.
 	 * Free ISOLATE pages back to the allocator because they are being
@@ -1326,10 +1327,8 @@ void free_hot_cold_page(struct page *page,int cold)
 	 * areas back if necessary.Otherwise,we may have to free 
 	 * excessively into the page allocator.
 	 */
-	if(migratetype >= MIGRATE_PCPTYPES)
-	{
-		if(unlikely(migratetype == MIGRATE_ISOLATE))
-		{
+	if(migratetype >= MIGRATE_PCPTYPES) {
+		if(unlikely(migratetype == MIGRATE_ISOLATE)) {
 			free_one_page(zone,page,0,migratetype);
 			goto out;
 		}
@@ -1340,9 +1339,9 @@ void free_hot_cold_page(struct page *page,int cold)
 		list_add_tail(&page->lru,&pcp->lists[migratetype]);
 	else
 		list_add(&page->lru,&pcp->lists[migratetype]);
+	mm_debug("")
 	pcp->count++;
-	if(pcp->count >= pcp->high)
-	{
+	if(pcp->count >= pcp->high) {
 		free_pcppages_bulk(zone,pcp->batch,pcp);
 		pcp->count -= pcp->batch;
 	}
@@ -1368,13 +1367,10 @@ static void __free_pages_ok(struct page *page,unsigned int order)
 //	local_irq_restore(flags);
 
 }
-/*
- * __free_pages
- */
+
 void __free_pages(struct page *page,unsigned long order)
 {
-	if(put_page_testzero(page))
-	{
+	if(put_page_testzero(page)) {
 		if(order == 0)
 			free_hot_cold_page(page,0);
 		else

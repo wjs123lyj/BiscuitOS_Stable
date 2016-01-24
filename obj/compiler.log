@@ -1,0 +1,4 @@
+debug.c: In function ‘check’:
+debug.c:362:5: warning: format ‘%p’ expects argument of type ‘void *’, but argument 4 has type ‘long unsigned int’ [-Wformat=]
+     name,zone->name,*zone->pageblock_flags);
+     ^

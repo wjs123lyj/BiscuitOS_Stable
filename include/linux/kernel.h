@@ -59,9 +59,10 @@ enum system_states {
 		__x > __y ? y : x; \
 		})
 
-#define ALIGN(x,align) ({ \
-		((x) & ~((align) - 1)); \
-		})
+#define __ALIGN_KERNEL_MASK(x,mask)    (((x) + (mask)) & ~(mask))
+#define __ALIGN_KERNEL(x,a)    __ALIGN_KERNEL_MASK(x,(typeof(x))(a) - 1)
+
+#define ALIGN(x,a)       __ALIGN_KERNEL((x),(a))
 #define PTR_ALIGN(p,a)   ((typeof(p))ALIGN((unsigned long)(p),(a)))
 #define IS_ALIGNED(x,a)  (((x) & ((typeof(x))(a) - 1)) == 0)
 
