@@ -428,8 +428,11 @@ static inline int get_pageblock_migratetype(struct page *page)
  * pfn_valid_within() should be used in this case;we optimise this away
  * when we have no holes within a MAX_ORDER_NR_PAGES block.
  */
-#define pfn_valid(x) (1)
+#ifdef CONFIG_HOLES_IN_ZONE
 #define pfn_valid_within(pfn) pfn_valid(pfn)
+#else
+#define pfn_valid_within(pfn)  (1)
+#endif
 
 /*
  * Section

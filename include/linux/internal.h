@@ -34,9 +34,7 @@ static inline void set_page_refcounted(struct page *page)
  */
 static inline unsigned long page_order(struct page *page)
 {
-	/*
-	 * PageBuddy() must be checked by the caller.
-	 */
+	/* PageBuddy() must be checked by the caller. */
 	return page_private(page);
 }
 #define ZONE_RECLAIM_NOSCAN        -2

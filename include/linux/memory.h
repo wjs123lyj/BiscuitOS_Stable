@@ -5,6 +5,8 @@
 #define arch_adjust_zones(size,holes) do {} while(0)
 #endif
 
+#define MODULES_VADDR (PAGE_OFFSET - 16 * 1024 * 1024)
+
 /*
  * The highmem pkmap virtual space shares the end of the module area.
  */
@@ -17,7 +19,7 @@
 #ifndef CONSISTENT_DMA_SIZE
 #define CONSISTENT_DMA_SIZE   SZ_2M
 #endif
-#define TASK_SIZE          0xC0000000
+#define TASK_SIZE          (UL(CONFIG_PAGE_OFFSET) - UL(0x01000000))
 #define CONSISTENT_END     0xFFE00000UL
 #define CONSISTENT_BASE    (CONSISTENT_END - CONSISTENT_DMA_SIZE)
 

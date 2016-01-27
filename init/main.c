@@ -28,6 +28,7 @@ static void __init mm_init(void)
 	 */	
 	page_cgroup_init_flatmem();
 	mem_init();
+	kmem_cache_init();
 }
 void __init smp_setup_processor_id(void)
 {
@@ -82,6 +83,7 @@ static void start_kernel(void)
 
 	smp_setup_processor_id();
 
+	page_address_init();
 	setup_arch(&command_line);
 	mm_init_owner(&init_mm,&init_task);
 	build_all_zonelists(NULL);

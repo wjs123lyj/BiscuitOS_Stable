@@ -2,6 +2,7 @@
 #include "linux/setup.h"
 #include "linux/debug.h"
 
+
 unsigned int MEM0_OFFSET;
 #ifdef CONFIG_BOTH_BANKS
 unsigned int MEM1_OFFSET;

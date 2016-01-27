@@ -237,9 +237,7 @@ static inline struct zonelist *node_zonelist(int nid,gfp_t flags)
 {
 	return NODE_DATA(nid)->node_zonelists + gfp_zonelist(flags);
 }
-/*
- * Convert GFP flags to their corresponding migrate type.
- */
+/* Convert GFP flags to their corresponding migrate type. */
 static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 {
 	WARN_ON((gfp_flags & GFP_MOVABLE_MASK) == GFP_MOVABLE_MASK);

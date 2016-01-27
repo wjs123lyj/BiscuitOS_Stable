@@ -6,6 +6,7 @@
 #include "linux/highmem.h"
 #include "linux/mm.h"
 #include "linux/hash.h"
+#include "linux/spinlock.h"
 
 pte_t *pkmap_page_table;
 
@@ -25,12 +26,13 @@ struct page_address_map {
  * page_address_map freelist,allocated from page_address_maps.
  */
 static struct list_head page_address_pool;  /* freelist */
+static spinlock_t pool_lock;    /* protect page_address_pool */
 /*
  * Hash table bucket
  */
 static struct page_address_slot {
 	struct list_head lh;     /* List of page_address_maps */
-//  spinlock_t lock;         /* Protect this bucket's list */
+    spinlock_t lock;         /* Protect this bucket's list */
 } page_address_htable[1 << PA_HASH_ORDER];
 
 #define unlock_kmao_any(flags) do {} while(0)
@@ -153,12 +155,11 @@ void __init page_address_init(void)
 	INIT_LIST_HEAD(&page_address_pool);
 	for(i = 0 ; i < ARRAY_SIZE(page_address_maps); i++)
 		list_add(&page_address_maps[i].list,&page_address_pool);
-	for(i = 0 ; i < ARRAY_SIZE(page_address_htable); i ++)
-	{
+	for(i = 0 ; i < ARRAY_SIZE(page_address_htable); i ++) {
 		INIT_LIST_HEAD(&page_address_htable[i].lh);
-//		spin_lock_init(&page_address_htable[i].lock);
+		spin_lock_init(&page_address_htable[i].lock);
 	}
-//  spin_lock_init(&pool_lock);
+	spin_lock_init(&pool_lock);
 }
 /*
  * pin a highmem page into memory.

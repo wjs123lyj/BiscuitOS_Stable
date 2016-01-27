@@ -93,9 +93,7 @@ struct kmem_cache_order_objects {
  */
 struct kmem_cache {
 	struct kmem_cache_cpu __percpu *cpu_slab;
-	/*
-	 * Userd for retriving partial slabs etc
-	 */
+	/* Userd for retriving partial slabs etc */
 	unsigned long flags;
 	int size;     /* This size of an object including meta data */
 	int objsize;  /* The size of an object without meta data */

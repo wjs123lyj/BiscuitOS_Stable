@@ -510,19 +510,20 @@ static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
 
 	while(start < end) {
 		unsigned int *map,idx,vec;
+		int i;
 
 		map = bdata->node_bootmem_map;
 		idx = start - bdata->node_min_pfn;
 		vec = ~map[idx / BITS_PER_LONG];
-
-		if(aligned && vec == ~0UL && start + BITS_PER_LONG < end) {
-			int order = ilog2(BITS_PER_LONG);
-
+	
+		if(aligned && vec == ~0U && start + BITS_PER_LONG < end) {
+			int order = ilog2(BITS_PER_LONG);	
+		
 			__free_pages_bootmem(pfn_to_page(start),order);
 			count += BITS_PER_LONG;
 		} else {
 			unsigned long off = 0;
-
+			
 			while(vec && off < BITS_PER_LONG) {
 				if(vec & 1) {
 					page = pfn_to_page(start + off);
@@ -535,15 +536,17 @@ static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
 		} 
 		start += BITS_PER_LONG;
 	}
-	page = virt_to_page(bdata->node_bootmem_map);
+	/* For simulating... */
+	page = 
+		pfn_to_page((mem_to_phys(bdata->node_bootmem_map)) >> PAGE_SHIFT);
 	pages = bdata->node_low_pfn - bdata->node_min_pfn;
 	pages = bootmem_bootmap_pages(pages);
 	count += pages;
-	while(pages--)
+	while(pages--) 
 		__free_pages_bootmem(page++,0);
 	
-	bdebug("nid=%p released=%p\n",
-			(void *)(bdata - bootmem_node_data),(void *)count);
+	bdebug("nid=%d released=%p\n",
+			(int)(bdata - bootmem_node_data),(void *)count);
 
 	return count;
 }

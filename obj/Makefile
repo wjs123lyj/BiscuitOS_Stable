@@ -5,3 +5,5 @@ all:
 	@echo          Buddy Memory System Running
 	@echo ==============================================
 	@./a
+#	@./a > buddy.txt
+#	@vi buddy.txt

@@ -1890,9 +1890,7 @@ void __init kmem_cache_init(void)
 	kmem_size = offsetof(struct kmem_cache,node) +
 		nr_node_ids * sizeof(struct kmem_cache_node *);
 
-	/*
-	 * Allocate two kmem_caches from the page allocator.
-	 */
+	/* Allocate two kmem_caches from the page allocator. */
 	kmalloc_size = ALIGN(kmem_size,cache_line_size());
 	order = get_order(2 * kmalloc_size);
 	kmem_cache = (void *)(unsigned long)__get_free_pages(GFP_NOWAIT,order);

@@ -166,12 +166,6 @@ static inline pte_t *pmd_page_vaddr(pmd_t *pmd)
 
 #define pte_offset_kernel(pmd,addr) (pmd_page_vaddr(pmd) + pte_index(addr))
 
-
-/*
- * The virtuall address of KERNEL MODULE.
- */
-#define MODULES_VADDR (unsigned long)(PAGE_OFFSET - SZ_32M)
-
 /*
  * VMALLOC AREA
  */

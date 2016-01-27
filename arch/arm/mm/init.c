@@ -278,23 +278,21 @@ static inline int free_area(unsigned long pfn,unsigned long end,char *s)
 {
 	unsigned int pages = 0,size = (end - pfn) << (PAGE_SHIFT - 10);
 
-	for(; pfn < end ; pfn++)
-	{
+
+	for(; pfn < end ; pfn++) {
 		struct page *page = pfn_to_page(pfn);
 		
 		ClearPageReserved(page);
 		init_page_count(page);
 		__free_page(page);
-		page++;
+		pages++;
 	}
 	if(size && s)
 		mm_debug("Freeing %s memory %dK\n",s,size);
 	
 	return pages;
 }
-/*
- * Free highpage in initialition.
- */
+
 static void __init free_highpages(void)
 {
 #ifdef CONFIG_HIGHMEM
@@ -302,8 +300,7 @@ static void __init free_highpages(void)
 	struct memblock_region *mem,*res;
 
 	/* Set highmem page free */
-	for_each_memblock(memory,mem)
-	{
+	for_each_memblock(memory,mem) {
 		unsigned long start = memblock_region_memory_base_pfn(mem);
 		unsigned long end   = memblock_region_memory_end_pfn(mem);
 
@@ -316,13 +313,12 @@ static void __init free_highpages(void)
 			start = max_low;
 
 		/* Find and exclude any reserved regions */
-		for_each_memblock(reserved,res)
-		{
+		for_each_memblock(reserved,res) {
 			unsigned long res_start,res_end;
 
 			res_start = memblock_region_reserved_base_pfn(res);
 			res_end   = memblock_region_reserved_end_pfn(res);
-
+			
 			if(res_end < start)
 				continue;
 			if(res_start < start)
@@ -331,9 +327,9 @@ static void __init free_highpages(void)
 				res_start = end;
 			if(res_end > end)
 				res_end = end;
-			if(res_start != start)
+			if(res_start != start) 
 				totalhigh_pages += free_area(start,res_start,NULL);
-
+			
 			start = res_end;
 			if(start == end)
 				break;
@@ -341,7 +337,7 @@ static void __init free_highpages(void)
 		/*
 		 * And now free anything which remains.
 		 */
-		if(start < end)
+		if(start < end) 
 			totalhigh_pages += free_area(start,end,NULL);
 	}
 	totalram_pages += totalhigh_pages;
@@ -363,19 +359,19 @@ void __init mem_init(void)
 
 	/* This will put all unused low memory onto the freelists. */
 	free_unused_memmap(&meminfo);
-
+	
 	totalram_pages += free_all_bootmem();
 #ifdef CONFIG_SA1111
 	/* Intel StrongARM not support */
 	total_pages += free_area(PHYS_PFN_OFFSET,
 			__phys_to_pfn(__pa(swapper_pg_dir)),NULL);
 #endif
+
 	free_highpages();
 
 	reserved_pages = free_pages = 0;
 
-	for_each_bank(i,&meminfo)
-	{
+	for_each_bank(i,&meminfo) {
 		struct membank *bank = &meminfo.bank[i];
 		unsigned int pfn1,pfn2;
 		struct page *page,*end;
@@ -387,11 +383,11 @@ void __init mem_init(void)
 		end  = pfn_to_page(pfn2 - 1) + 1;
 
 		do {
-			//if(PageReserved(page))
-			if(0)
+			if(PageReserved(page)) 
 				reserved_pages++;
-			else if(!page_count(page))
+			else if(!page_count(page)) 
 				free_pages++;
+			page++;
 		} while(page < end);
 	}
 
@@ -401,12 +397,11 @@ void __init mem_init(void)
 	 */
 	mm_debug("Memory:");
 	num_physpages = 0;
-	for_each_memblock(memory,reg)
-	{
+	for_each_memblock(memory,reg) {
 		unsigned long pages = memblock_region_memory_end_pfn(reg) - 
 			memblock_region_memory_base_pfn(reg);
 		num_physpages += pages;
-		mm_debug("%ldMB",pages >> (20 - PAGE_SHIFT));
+		mm_debug(" %ldMB",pages >> (20 - PAGE_SHIFT));
 	}
 	mm_debug(" = %luMB total\n",num_physpages >> (20 - PAGE_SHIFT));
 
@@ -420,20 +415,20 @@ void __init mem_init(void)
 #define MLM(b,t) (void *)b,(void *)t,(void *)((t) - (b) >> 20)
 #define MLK_ROUNDUP(b,t) (void *)b,(void *)t,(void *)DIV_ROUND_UP(((t) - (b)),SZ_1K)
 	mm_debug("Vitual kernel memory layout:\n"
-			"   vector : 0x%p - 0x%p (%p kB)\n"
-			"   fixmap : 0x%p - 0x%p (%p kB)\n"
+			"   vector : %p - %p (%p kB)\n"
+			"   fixmap : %p - %p (%p kB)\n"
 #ifdef CONFIG_MMU
-			"   DMA    : 0x%p - 0x%p (%p MB)\n"
+			"   DMA    : %p - %p (%p MB)\n"
 #endif
-			"   vmalloc: 0x%p - 0x%p (%p MB)\n"
-			"   lowmem : 0x%p - 0x%p (%p MB)\n"
+			"   vmalloc: %p - %p (%p MB)\n"
+			"   lowmem : %p - %p (%p MB)\n"
 #ifdef CONFIG_HIGHMEM
-			"   pkmap  : 0x%p - 0x%p (%p MB)\n"
+			"   pkmap  : %p - %p (%p MB)\n"
 #endif
-			"   modules: 0x%p - 08%p (%p MB)\n"
-			"   .init  : 0x%p - 0x%p (%p kB)\n"
-			"   .text  : 0x%p - 0x%p (%p kB)\n"
-			"   .data  : 0x%p - 0x%p (%p kB)\n",
+			"   modules: %p - %p (%p MB)\n"
+			"   .init  : %p - %p (%p kB)\n"
+			"   .text  : %p - %p (%p kB)\n"
+			"   .data  : %p - %p (%p kB)\n",
 			MLK(UL(CONFIG_VECTORS_BASE),UL(CONFIG_VECTORS_BASE) +
 				(PAGE_SIZE)),
 			MLK(FIXADDR_START,FIXADDR_TOP),
@@ -472,8 +467,7 @@ void __init mem_init(void)
 	BUG_ON(PKMAP_BASE + LAST_PKMAP * PAGE_SIZE  > PAGE_OFFSET);
 #endif
 
-	if(PAGE_SIZE >= 16384 && num_physpages <= 128)
-	{
+	if(PAGE_SIZE >= 16384 && num_physpages <= 128) {
 		extern int sysctl_overcommit_memory;
 
 		/*
@@ -594,3 +588,13 @@ void arm_bootmem_init(unsigned int start_pfn,
 				(end - start) << PAGE_SHIFT,BOOTMEM_DEFAULT);	
 	}
 }
+
+#ifndef CONFIG_SPARSEMEM
+extern int __init_memblock memblock_is_memory(phys_addr_t addr);
+int pfn_valid(unsigned long pfn)
+{
+	return memblock_is_memory(pfn << PAGE_SHIFT);
+}
+#endif
+
+

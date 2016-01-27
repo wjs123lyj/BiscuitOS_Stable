@@ -143,6 +143,14 @@
  * Configure the number of CPU.
  */
 #define CONFIG_NR_CPUS 1
+/*
+ * Configure wether has hold in zone.
+ */
+#define CONFIG_HOLES_IN_ZONE
+/*
+ * Configure the address of PAGE_OFFSET
+ */
+#define CONFIG_PAGE_OFFSET 0xc0000000
 
 
 #endif

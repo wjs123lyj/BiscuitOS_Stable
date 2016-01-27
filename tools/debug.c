@@ -357,9 +357,6 @@ void binary(unsigned int data)
 void check(char *name)
 {
 	struct zone *zone = &NODE_DATA(0)->node_zones[0];
-
-	mm_debug("[%s]zone:%s pageblock_flags:%p \n",
-				name,zone->name,*zone->pageblock_flags);
 }
 void stop(void)
 {
