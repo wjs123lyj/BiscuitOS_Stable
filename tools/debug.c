@@ -4,6 +4,7 @@
 #include "linux/setup.h"
 #include "linux/memblock.h"
 #include "linux/atomic.h"
+#include "linux/list.h"
 
 extern struct meminfo meminfo;
 extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
@@ -354,9 +355,27 @@ void binary(unsigned int data)
 	value[32] = '\0';
 	mm_debug("binary %s\n",value);
 }
-void check(char *name)
+void buddy_free(char *name)
 {
+	int i,j;
 	struct zone *zone = &NODE_DATA(0)->node_zones[0];
+
+	for(i = 0 ; i < MAX_ORDER ; i++) {
+		struct free_area *free = &zone->free_area[i];
+		struct list_head *list;
+
+		mm_debug("[%s]Order %d nr_free %p\n",name,i,(void *)free->nr_free);
+		for(j = 0 ; j < MIGRATE_TYPES ; j++) {
+			int total = 0;
+			if(list_empty(&free->free_list[j]))
+				total = 0;
+			else 
+				list_for_each(list,&free->free_list[j])
+					total += 1;
+			mm_debug("MIGRATETYPE %d total %p\n",
+					j,(void *)(unsigned long)total);
+		}
+	}
 }
 void stop(void)
 {

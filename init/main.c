@@ -22,6 +22,8 @@ char __initdata boot_command_line[COMMAND_LINE_SIZE];
  */
 static void __init mm_init(void)
 {
+	struct zone *zone;
+	int i;
 	/*
 	 * page_cgroup requires continues pages as memmap
 	 * and it's bigger than MAX_ORDER unless SPARSEMEM.

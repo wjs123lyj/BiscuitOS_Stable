@@ -1433,7 +1433,7 @@ static inline void expand(struct zone *zone,struct page *page,
 		int migratetype)
 {
 	unsigned long size = 1 << high;
-
+	
 	while(high > low) {
 		area--;
 		high--;
@@ -1485,8 +1485,6 @@ static int move_freepages(struct zone *zone,
 	unsigned long order;
 	int pages_moved = 0;
 
-	mm_debug("zone %s start_pages %p end_page %p migratetype %p\n",
-			zone->name,start_page,end_page,migratetype);
 #ifndef CONFIG_HOLES_IN_ZONES
 	/*
 	 * page_zone is not safe to calii in this context when
@@ -1542,13 +1540,13 @@ static int move_freepages_block(struct zone *zone,struct page *page,
 
 	return move_freepages(zone,start_page,end_page,migratetype);
 }
+
 static void change_pageblock_range(struct page *pageblock_page,
 		int start_order,int migratetype)
 {
 	int nr_pageblock = 1 << (start_order - pageblock_order);
 
-	while(nr_pageblock--)
-	{
+	while(nr_pageblock--) {
 		set_pageblock_migratetype(pageblock_page,migratetype);
 		pageblock_page += pageblock_nr_pages;
 	}
@@ -1577,11 +1575,9 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 			area = &(zone->free_area[current_order]);
 			if(list_empty(&area->free_list[migratetype]))
 				continue;
-
 			page = list_entry(area->free_list[migratetype].next,
 					struct page,lru);
 			area->nr_free--;
-
 			/*
 			 * If breaking a large block of pages,move all free
 			 * pages to the preferred allocation list.If falling
@@ -1598,7 +1594,7 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 
 				/* Claim the whole block if over half of it is free */
 				if(pages >= (1 << (pageblock_order -1)) ||
-						page_group_by_mobility_disabled)
+						page_group_by_mobility_disabled) 
 					set_pageblock_migratetype(page,start_migratetype);
 
 				migratetype = start_migratetype;
@@ -1609,17 +1605,15 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 			rmv_page_order(page);
 
 			/* Take ownership for orders >= pageblock_order */
-			if(current_order >= pageblock_order)
+			if(current_order >= pageblock_order) 
 				change_pageblock_range(page,current_order,
 						start_migratetype);
 			expand(zone,page,order,current_order,area,migratetype);
-
-//			trace_mm_page_alloc_extfrag(page,order,current_order,
-//					start_migratetype,migratetype);
-
+			
 			return page;
 		}
 	}
+	return NULL;
 }
 
 /*
@@ -1642,13 +1636,12 @@ retry_reserve:
 		 * is used because __rmqueue_smallest is an inline function
 		 * and we want just one call site.
 		 */
-		if(!page)
-		{
+		if(!page) {
 			migratetype = MIGRATE_RESERVE;
 			goto retry_reserve;
 		}
 	}
-//	trace_mm_page_alloc_zone_locked(page,order,migratetype);
+	
 	return page;
 }
 
@@ -1685,7 +1678,7 @@ static int rmqueue_bulk(struct zone *zone,unsigned int order,
 		list = &page->lru;
 	}
 	__mod_zone_page_state(zone,NR_FREE_PAGES, -(i << order));
-//	spin_unlock(&zone->lock);
+	spin_unlock(&zone->lock);
 	return i;
 }
 /*
@@ -1776,6 +1769,7 @@ static inline struct page *buffered_rmqueue(struct zone *preferred_zone,
 	struct page *page;
 	int cold = !!(gfp_flags & __GFP_COLD);
 
+	mm_debug("cold %p\n",cold);
 again:
 	if(likely(order == 0)) {
 		struct per_cpu_pages *pcp;
