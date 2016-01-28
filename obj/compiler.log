@@ -1,4 +1,0 @@
-page_alloc.c: In function ‘buffered_rmqueue’:
-page_alloc.c:1772:2: warning: format ‘%p’ expects argument of type ‘void *’, but argument 2 has type ‘int’ [-Wformat=]
-  mm_debug("cold %p\n",cold);
-  ^

@@ -1689,8 +1689,7 @@ static inline int check_new_page(struct page *page)
 	if(unlikely(page_mapcount(page) |
 				(page->mapping != NULL) |
 				(atomic_read(&page->_count) != 0) |
-			    (page->flags & PAGE_FLAGS_CHECK_AT_PREP)))
-	{
+			    (page->flags & PAGE_FLAGS_CHECK_AT_PREP))) {
 		return 1;
 	}
 	return 0;
@@ -1735,13 +1734,12 @@ static int prep_new_page(struct page *page,int order,gfp_t gfp_flags)
 {
 	int i;
 
-	for(i = 0 ; i < (1 << order) ; i++)
-	{
+	for(i = 0 ; i < (1 << order) ; i++) {
 		struct page *p = page + i;
 		if(unlikely(check_new_page(p)))
 			return 1;
 	}
-	
+
 	set_page_private(page,0);
 	set_page_refcounted(page);
 
@@ -1769,7 +1767,6 @@ static inline struct page *buffered_rmqueue(struct zone *preferred_zone,
 	struct page *page;
 	int cold = !!(gfp_flags & __GFP_COLD);
 
-	mm_debug("cold %p\n",cold);
 again:
 	if(likely(order == 0)) {
 		struct per_cpu_pages *pcp;
@@ -1792,10 +1789,8 @@ again:
 			page = list_entry(list->next,struct page,lru);
 		list_del(&page->lru);
 		pcp->count--;
-	} else
-	{
-		if(unlikely(gfp_flags & __GFP_NOFAIL))
-		{
+	} else {
+		if(unlikely(gfp_flags & __GFP_NOFAIL)) {
 			/*
 			 * __GFP_NOFAIL is not to be used in new code.
 			 *
@@ -1808,25 +1803,25 @@ again:
 			 */
 			WARN_ON_ONCE(order - 1);
 		}
-//		spin_lock_irqsave(&zone->lock,flags);
+		spin_lock_irqsave(&zone->lock,flags);
 		page = __rmqueue(zone,order,migratetype);
-//		spin_unlock(&zone->lock);
+		spin_unlock(&zone->lock);
 		if(!page)
 			goto failed;
 		__mod_zone_page_state(zone,NR_FREE_PAGES,-(1 << order));
 	}
 
-//	__count_zone_vm_events(PGALLOC,zone, 1 << order);
 	zone_statistics(preferred_zone,zone);
-//	local_irq_restore(flags);
+	local_irq_restore(flags);
 
 	VM_BUG_ON(bad_range(zone,page));
 	if(prep_new_page(page,order,gfp_flags))
 		goto again;
+	
 	return page;
 
 failed:
-//	local_irq_restore(flags);
+	local_irq_restore(flags);
 	return NULL;
 }
 static void zlc_mark_zone_full(struct zonelist *zonelist,struct zoneref *z)
@@ -1906,8 +1901,7 @@ this_zone_full:
 		if(NUMA_BUILD)
 			zlc_mark_zone_full(zonelist,z);
 try_next_zone:
-		if(NUMA_BUILD && !did_zlc_setup && nr_online_nodes > 1)
-		{
+		if(NUMA_BUILD && !did_zlc_setup && nr_online_nodes > 1) {
 			/*
 			 * We do zlc_setup after the first zone is tried but only
 			 * if there are multiple nodes make it worthwhile
@@ -1917,8 +1911,7 @@ try_next_zone:
 			did_zlc_setup = 1;
 		}
 	}
-	if(unlikely(NUMA_BUILD && page == NULL && zlc_active))
-	{
+	if(unlikely(NUMA_BUILD && page == NULL && zlc_active)) {
 		/* Disable zlc cache for second zonelist scan */
 		zlc_active = 0;
 		goto zonelist_scan;
