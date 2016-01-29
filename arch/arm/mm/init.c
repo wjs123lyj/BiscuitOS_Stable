@@ -366,7 +366,7 @@ void __init mem_init(void)
 	total_pages += free_area(PHYS_PFN_OFFSET,
 			__phys_to_pfn(__pa(swapper_pg_dir)),NULL);
 #endif
-
+	
 	free_highpages();
 
 	reserved_pages = free_pages = 0;

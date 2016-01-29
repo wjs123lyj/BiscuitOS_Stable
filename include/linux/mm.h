@@ -13,7 +13,7 @@
 #define ZONES_WIDTH         ZONES_SHIFT
 #define NODES_WIDTH         NODES_SHIFT
 
-#define SECTIONS_PGOFF      ((sizeof(unsigned long) *8) - SECTIONS_WIDTH)
+#define SECTIONS_PGOFF      ((sizeof(unsigned int) *8) - SECTIONS_WIDTH)
 #define NODES_PGOFF         (SECTIONS_PGOFF - NODES_WIDTH)
 #define ZONES_PGOFF         (NODES_PGOFF - ZONES_WIDTH)
 

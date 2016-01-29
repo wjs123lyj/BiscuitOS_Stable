@@ -1258,8 +1258,7 @@ static unsigned long calculate_alignment(unsigned long flags,
 	 * The hardware cache alignment cannot override the specified
 	 * alignment thought.If that is greater then use it.
 	 */
-	if(flags & SLAB_HWCACHE_ALIGN)
-	{
+	if(flags & SLAB_HWCACHE_ALIGN) {
 		unsigned long ralign = cache_line_size();
 
 		while(size <= ralign / 2)
@@ -1300,6 +1299,8 @@ static int calculate_sizes(struct kmem_cache *s,int forced_order)
 			!s->ctor)
 		s->flags |= __OBJECT_POISON;
 	else
+		s->flags &= ~__OBJECT_POISON;
+
 
 		/*
 		 * If we are Redzoning then check if there is some space between the
@@ -1317,8 +1318,7 @@ static int calculate_sizes(struct kmem_cache *s,int forced_order)
 	s->inuse = size;
 
 	if(((flags & (SLAB_DESTROY_BY_RCU | SLAB_POISON)) ||
-				s->ctor))
-	{
+				s->ctor)) {
 		/*
 		 * Relocate free pointer after the object if it is not
 		 * permitted to overwrite the first word of the object on 
@@ -1389,7 +1389,7 @@ static int calculate_sizes(struct kmem_cache *s,int forced_order)
 	s->min = oo_make(get_order(size),size);
 	if(oo_objects(s->oo) > oo_objects(s->max))
 		s->max = s->oo;
-
+	
 	return !!oo_objects(s->oo);
 }
 /*
@@ -1774,9 +1774,8 @@ static inline unsigned long kmem_cache_flags(unsigned long objsize,
 {
 	return flags;
 }
-/*
- * Top open.
- */
+
+
 static int kmem_cache_open(struct kmem_cache *s,
 		const char *name,size_t size,
 		size_t align,unsigned long flags,
@@ -1791,8 +1790,8 @@ static int kmem_cache_open(struct kmem_cache *s,
 
 	if(!calculate_sizes(s,-1))
 		goto error;
-	if(disable_higher_order_debug)
-	{
+	
+	if(disable_higher_order_debug) {
 		/*
 		 * Disable debugging flags that store metadat if the min slab
 		 * order increased.
@@ -1893,7 +1892,8 @@ void __init kmem_cache_init(void)
 	/* Allocate two kmem_caches from the page allocator. */
 	kmalloc_size = ALIGN(kmem_size,cache_line_size());
 	order = get_order(2 * kmalloc_size);
-	kmem_cache = (void *)(unsigned long)__get_free_pages(GFP_NOWAIT,order);
+	/* In order to use directly,so simulate... */
+	kmem_cache = phys_to_mem(__pa(__get_free_pages(GFP_NOWAIT,order)));
 
 	/*
 	 * Must first have the slab cache available for the allocations of the 

@@ -325,12 +325,12 @@ typedef struct pglist_data {
 } pg_data_t;
 
 extern struct pglist_data contig_pglist_data;
-
+extern int movable_zone;
 #define NODE_DATA(nid) (&(contig_pglist_data))
 static inline int zone_movable_is_highmem(void)
 {
 #if defined(CONFIG_HIGHMEM) && defined(CONFIG_ARCH_POPULATES_NODE_MAP)
-	return 0;
+	return movalbe_zone == ZONE_HIGHMEM;
 #else
 	return 0;
 #endif
@@ -354,8 +354,8 @@ static inline int is_highmem_idx(enum zone_type idx)
  */
 static inline int is_highmem(struct zone *zone)
 {
-#ifndef CONFIG_HIGHMEM
-	int zone_off = (char *)zone - (char *)zone->zone_pgdata->node_zones;
+#ifdef CONFIG_HIGHMEM
+	int zone_off = (char *)zone - (char *)zone->zone_pgdat->node_zones;
 
 	return zone_off == ZONE_HIGHMEM * sizeof(*zone) ||
 		   (zone_off == ZONE_MOVABLE * sizeof(*zone) &&

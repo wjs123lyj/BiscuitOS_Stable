@@ -52,7 +52,7 @@ void *page_address(struct page *page)
 
 	if(!PageHighMem(page)) 
 		return lowmem_page_address(page);
-		
+
 	pos = page_slot(page);
 	ret = NULL;
 	//spin_lock_irqsave(&psa->lock,flags);

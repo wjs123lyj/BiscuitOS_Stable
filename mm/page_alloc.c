@@ -75,6 +75,9 @@ static unsigned long __meminitdata nr_kernel_pages;
 static unsigned long __meminitdata nr_all_pages;
 gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;
 
+/* movable_zone is the "real" zone pages in ZONE_MOVABLE are taken from */
+int movable_zone;
+
 extern long vm_total_pages;
 extern unsigned long highest_memmap_pfn;
 /*
@@ -1308,7 +1311,7 @@ void free_hot_cold_page(struct page *page,int cold)
 
 	if(!free_pages_prepare(page,0))
 		return;
-
+	
 	migratetype = get_pageblock_migratetype(page);
 	set_page_private(page,migratetype);
 	local_irq_save(flags);
@@ -2269,7 +2272,6 @@ struct page *__alloc_pages_nodemask(gfp_t gfp_mask,unsigned int order,
 			nodemask,order,zonelist,high_zoneidx,
 			ALLOC_WMARK_LOW | ALLOC_CPUSET,
 			preferred_zone,migratetype);
-
 	if(unlikely(!page))
 		page = __alloc_pages_slowpath(gfp_mask,order,
 				zonelist,high_zoneidx,nodemask,
