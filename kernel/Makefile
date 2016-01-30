@@ -4,6 +4,7 @@ CURRENT_SOURCE += resource.c
 CURRENT_SOURCE += wait.c
 CURRENT_SOURCE += fork.c
 CURRENT_SOURCE += sched.c
+CURRENT_SOURCE += cpu.c
 
 all:
 	@cp ${CURRENT_SOURCE} ${OBJS_PATH}

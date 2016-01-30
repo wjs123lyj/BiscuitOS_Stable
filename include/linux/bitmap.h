@@ -15,8 +15,7 @@
 static inline void bitmap_fill(unsigned long *dst,int nbits)
 {
 	size_t nlongs = BITS_TO_LONGS(nbits);
-	if(!small_const_nbits(nbits))
-	{
+	if(!small_const_nbits(nbits)) {
 		int len = (nlongs - 1) * sizeof(unsigned long);
 		memset(dst,0xff,len);
 	}

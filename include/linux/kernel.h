@@ -29,6 +29,7 @@
 #define __initdata_memblock
 #define __init_data
 
+#define UINT_MAX (~0U)
 
 #define true  1
 #define false 0

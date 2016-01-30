@@ -6,6 +6,7 @@ CURRENT_SOURCE += string.c
 CURRENT_SOURCE += vsprintf.c
 CURRENT_SOURCE += radix-tree.c
 CURRENT_SOURCE += rbtree.c
+CURRENT_SOURCE += bitmap.c
 
 
 

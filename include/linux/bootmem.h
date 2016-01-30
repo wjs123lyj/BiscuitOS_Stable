@@ -30,6 +30,9 @@ extern unsigned long max_low_pfn;
 extern unsigned long min_low_pfn;
 extern unsigned long max_pfn;
 
+#define alloc_bootmem(x)  \
+	__alloc_bootmem(x,SMP_CACHE_BYTES,__pa(MAX_DMA_ADDRESS))
+
 #define alloc_bootmem_nopanic(x) \
 	__alloc_bootmem_nopanic(x,SMP_CACHE_BYTES,__pa(MAX_DMA_ADDRESS))
 

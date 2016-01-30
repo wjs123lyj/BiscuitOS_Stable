@@ -96,6 +96,22 @@ extern size_t *pcpu_group_sizes __read_mostly;
 #define per_cpu_ptr(ptr,cpu) (ptr)
 
 /*
+ * PERCPU_DYNAMIC_RESERVE indicates the amounts of free area to piggy
+ * back on the first chunk for dynamic percpu allocation if arch is 
+ * manually allocating and mapping it for faster access(as a part of
+ * large page mapping for example)
+ *
+ * The following values give between one and two pages of free space
+ * after typical minimal boot(2-way SMP,single disk and NIC) with
+ * both defconfig and a distro config on X86_64 and 32.More
+ * intelligent way to determine this would be nice.
+ */
+#if BITS_PER_LONG > 32
+#define PERCPU_DYNAMIC_RESERVE  (20 << 10)
+#else
+#define PERCPU_DYNAMIC_RESERVE  (12 << 10)
+#endif
+/*
  * Macro which verifies @ptr is a percpu pointer without evaluation
  * @ptr.This is to be used in percpu accessors to verify that the 
  * input parameter is a percpu pointer.

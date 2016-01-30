@@ -1,5 +1,4 @@
-CURRENT_SOURCE := bitmap.c
-CURRENT_SOURCE += boot_arch.c
+CURRENT_SOURCE := boot_arch.c
 CURRENT_SOURCE += debug.c
 CURRENT_SOURCE += register_simulate.c
 

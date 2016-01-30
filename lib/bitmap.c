@@ -1,6 +1,8 @@
+#include "linux/kernel.h"
 #include "linux/debug.h"
 #include "linux/bitops.h"
 
+#define CHUNKSZ    32
 /*
  * Test and set bit.
  */
@@ -174,4 +176,52 @@ int find_next_bit(unsigned int *addr,unsigned long size,
 	}
 	return -1;
 }
+
+/**
+ * bitmap_scnprintf - convert bitmap to an ASCII hex string.
+ * @buf: byte buffer into which string is placed
+ * @buflen: reserved size of @buf,in bytes.
+ * @maskp: pointer to bitmap to convert
+ * @nmaskbits: size of bitmap,in bits
+ *
+ * Exactly @nmaskbits bits are displayed.Hex digits are grouped into 
+ * comma-separated sets of eight digits per set.
+ */
+int bitmap_scnprintf(char *buf,unsigned int buflen,
+		const unsigned long *maskp,int nmaskbits)
+{
+	int i,word,bit,len = 0;
+	unsigned long val;
+	const char *sep = "";
+	int chunksz;
+	u32 chunkmask;
+
+	chunksz = nmaskbits & (CHUNKSZ - 1);
+	if(chunksz == 0)
+		chunksz = CHUNKSZ;
+
+	i = ALIGN(nmaskbits,CHUNKSZ) - CHUNKSZ;
+	for(; i >= 0 ; i -= CHUNKSZ) {
+		chunkmask = ((1UL << chunksz) - 1);
+		word = i / BITS_PER_LONG;
+		bit = i % BITS_PER_LONG;
+		val = (maskp[word] >> bit) & chunkmask;
+		len += scnprintf(buf + len , buflen - len,"%s%p",sep,
+				(chunksz + 3) / 4,val);
+		chunksz = CHUNKSZ;
+		sep = ",";
+	}
+	return len;
+}
+
+
+
+
+
+
+
+
+
+
+
 

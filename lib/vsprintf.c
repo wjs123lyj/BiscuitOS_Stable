@@ -906,5 +906,56 @@ int vsnprintf(char *buf,size_t size,const char *fmt,va_list args)
 	return str - buf;
 }
 
+/**
+ * vscnprintf - Format a string and place it in a buffer
+ * buf: The buffer to place the result into
+ * @size: The size of the buffer,including the trailing null space
+ * @fmt: The format string the use
+ * args: Arguments for the format string
+ *
+ * The return value is the number of characters which have been written into
+ * the @buf not including the trailing '\0'.If @size is == 0 the function.
+ * returns 0.
+ *
+ * Call this functiion if you are already dealing with a va_list.
+ * Ypu probably want scnprintf() instead.
+ *
+ * See the vsnprintf() documentation for format string extensions over C99.
+ */
+int vscnprintf(char *buf,size_t size,const char *fmt,va_list args)
+{
+	int i;
 
+	i = vsnprintf(buf,size,fmt,args);
+
+	if(likely(i < size))
+		return i;
+	if(size != 0)
+		return size - 1;
+	return 0;
+}
+
+
+/**
+ * scnprintf - Format a string and place it in a buffer
+ * @buf: The buffer to place the result into
+ * @size: The size of the buffer,including the trailing null space
+ * @fmt: The format string to use
+ * @...: Argruments for the format string
+ *
+ * The return value is the number of characters written into @buf not including
+ * the trailing '\0'.If @size is == 0 the function return 0.
+ */
+
+int scnprintf(char *buf,size_t size,const char *fmt,...)
+{
+	va_list args;
+	int i;
+
+	va_start(args,fmt);
+	i = vscnprintf(buf,size,fmt,args);
+	va_end(args);
+
+	return i;
+}
 

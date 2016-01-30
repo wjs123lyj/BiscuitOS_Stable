@@ -656,7 +656,7 @@ long __init init_bootmem_node(struct pglist_data *pgdat,
  *
  * The function panincs if the request can not be satisified.
  */
-void * _init __alloc_bootmem(unsigned long size,unsigned long align,
+void * __init __alloc_bootmem(unsigned long size,unsigned long align,
 		unsigned long goal)
 {
 	unsigned long limit = 0;
