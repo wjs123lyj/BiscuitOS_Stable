@@ -17,6 +17,24 @@ struct pcpu_chunk {
 	unsigned int populated[]; /* populated bitmap */
 };
 
+struct pcpu_group_info {
+	int nr_units;  /* aligned # of units */
+	unsigned long base_offset;  /* base address offset */
+	unsigned int *cpu_map;  /* unit->cpu map,empty entries contain NR_CPUS */
+};
+
+struct pcpu_alloc_info {
+	size_t static_size;
+	size_t reserved_size;
+	size_t dyn_size;
+	size_t unit_size;
+	size_t atom_size;
+	size_t alloc_size;
+	size_t __ai_size;    /* internal,don't use */
+	int nr_groups;       /* 0 if grouping unnecessary */
+	struct pcpu_group_info groups[];
+};
+
 enum pcpu_fc {
 	PCPU_FC_AUTO,
 	PCPU_FC_EMBED,
@@ -41,7 +59,8 @@ enum pcpu_fc {
 #define __this_cpu_dec_return(pcp)   this_cpu_add_return(pcp,-1)
 
 #define alloc_percpu(type)   \
-	(typeof(type) *)__alloc_percpu(sizeof(type),__alignof__(type))
+	(typeof(type) *)(unsigned long)__alloc_percpu(sizeof(type),  \
+			__alignof__(type))
 
 #define __this_cpu_sub(pcp,val) __this_cpu_add((pcp),-(val))
 #define __this_cpu_dec(pcp)     __this_cpu_sub((pcp),1)

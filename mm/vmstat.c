@@ -3,6 +3,7 @@
 #include "linux/debug.h"
 #include "linux/vmstat.h"
 #include "linux/mm.h"
+#include "linux/irqflags.h"
 
 void __dec_zone_page_state(struct page *page,enum zone_stat_item item)
 {
@@ -16,5 +17,7 @@ void mod_zone_page_state(struct zone *zone,enum zone_stat_item item,
 {
 	unsigned long flags;
 
+	local_irq_save(flags);
 	__mod_zone_page_state(zone,item,delta);
+	local_irq_restore(flags);
 }

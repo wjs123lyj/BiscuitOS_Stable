@@ -8,7 +8,7 @@ SUBDIRS := init \
 		   obj \
 
 
-FLAGS := -g -pg -I../include
+FLAGS := -pg -I../include
 DEBUG_FLAGS := -C -E -g -Wfatal-errors
 CC   := gcc
 OBJS_DIR = obj

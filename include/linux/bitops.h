@@ -25,7 +25,10 @@ extern int find_next_bit(unsigned int *addr,unsigned long size,
 
 static inline int fls(int x)
 {
-	return (sizeof(int) * 8) - __builtin_clz(x);
+	if(x == 0)
+		return 0;
+	else
+		return (sizeof(int) * 8) - __builtin_clz(x);
 }
 static inline int fls64(u64 w)
 {

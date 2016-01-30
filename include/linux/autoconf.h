@@ -101,7 +101,7 @@
 /*
  * Support SLUB debug
  */
-#define CONFIG_SLUB_DEBUG
+//#define CONFIG_SLUB_DEBUG
 /*
  * Support the state of slub.
  */

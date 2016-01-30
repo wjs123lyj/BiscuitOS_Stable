@@ -5,6 +5,7 @@
 #include "linux/memblock.h"
 #include "linux/atomic.h"
 #include "linux/list.h"
+#include "linux/vmstat.h"
 
 extern struct meminfo meminfo;
 extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
@@ -381,3 +382,61 @@ void stop(void)
 {
 	while(1);
 }
+
+char *zone_stat_item_name[] = {
+	"NR_FREE_PAGES",
+	"NR_LRU_BASE",
+	"NR_INACTIVE_ANON",
+	"NR_ACTIVE_ANON",
+	"NR_INACTIVE_FILE",
+	"NR_ACTIVE_FILE",
+	"NR_UNEVICTABLE",
+	"NR_MLOCK",
+	"NR_ANON_PAGES",
+	"NR_FILE_MAPPED",
+	"NR_FILE_PAGES",
+	"NR_FILE_DIRTY",
+	"NR_WRITEBACK",
+	"NR_SLAB_RECLAIMABLE",
+	"NR_SLAB_UNRECLAIMABLE",
+	"NR_PAGETABLE",
+	"NR_KERNEL_STACK",
+	"NR_UNSTABLE_NFS",
+	"NR_BOUNCE",
+	"NR_VMSCAN_WRITE",
+	"NR_WRITEBACK_TEMP",
+	"NR_ISOLATED_ANON",
+	"NR_ISOLATED_FILE",
+	"NR_SHMEM",
+	"NR_DIRTIED",
+	"NR_WRITTEN",
+#ifndef CONFIG_NUMA
+	"NUMA_HIT",
+	"NUMA_MISS",
+	"NUMA_FOREIGN",
+	"NUMA_INTERLEAVE_HIT",
+	"NUMA_LOCAL",
+	"NUMA_OTHER",
+#endif
+	"NR_ANON_TRANSPARENT_HUGEPAGES"
+};
+
+/*
+ * Get all information of memory on some zone.
+ */
+void zone_information(char *name)
+{
+	int i;
+	struct zone *zone = NODE_DATA(0)->node_zones;
+
+	mm_debug("===========%s============\n",name);
+	mm_debug("zone %s\n",zone->name);
+	for(i = 0 ; i < NR_VM_ZONE_STAT_ITEMS ; i++) 
+		mm_debug("%s:\t%p\n",zone_stat_item_name[i],
+				(void *)zone_page_state(zone,i));
+	mm_debug("============END=============\n");
+	
+}
+
+
+

@@ -92,7 +92,7 @@ struct kmem_cache_order_objects {
  * Slab cache management.
  */
 struct kmem_cache {
-	struct kmem_cache_cpu __percpu *cpu_slab;
+	struct kmem_cache_cpu *cpu_slab;
 	/* Userd for retriving partial slabs etc */
 	unsigned long flags;
 	int size;     /* This size of an object including meta data */
@@ -215,8 +215,7 @@ extern void *__kmalloc(size_t size,gfp_t flags);
  */
 static inline void *kmalloc(size_t size,gfp_t flags)
 {
-	if(__builtin_constant_p(size))
-	{
+	if(__builtin_constant_p(size)) {
 		if(size > SLUB_MAX_SIZE)
 			return kmalloc_large(size,flags);
 

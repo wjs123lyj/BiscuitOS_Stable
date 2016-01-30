@@ -461,6 +461,20 @@ void * __init _alloc_bootmem_nopanic(unsigned long size,unsigned long align,
 
 	return ___alloc_bootmem_nopanic(size,align,goal,limit);
 }
+
+/**
+ * __alloc_bootmem_nopanic - allocate boot memory without panicking
+ * @size:size of the request in bytes
+ * @align:alignment of the region
+ * @goat:preferred starting address of the region
+ *
+ * The goal is dropped if it can not be satisfied and the allocation will
+ * fall back to memory below @goal
+ *
+ * Allocation may happen on any node in the system.
+ *
+ * Return NULL on failure.
+ */
 void * __init __alloc_bootmem_nopanic(unsigned long size,unsigned long align,
 		unsigned long goal)
 {
@@ -627,4 +641,25 @@ long __init init_bootmem_node(struct pglist_data *pgdat,
 		unsigned long freepfn,unsigned long start_pfn,unsigned long end_pfn)
 {
 	return init_bootmem_core(pgdat->bdata,freepfn,start_pfn,end_pfn);
+}
+
+/**
+ * __alloc_bootmem - allocate boot memory
+ * @size:size of the request in bytes
+ * @align:alignment of the region
+ * @goal:preferred starting address of the region
+ * 
+ * The goal is dropped of it can not be satisfied and the allocation will
+ * fall back to memory below @goal
+ *
+ * Allocation may happen on any node in the system.
+ *
+ * The function panincs if the request can not be satisified.
+ */
+void * _init __alloc_bootmem(unsigned long size,unsigned long align,
+		unsigned long goal)
+{
+	unsigned long limit = 0;
+
+	return ___alloc_bootmem(size,align,goal,limit);
 }

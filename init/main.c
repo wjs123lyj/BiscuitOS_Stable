@@ -58,6 +58,9 @@ static int __init do_early_param(char *param,char *val)
 	return 0;
 }
 
+static inline void setup_nr_cpu_ids(void) {}
+static inline void smp_prepare_cpu(unsigned int maxcpus) {}
+
 void __init parse_early_options(char *cmdline)
 {
 	parse_args("early options",cmdline,NULL,0,do_early_param);
@@ -88,6 +91,8 @@ static void start_kernel(void)
 	page_address_init();
 	setup_arch(&command_line);
 	mm_init_owner(&init_mm,&init_task);
+	setup_nr_cpu_ids();
+	
 	build_all_zonelists(NULL);
 	page_alloc_init();
 
