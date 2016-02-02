@@ -1473,3 +1473,36 @@ static int __init percpu_alloc_setup(char *str)
 	return 0;
 }
 early_param("percpu_alloc",percpu_alloc_setup);
+
+/*
+ * First and reserved chunks are initialized with temporary allocation
+ * map in initdata so that they can be used before slab is online.
+ * This function is called after slab is brought up and replace those
+ * with properly allocated maps.
+ */
+void __init percpu_init_late(void)
+{
+	struct pcpu_chunk *target_chunks[] = 
+		{pcpu_first_chunk,pcpu_reserved_chunk,NULL};
+	struct pcpu_chunk *chunk;
+	unsigned long flags;
+	int i;
+
+	for(i = 0 ; (chunk = target_chunks[i]) ; i++) {
+		int *map;
+		const size_t size = PERCPU_DYNAMIC_EARLY_SLOTS * sizeof(map[0]);
+
+		BUILD_BUG_ON(size > PAGE_SIZE);
+
+		map = pcpu_mem_alloc(size);
+		BUG_ON(!map);
+
+		spin_lock_irqsave(&pcpu_lock,flags);
+		memcpy(map,chunk->map,size);
+		chunk->map = map;
+		spin_unlock_irqrestore(&pcpu_lock,flags);
+	}
+}
+
+
+

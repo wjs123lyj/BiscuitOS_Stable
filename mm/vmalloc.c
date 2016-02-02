@@ -80,6 +80,7 @@ static struct rb_root vmap_area_root = RB_ROOT;
 unsigned long vmap_area_pcpu_hole;
 static atomic_t vmap_lazy_nr = ATOMIC_INIT(0);
 static LIST_HEAD(vmap_area_list);
+static bool vmap_initialized __read_mostly = false;
 extern unsigned long totalram_pages;
 extern void kfree(const void *x);
 /*
@@ -1102,3 +1103,36 @@ struct page *vmalloc_to_page(const void *vmalloc_addr)
 	}
 	return page;
 }
+
+void __init vmalloc_init(void)
+{
+#ifdef NO_DEBUG_CURRENT
+	struct vmap_area *va;
+	struct vm_struct *tmp;
+	int i;
+
+	for_each_possible_cpu(i) {
+		struct vmap_block_queue *vbq;
+		
+		vbq = &per_cpu(vmap_block_queue,i);
+		spin_lock_init(&vbq->lock);
+		INIT_LIST_HEAD(&vbq->free);
+	}
+
+	/* Import exiting vmlist entries */
+	for(tmp = vmlist ; tmp ; tmp = tmp->next) {
+		va = kzalloc(sizeof(struct vmap_area),GFP_NOWAIT);
+		va->flags = tmp->flags | VM_VM_AREA;
+		va->va_start = (unsigned long)tmp->addr;
+		va->va_end = va->va_start + tmp->size;
+		__insert_vmap_area(va);
+	}
+
+	vmap_area_pcpu_hole = VMALLOC_END;
+
+	vmap_initialized = true;
+#endif
+}
+
+
+
