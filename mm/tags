@@ -28,8 +28,8 @@ PAGES_PER_WAITQUEUE	page_alloc.c	204;"	d	file:
 PARTIAL	slub.c	/^	PARTIAL, \/* Kmem_cache_node works *\/$/;"	e	enum:__anon2	file:
 PA_HASH_ORDER	highmem.c	16;"	d	file:
 PCPU_DFL_MAP_ALLOC	percpu.c	68;"	d	file:
-PCPU_SETUP_BUG_ON	percpu.c	1238;"	d	file:
-PCPU_SETUP_BUG_ON	percpu.c	1303;"	d	file:
+PCPU_SETUP_BUG_ON	percpu.c	1276;"	d	file:
+PCPU_SETUP_BUG_ON	percpu.c	1341;"	d	file:
 PCPU_SLOT_BASE_SHIFT	percpu.c	67;"	d	file:
 PageCompound	page_alloc.c	154;"	d	file:
 SLAB_DEBUG_FLAGS	slub.c	127;"	d	file:
@@ -271,6 +271,7 @@ kmem_cache_node	slub.c	/^static struct kmem_cache *kmem_cache_node;$/;"	v	typere
 kmem_cache_open	slub.c	/^static int kmem_cache_open(struct kmem_cache *s,$/;"	f	file:
 kmem_size	slub.c	/^static int kmem_size = sizeof(struct kmem_cache);$/;"	v	file:
 kmemcheck_pte_lookup	pte.c	/^pte_t *kmemcheck_pte_lookup(unsigned long address)$/;"	f
+kstrdup	util.c	/^char *kstrdup(const char *s,gfp_t gfp)$/;"	f
 kunmap_high	highmem.c	/^void kunmap_high(struct page *page)$/;"	f
 lazy_max_pages	vmalloc.c	/^static unsigned long lazy_max_pages(void)$/;"	f	file:
 lh	highmem.c	/^	struct list_head lh;     \/* List of page_address_maps *\/$/;"	m	struct:page_address_slot	typeref:struct:page_address_slot::list_head	file:
@@ -377,8 +378,8 @@ pcpu_create_chunk	percpu.c	/^static struct pcpu_chunk *pcpu_create_chunk(void)$/
 pcpu_dump_alloc_info	percpu.c	/^static void pcpu_dump_alloc_info(const char *lvl,$/;"	f	file:
 pcpu_extend_area_map	percpu.c	/^static int pcpu_extend_area_map(struct pcpu_chunk *chunk,int new_alloc)$/;"	f	file:
 pcpu_first_chunk	percpu.c	/^static struct pcpu_chunk *pcpu_first_chunk;$/;"	v	typeref:struct:pcpu_chunk	file:
-pcpu_for_each_pop_region	percpu.c	764;"	d	file:
-pcpu_for_each_unpop_region	percpu.c	759;"	d	file:
+pcpu_for_each_pop_region	percpu.c	784;"	d	file:
+pcpu_for_each_unpop_region	percpu.c	779;"	d	file:
 pcpu_free_area	percpu.c	/^static void pcpu_free_area(struct pcpu_chunk *chunk,int freeme)$/;"	f	file:
 pcpu_free_chunk	percpu.c	/^static void pcpu_free_chunk(struct pcpu_chunk *chunk)$/;"	f	file:
 pcpu_free_pages	percpu.c	/^static void pcpu_free_pages(struct pcpu_chunk *chunk,$/;"	f	file:

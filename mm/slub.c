@@ -61,6 +61,19 @@ enum track_item {
 	TRACK_FREE
 };
 
+char *kmalloc_name[] = {
+	"kmalloc-8",
+	"kmalloc-16",
+	"kmalloc-32",
+	"kmalloc-64",
+	"kmalloc-128",
+	"kmalloc-256",
+	"kmalloc-512",
+	"kmalloc-1024",
+	"kmalloc-2048",
+	"kmalloc-4096",
+	"kmalloc-8192"
+}; 
 /*
  * Conversion table for small slab size / 8 to the index in the
  * kmalloc array.This is necessary for slab < 192 since we have non power
@@ -111,6 +124,8 @@ static struct kmem_cache *kmem_cache_node;
 static int disable_higher_order_debug;
 /* A list of all slab caches on the system */
 static LIST_HEAD(slab_caches);
+
+extern char *kstrdup(const char *s,gfp_t gfp);
 
 /*
  * Merge control.If this is set then no merging of slab caches will occur.
@@ -1058,8 +1073,6 @@ void *__kmalloc(size_t size,gfp_t flags)
 
 	ret = slab_alloc(s,flags,NUMA_NO_NODE,_RET_IP_);
 
-	//trace_kmalloc(_RET_IP_,ret,size,s->size,flags);
-
 	return ret;
 }
 void *kmem_cache_alloc(struct kmem_cache *s,gfp_t gfpflags)
@@ -1249,10 +1262,12 @@ static struct kmem_cache *get_slab(size_t size,gfp_t flags)
 	if(size <= 192) {
 		if(!size)
 			return ZERO_SIZE_PTR;
-		
+	
 		index = size_index[size_index_elem(size)];
 	} else
 		index = fls(size - 1);
+
+	return kmalloc_caches[index];
 }
 void *__kmalloc_node(size_t size,gfp_t flags,int node)
 {
@@ -1904,7 +1919,7 @@ static struct kmem_cache *__init create_kmalloc_cache(const char *name,
 	if(!kmem_cache_open(s,name,size,ARCH_KMALLOC_MINALIGN,
 				flags,NULL))
 		goto panic;
-	
+
 	list_add(&s->list,&slab_caches);
 	return s;
 
@@ -1989,7 +2004,6 @@ void __init kmem_cache_init(void)
 
 		if(elem >= ARRAY_SIZE(size_index))
 			break;
-		mm_debug("KMALLOC_SHIFT_LOW %p\n",KMALLOC_SHIFT_LOW);
 		size_index[elem] = KMALLOC_SHIFT_LOW;
 	}
 
@@ -2030,18 +2044,19 @@ void __init kmem_cache_init(void)
 
 	/* Provide the correct kmalloc names now that the caches are up */
 	if(KMALLOC_MIN_SIZE <= 32) {
-//		kmalloc_caches[1]->name = kstrdup(kmalloc_caches[1]->name,GFP_NOWAIT);
+		kmalloc_caches[1]->name = kstrdup(kmalloc_caches[1]->name,GFP_NOWAIT);
 		BUG_ON(!kmalloc_caches[1]->name);
 	}
 
 	if(KMALLOC_MIN_SIZE <= 64) {
-//		kmalloc_caches[2]->name = kstrdup(kmalloc_caches[2]->name,GFP_NOWAIT);
+		kmalloc_caches[2]->name = kstrdup(kmalloc_caches[2]->name,GFP_NOWAIT);
 		BUG_ON(!kmalloc_caches[2]->name);
 	}
 
 	for(i = KMALLOC_SHIFT_LOW ; i < SLUB_PAGE_SHIFT ; i++) {
-		char *s = NULL;//kasprintf(GFP_NOWAIT,"kmalloc-%d",1 << i);
+		char *s = kmalloc_name[i - KMALLOC_SHIFT_LOW];
 
+		/* No time to debug,so use simple way to do.. */
 		BUG_ON(!s);
 		kmalloc_caches[i]->name = s;
 	}

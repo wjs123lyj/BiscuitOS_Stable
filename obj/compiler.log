@@ -1,4 +1,0 @@
-slub.c: In function ‘kmem_cache_init’:
-slub.c:1992:3: warning: format ‘%p’ expects argument of type ‘void *’, but argument 2 has type ‘int’ [-Wformat=]
-   mm_debug("KMALLOC_SHIFT_LOW %p\n",KMALLOC_SHIFT_LOW);
-   ^

@@ -1,3 +1,6 @@
+#include "linux/kernel.h"
+#include "linux/slub_def.h"
+#include <stdarg.h>
 
 
 /* Simplified asprintf. */
@@ -7,7 +10,7 @@ char *kvasprintf(gfp_t gfp,const char *fmt,va_list ap)
 	char *p;
 	va_list aq;
 
-	va_copy(aq,qp);
+	va_copy(aq,ap);
 	len = vsnprintf(NULL,0,fmt,aq);
 	va_end(aq);
 

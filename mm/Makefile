@@ -18,6 +18,7 @@ CURRENT_SOURCE += swap_state.c
 CURRENT_SOURCE += vmalloc.c
 CURRENT_SOURCE += vmscan.c
 CURRENT_SOURCE += vmstat.c
+CURRENT_SOURCE += util.c
 
 all:
 	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
