@@ -2,6 +2,7 @@
 #include "linux/debug.h"
 #include "linux/setup.h"
 #include "linux/init.h"
+#include "linux/smp.h"
 
 extern struct task_struct init_task;
 extern struct mm_struct init_mm;
@@ -92,6 +93,8 @@ static void start_kernel(void)
 	setup_arch(&command_line);
 	mm_init_owner(&init_mm,&init_task);
 	setup_nr_cpu_ids();
+	setup_per_cpu_areas();
+	smp_prepare_boot_cpu();
 	
 	build_all_zonelists(NULL);
 	page_alloc_init();

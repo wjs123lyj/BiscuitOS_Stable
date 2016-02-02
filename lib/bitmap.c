@@ -202,26 +202,14 @@ int bitmap_scnprintf(char *buf,unsigned int buflen,
 
 	i = ALIGN(nmaskbits,CHUNKSZ) - CHUNKSZ;
 	for(; i >= 0 ; i -= CHUNKSZ) {
-		chunkmask = ((1UL << chunksz) - 1);
+		chunkmask = ((1U << chunksz) - 1);
 		word = i / BITS_PER_LONG;
 		bit = i % BITS_PER_LONG;
 		val = (maskp[word] >> bit) & chunkmask;
-		len += scnprintf(buf + len , buflen - len,"%s%p",sep,
+		len += scnprintf(buf + len , buflen - len,"%s%0*lx",sep,
 				(chunksz + 3) / 4,val);
 		chunksz = CHUNKSZ;
 		sep = ",";
 	}
 	return len;
 }
-
-
-
-
-
-
-
-
-
-
-
-

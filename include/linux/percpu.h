@@ -58,6 +58,8 @@ enum pcpu_fc {
 #define __this_cpu_inc_return(pcp)   this_cpu_add_return(pcp,1)
 #define __this_cpu_dec_return(pcp)   this_cpu_add_return(pcp,-1)
 
+#define __this_cpu_inc(pcp)        __this_cpu_add((pcp),1)
+
 #define alloc_percpu(type)   \
 	(typeof(type) *)(unsigned long)__alloc_percpu(sizeof(type),  \
 			__alignof__(type))

@@ -164,7 +164,7 @@ static inline struct kmem_cache_order_objects oo_make(int order,
 }
 static inline void stat(struct kmem_cache *s,enum stat_item si)
 {
-#ifndef CONFIG_SLUB_STATS
+#ifdef CONFIG_SLUB_STATS
 	__this_cpu_inc(s->cpu_slab->stat[si]);
 #endif
 }
@@ -1029,8 +1029,7 @@ static void *slab_alloc(struct kmem_cache *s,
 	object = c->freelist;
 	if(unlikely(!object || !node_match(c,node)))
 		object = __slab_alloc(s,gfpflags,node,addr,c);
-	else
-	{
+	else {
 		c->freelist = get_freepointer(s,object);
 		stat(s,ALLOC_FASTPATH);
 	}
@@ -1165,9 +1164,9 @@ static inline int slab_order(int size,int min_objects,
 		return get_order(size * MAX_OBJS_PER_PAGE) - 1;
 
 	for(order = max(min_order,
-				fls(min_objects *size - 1) - PAGE_SHIFT) ;
-			order <= max_order ; order++)
-	{
+				fls(min_objects * size - 1) - PAGE_SHIFT) ;
+			order <= max_order ; order++) {
+
 		unsigned long slab_size = PAGE_SIZE << order;
 
 		if(slab_size < min_objects * size)
@@ -1178,7 +1177,7 @@ static inline int slab_order(int size,int min_objects,
 		if(rem <= slab_size / fract_leftover)
 			break;
 	}
-	
+
 	return order;
 }
 static inline int calculate_order(int size)
@@ -1198,15 +1197,12 @@ static inline int calculate_order(int size)
 	min_objects = slub_min_objects;
 	if(!min_objects)
 		min_objects = 4 * (fls(nr_cpu_ids) + 1);
-		;
 	max_objects = (PAGE_SIZE << slub_max_order) / size;
 	min_objects = min(min_objects,max_objects);
 
-	while(min_objects > 1)
-	{
+	while(min_objects > 1) {
 		fraction = 16;
-		while(fraction >= 4)
-		{
+		while(fraction >= 4) {
 			order = slab_order(size,min_objects,
 					slub_max_order,fraction);
 			if(order <= slub_max_order)
@@ -1431,7 +1427,7 @@ static int calculate_sizes(struct kmem_cache *s,int forced_order)
 	s->min = oo_make(get_order(size),size);
 	if(oo_objects(s->oo) > oo_objects(s->max))
 		s->max = s->oo;
-	
+
 	return !!oo_objects(s->oo);
 }
 
@@ -1500,7 +1496,7 @@ static struct page *allocate_slab(struct kmem_cache *s,gfp_t flags,int node)
 			(s->flags & SLAB_RECLAIM_ACCOUNT) ?
 			NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
 			1 << oo_order(oo));
-
+	
 	return page;
 }
 
@@ -1524,6 +1520,7 @@ static struct page *new_slab(struct kmem_cache *s,gfp_t flags,int node)
 
 	/* In order to simulate... */
 	start = phys_to_mem(__pa(page_address(page)));
+
 
 	if(unlikely(s->flags & SLAB_POISON))
 		memset(start,POISON_INUSE,PAGE_SIZE << compound_order(page));
@@ -1697,10 +1694,11 @@ static inline void slab_free(struct kmem_cache *s,
 	slab_free_hook(s,x);
 
 	local_irq_save(flags);
-	c = __this_cpu_ptr(s->cpu_slab);
+	c = (struct kmem_cache_cpu *)__this_cpu_ptr(s->cpu_slab);
+	mm_debug("c %p\n",c->page);
 
 	slab_free_hook_irq(s,x);
-	
+
 	if(likely(page == c->page && c->node != NUMA_NO_NODE)) {
 		mm_debug("dfds\n");
 		set_freepointer(s,object,c->freelist);
@@ -1757,7 +1755,7 @@ static void free_kmem_cache_nodes(struct kmem_cache *s)
 
 	for_each_node_state(node,N_NORMAL_MEMORY) {
 		struct kmem_cache_node *n = s->node[node];
-		
+
 		if(n)
 			kmem_cache_free(kmem_cache_node,
 					(void *)(unsigned long)__va(mem_to_phys(n))); // simulate.
@@ -1828,14 +1826,13 @@ static int kmem_cache_open(struct kmem_cache *s,
 
 	if(!calculate_sizes(s,-1))
 		goto error;
-	
+
 	if(disable_higher_order_debug) {
 		/*
 		 * Disable debugging flags that store metadat if the min slab
 		 * order increased.
 		 */
-		if(get_order(s->size) > get_order(s->objsize))
-		{
+		if(get_order(s->size) > get_order(s->objsize)) {
 			s->flags &= ~DEBUG_METADATA_FLAGS;
 			s->offset = 0;
 			if(!calculate_sizes(s,-1))
@@ -1944,9 +1941,6 @@ void __init kmem_cache_init(void)
 			sizeof(struct kmem_cache_node),
 			0,SLAB_HWCACHE_ALIGN | SLAB_PANIC,NULL);
 
-	/* Not support notifier for slab */
-//	hotplug_memory_notifier(slab_memory_callback,SLAB_CALLBACK_PRI);
-
 	/* Able to allocate the per node structures */
 	slab_state = PARTIAL;
 
@@ -1972,7 +1966,7 @@ void __init kmem_cache_init(void)
 	kmem_cache_bootstrap_fixup(kmem_cache);
 	caches++;
 	/* Free temporary boot structure */
-	free_pages((unsigned long)temp_kmem_cache,order);
+	free_pages(__va(mem_to_phys(temp_kmem_cache)),order);
 	
 	/* Now we can use the kmem_cache to allocate kmalloc slabs */
 
@@ -1995,6 +1989,7 @@ void __init kmem_cache_init(void)
 
 		if(elem >= ARRAY_SIZE(size_index))
 			break;
+		mm_debug("KMALLOC_SHIFT_LOW %p\n",KMALLOC_SHIFT_LOW);
 		size_index[elem] = KMALLOC_SHIFT_LOW;
 	}
 

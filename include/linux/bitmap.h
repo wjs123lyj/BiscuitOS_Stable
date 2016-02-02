@@ -6,7 +6,7 @@
 #define BITMAP_LAST_WORD_MASK(nbits)       \
 (                                          \
 	((nbits) % BITS_PER_LONG)   ?          \
-			(1UL << ((nbits) % BITS_PER_LONG)) - 1 : ~0UL       \
+			(1U << ((nbits) % BITS_PER_LONG)) - 1 : ~0U       \
 )
 
 #define small_const_nbits(nbits)    \

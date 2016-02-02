@@ -150,8 +150,19 @@ static void *pcpu_mem_alloc(size_t size)
 	else
 		return vzalloc(size);
 }
-/*
- * determin whether chunk area map needs to be extended.
+/**
+ * pcpu_need_to_extend - determine whether chunk area map needs to be extended.
+ * @chunk: chunk of interest
+ *
+ * Determine whether aera map of @chunk needs to be extended to 
+ * accomodate a new allocation
+ *
+ * CONTEXT:
+ * pcpu_lock
+ * 
+ * RETURNS:
+ * New target map allocation length if extension is necessary,0
+ * otherwise.
  */
 static int pcpu_need_to_extend(struct pcpu_chunk *chunk)
 {
@@ -214,8 +225,26 @@ out_unlock:
 	pcpu_mem_free(old,old_size);
 	pcpu_mem_free(new,new_size);
 }
-/*
- * Split a map block
+
+/**
+ * pcpu_split_block - split a map block
+ * @chunk:chunk of interest
+ * @i: index of map block to split
+ * @head: head size in bytes (can be 0)
+ * @tail: tail size in bytes (can be 0)
+ *
+ * Split the @i'th map block into two or three blocks.If @head is 
+ * non-zero,@head bytes block is inserted before block @i moving it
+ * to @i+1 and reducing its size by @head bytes.
+ *
+ * If @tail is non-zero,the target block,which can be @i or @i+1
+ * depending on @head,is reduced by @tail bytes and @tail byte block
+ * is inserted after the target block.
+ * 
+ * @chunk->map must have enough free slots to accomodate the split.
+ *
+ * CONTEXT:
+ * pcpu_lock.
  */
 static void pcpu_split_block(struct pcpu_chunk *chunk,int i,
 		int head,int tail)
@@ -229,13 +258,11 @@ static void pcpu_split_block(struct pcpu_chunk *chunk,int i,
 			sizeof(chunk->map[0]) * (chunk->map_used - i));
 	chunk->map_used += nr_extra;
 
-	if(head)
-	{
+	if(head) {
 		chunk->map[i + 1] = chunk->map[i] - head;
 		chunk->map[i++] = head;
 	}
-	if(tail)
-	{
+	if(tail) {
 		chunk->map[i++] -= tail;
 		chunk->map[i] = tail;
 	}
@@ -268,12 +295,11 @@ static void pcpu_chunk_relocate(struct pcpu_chunk *chunk,int oslot)
 {
 	int nslot = pcpu_chunk_slot(chunk);
 
-	if(chunk != pcpu_reserved_chunk && oslot != nslot) {
+	if(chunk != pcpu_reserved_chunk && oslot != nslot) 
 		if(oslot < nslot)
 			list_move(&chunk->list,&pcpu_slot[nslot]);
 		else
 			list_move_tail(&chunk->list,&pcpu_slot[nslot]);
-	}
 }
 /*
  * Allocate area from a pcpu_chunk.
@@ -284,8 +310,7 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk,int size,int align)
 	int max_contig = 0;
 	int i,off;
 
-	for(i = 0,off = 0; i < chunk->map_used ; off += abs(chunk->map[i++]))
-	{
+	for(i = 0,off = 0; i < chunk->map_used ; off += abs(chunk->map[i++])) {
 		bool is_last = i + 1 == chunk->map_used;
 		int head,tail;
 
@@ -295,20 +320,18 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk,int size,int align)
 
 		if(chunk->map[i] < 0)
 			continue;
-		if(chunk->map[i] < head + size) 
-		{
+		if(chunk->map[i] < head + size) {
 			max_contig = max(chunk->map[i],max_contig);
 			continue;
 		}
-
+		
 		/*
 		 * If head is small or the previois block is free,
-		 * merge'em.Note that small is defined as smaller
+		 * merge'em.Note that 'small' is defined as smaller
 		 * than sizeof(int),which is very small but isn't too
 		 * uncommon for percpu allocations.
 		 */
-		if(head && (head < sizeof(int) || chunk->map[i - 1] > 0))
-		{
+		if(head && (head < sizeof(int) || chunk->map[i - 1] > 0)) {
 			if(chunk->map[i - 1] > 0)
 				chunk->map[i - 1] += head;
 			else {
@@ -326,11 +349,9 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk,int size,int align)
 			tail = 0;
 
 		/* split if warranted */
-		if(head || tail)
-		{
+		if(head || tail) {
 			pcpu_split_block(chunk,i,head,tail);
-			if(head)
-			{
+			if(head) {
 				i++;
 				off += head;
 				max_contig = max(chunk->map[i - 1],max_contig);
@@ -345,12 +366,12 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk,int size,int align)
 		else
 			chunk->contig_hint = max(chunk->contig_hint,
 					max_contig);
-
+		
 		chunk->free_size -= chunk->map[i];
 		chunk->map[i] = -chunk->map[i];
 
 		pcpu_chunk_relocate(chunk,oslot);
-		
+	
 		return off;
 	}
 
@@ -443,7 +464,7 @@ static void __percpu *pcpu_alloc(size_t size,size_t align,bool reserved)
 		err = "alloc_from reserved chunk failed";
 		goto fail_unlock;
 	}
-	
+
 restart:
 	/* search through normal chunks */
 	for(slot = pcpu_size_to_slot(size); slot < pcpu_nr_slots ; slot++) {
@@ -488,8 +509,7 @@ area_found:
 	spin_unlock_irqrestore(&pcpu_lock,flags);
 
 	/* populate,map and clear the area */
-	if(pcpu_populate_chunk(chunk,off,size))
-	{
+	if(pcpu_populate_chunk(chunk,off,size)) {
 		spin_lock_irqsave(&pcpu_lock,flags);
 		pcpu_free_area(chunk,off);
 		err = "failed to populate";
@@ -938,9 +958,10 @@ static struct page **pcpu_get_pages_and_bitmap(struct pcpu_chunk *chunk,
 	static unsigned long *bitmap;
 	size_t pages_size = pcpu_nr_units * pcpu_unit_pages * sizeof(pages[0]);
 	size_t bitmap_size = BITS_TO_LONGS(pcpu_unit_pages) * 
-		sizeof(unsigned long);
+		sizeof(unsigned int);
 
-	if(!pages || bitmap) {
+
+	if(!pages || !bitmap) {
 		if(may_alloc && !pages)
 			pages = pcpu_mem_alloc(pages_size);
 		if(may_alloc && !bitmap)
@@ -957,6 +978,7 @@ static struct page **pcpu_get_pages_and_bitmap(struct pcpu_chunk *chunk,
 	
 	return pages;
 }
+#ifdef CONFIG_VM
 /*
  * populate and map an area of a pcpu_chunk.
  */
@@ -977,7 +999,7 @@ static int pcpu_populate_chunk(struct pcpu_chunk *chunk,int off,int size)
 		goto clear;
 
 	/* need to allocate and map pages,this chunk can't be immutable */
-	mm_warn("WARN[%s]\n",__FUNCTION__);
+	WARN_ON(chunk->immutable);
 
 	pages = pcpu_get_pages_and_bitmap(chunk,&populated,true);
 	if(!pages)
@@ -1027,6 +1049,21 @@ err_free:
 		pcpu_free_pages(chunk,pages,populated,rs,re);
 	return rc;
 }
+#else
+static int pcpu_populate_chunk(struct pcpu_chunk *chunk,int off,int size)
+{
+	unsigned int cpu;
+
+	for_each_possible_cpu(cpu)
+		memset((void *)pcpu_chunk_addr(chunk,cpu,0) + off,0,size);
+
+	return 0;
+}
+
+#endif
+
+
+
 static struct pcpu_chunk *pcpu_create_chunk(void)
 {
 	struct pcpu_chunk *chunk;
@@ -1076,8 +1113,9 @@ struct pcpu_alloc_info *__init pcpu_alloc_alloc_info(int nr_groups,
 			__alignof__(ai->groups[0].cpu_map[0]));
 	ai_size = base_size + nr_units * sizeof(ai->groups[0].cpu_map[0]);
 
-	ptr = (void *)(unsigned long)(
-			alloc_bootmem_nopanic(PFN_ALIGN(ai_size)));
+	/* In order to simulate... */
+	ptr = phys_to_mem(__pa(
+			alloc_bootmem_nopanic(PFN_ALIGN(ai_size))));
 	if(!ptr)
 		return NULL;
 	ai = ptr;
@@ -1218,7 +1256,7 @@ static int __init pcpu_verify_alloc_info(const struct pcpu_alloc_info *ai)
 int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 		void *base_addr)
 {
-	static char cpus_buf[4096] __initdata;
+	static char cpus_buf[4096] __initdata = "f";
 	static int smap[PERCPU_DYNAMIC_EARLY_SLOTS] __initdata;
 	static int dmap[PERCPU_DYNAMIC_EARLY_SLOTS] __initdata;
 	size_t dyn_size = ai->dyn_size;
@@ -1230,8 +1268,10 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	unsigned int cpu;
 	int *unit_map;
 	int group,unit,i;
+	unsigned long j;
 
-	cpumask_scnprintf(cpus_buf,sizeof(cpus_buf),cpu_possible_mask);
+	/* Can't debug.... */
+	//cpumask_scnprintf(cpus_buf,sizeof(cpus_buf),cpu_possible_mask);
 
 #define PCPU_SETUP_BUG_ON(cond) do {      \
 	if(unlikely(cond)) {                  \
@@ -1250,16 +1290,19 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	PCPU_SETUP_BUG_ON(ai->unit_size < PCPU_MIN_UNIT_SIZE);
 	PCPU_SETUP_BUG_ON(ai->dyn_size < PERCPU_DYNAMIC_EARLY_SIZE);
 	PCPU_SETUP_BUG_ON(pcpu_verify_alloc_info(ai) < 0);
-
+	
 	/* process group information and build config tables accordingly */
-	group_offsets = (unsigned long *)(unsigned long)(
-			alloc_bootmem(ai->nr_groups * sizeof(group_offsets[0])));
-	group_sizes   = (size_t *)(unsigned long)(
-			alloc_bootmem(ai->nr_groups * sizeof(group_sizes[0])));
-	unit_map  = (int *)(unsigned long)(
-			alloc_bootmem(nr_cpu_ids * sizeof(unit_map[0])));
-	unit_off  = (unsigned long *)(unsigned long)(
-			alloc_bootmem(nr_cpu_ids * sizeof(unit_off[0])));
+	group_offsets = phys_to_mem(__pa(
+				alloc_bootmem(ai->nr_groups * sizeof(group_offsets[0]))));
+
+	group_sizes   = phys_to_mem(__pa(
+			alloc_bootmem(ai->nr_groups * sizeof(group_sizes[0]))));
+
+	unit_map  = phys_to_mem(__pa(
+			alloc_bootmem(nr_cpu_ids * sizeof(unit_map[0]))));
+
+	unit_off  = phys_to_mem(__pa(
+			alloc_bootmem(nr_cpu_ids * sizeof(unit_off[0]))));
 
 	for(cpu = 0 ; cpu < nr_cpu_ids ; cpu++)
 		unit_map[cpu] = UINT_MAX;
@@ -1316,9 +1359,9 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	 * empty chunks.
 	 */
 	pcpu_nr_slots = __pcpu_size_to_slot(pcpu_unit_size) + 2;
-	pcpu_slot = (struct list_head *)(unsigned long)(
-			alloc_bootmem(pcpu_nr_slots * sizeof(pcpu_slot[0])));
-	for(i = 0 ; i < pcpu_nr_slots ; i++)
+	pcpu_slot = phys_to_mem(__pa(
+			alloc_bootmem(pcpu_nr_slots * sizeof(pcpu_slot[0]))));
+	for(i = 0 ; i < pcpu_nr_slots ; i++) 
 		INIT_LIST_HEAD(&pcpu_slot[i]);
 
 	/*
@@ -1328,8 +1371,8 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	 * convers static area + reserved area (mostly unsed for module
 	 * static percpu allocation).
 	 */
-	schunk = (struct pcpu_chunk *)(unsigned long)(
-			alloc_bootmem(pcpu_chunk_struct_size));
+	schunk = phys_to_mem(__pa(
+			alloc_bootmem(pcpu_chunk_struct_size)));
 	INIT_LIST_HEAD(&schunk->list);
 	schunk->base_addr = base_addr;
 	schunk->map = smap;
@@ -1346,7 +1389,7 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 		schunk->free_size = dyn_size;
 		dyn_size = 0;                 /* dynamic area covered */
 	}
-	schunk->contig_hint - schunk->free_size;
+	schunk->contig_hint = schunk->free_size;
 
 	schunk->map[schunk->map_used++] = -ai->static_size;
 	if(schunk->free_size)
@@ -1354,8 +1397,8 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 
 	/* Init dynamic chunk if necessary */
 	if(dyn_size) {
-		dchunk = (struct pcpu_chunk *)(unsigned long)(
-				alloc_bootmem(pcpu_chunk_struct_size));
+		dchunk = phys_to_mem(__pa(
+				alloc_bootmem(pcpu_chunk_struct_size)));
 		INIT_LIST_HEAD(&dchunk->list);
 		dchunk->base_addr = base_addr;
 		dchunk->map = dmap;
@@ -1395,8 +1438,9 @@ void __init setup_per_cpu_areas(void)
 	void *fc;
 
 	ai = pcpu_alloc_alloc_info(1,1);
-	fc = (void *)(unsigned long)(
-				__alloc_bootmem(unit_size,PAGE_SIZE,__pa(MAX_DMA_ADDRESS)));
+	/* In order to simulate... */
+	fc = phys_to_mem(__pa(
+				__alloc_bootmem(unit_size,PAGE_SIZE,__pa(MAX_DMA_ADDRESS))));
 	if(!ai || !fc)
 		panic("Failed to allocate memory for percpu areas.");
 

@@ -1,13 +1,13 @@
 #ifndef _SLUB_DEF_H_
 #define _SLUB_DEF_H_
 
-#include "list.h"
-#include "types.h"
-#include "slab.h"
-#include "spinlock_types.h"
-#include "../asm/getorder.h"
-#include "log2.h"
-#include "kmemleak.h"
+#include "linux/list.h"
+#include "linux/types.h"
+#include "linux/slab.h"
+#include "linux/spinlock_types.h"
+#include "asm/getorder.h"
+#include "linux/log2.h"
+#include "linux/kmemleak.h"
 
 enum stat_item {
 	ALLOC_FASTPATH,          /* Allocation from cpu slab */

@@ -12,8 +12,8 @@
 #define mm_notice
 #define bdebug printf
 #define mm_err printf
-#define panic printf
 #define mm_warn printf
+#define panic printf
 
 #define BUG() do {  \
 	mm_debug("BUG:failure at %s:%d %s()!\n",\

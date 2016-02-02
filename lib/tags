@@ -1,0 +1,130 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CHUNKSZ	bitmap.c	5;"	d	file:
+CURRENT_SOURCE	Makefile	/^CURRENT_SOURCE := sort.c$/;"	m
+DECODED_BUF_SIZE	vsprintf.c	342;"	d	file:
+FLAG_BUF_SIZE	vsprintf.c	341;"	d	file:
+FORMAT_TYPE_BYTE	vsprintf.c	/^	FORMAT_TYPE_BYTE,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_CHAR	vsprintf.c	/^	FORMAT_TYPE_CHAR,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_INT	vsprintf.c	/^	FORMAT_TYPE_INT,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_INVALID	vsprintf.c	/^	FORMAT_TYPE_INVALID,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_LONG	vsprintf.c	/^	FORMAT_TYPE_LONG,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_LONG_LONG	vsprintf.c	/^	FORMAT_TYPE_LONG_LONG,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_NONE	vsprintf.c	/^	FORMAT_TYPE_NONE,  \/* just a string part *\/$/;"	e	enum:format_type	file:
+FORMAT_TYPE_NRCHARS	vsprintf.c	/^	FORMAT_TYPE_NRCHARS,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_PERCENT_CHAR	vsprintf.c	/^	FORMAT_TYPE_PERCENT_CHAR,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_PRECISION	vsprintf.c	/^	FORMAT_TYPE_PRECISION,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_PTR	vsprintf.c	/^	FORMAT_TYPE_PTR,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_PTRDIFF	vsprintf.c	/^	FORMAT_TYPE_PTRDIFF$/;"	e	enum:format_type	file:
+FORMAT_TYPE_SHORT	vsprintf.c	/^	FORMAT_TYPE_SHORT,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_SIZE_T	vsprintf.c	/^	FORMAT_TYPE_SIZE_T,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_STR	vsprintf.c	/^	FORMAT_TYPE_STR,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_UBYTE	vsprintf.c	/^	FORMAT_TYPE_UBYTE,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_UINT	vsprintf.c	/^	FORMAT_TYPE_UINT,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_ULONG	vsprintf.c	/^	FORMAT_TYPE_ULONG,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_USHORT	vsprintf.c	/^	FORMAT_TYPE_USHORT,$/;"	e	enum:format_type	file:
+FORMAT_TYPE_WIDTH	vsprintf.c	/^	FORMAT_TYPE_WIDTH,$/;"	e	enum:format_type	file:
+IO_RSRC_PRINTK_SIZE	vsprintf.c	300;"	d	file:
+LEFT	vsprintf.c	18;"	d	file:
+MEM_RSRC_PRINTK_SIZE	vsprintf.c	304;"	d	file:
+OBJS_PATH	Makefile	/^OBJS_PATH = ..\/${OBJS_DIR}$/;"	m
+PLUS	vsprintf.c	16;"	d	file:
+RADIX_TREE_INDEX_BITS	radix-tree.c	34;"	d	file:
+RADIX_TREE_MAP_MASK	radix-tree.c	11;"	d	file:
+RADIX_TREE_MAP_SHIFT	radix-tree.c	8;"	d	file:
+RADIX_TREE_MAP_SIZE	radix-tree.c	10;"	d	file:
+RADIX_TREE_MAX_PATH	radix-tree.c	35;"	d	file:
+RADIX_TREE_TAG_LONGS	radix-tree.c	13;"	d	file:
+RAW_BUF_SIZE	vsprintf.c	343;"	d	file:
+RSRC_BUF_SIZE	vsprintf.c	340;"	d	file:
+SIGN	vsprintf.c	15;"	d	file:
+SMALL	vsprintf.c	19;"	d	file:
+SPACE	vsprintf.c	17;"	d	file:
+SPECIAL	vsprintf.c	20;"	d	file:
+TOLOWER	string.c	9;"	d	file:
+TOLOWER	vsprintf.c	12;"	d	file:
+ZEROPAD	vsprintf.c	14;"	d	file:
+_UNUSE_STD_	vsprintf.c	1;"	d	file:
+__rb_erase_color	rbtree.c	/^static void __rb_erase_color(struct rb_node *node,struct rb_node *parent,$/;"	f	file:
+__rb_rotate_left	rbtree.c	/^static void __rb_rotate_left(struct rb_node *node,struct rb_root *root)$/;"	f	file:
+__rb_rotate_right	rbtree.c	/^static void __rb_rotate_right(struct rb_node *node,struct rb_root *root)$/;"	f	file:
+_ctype	ctype.c	/^const unsigned char _ctype[] = {$/;"	v
+any_tag_set	radix-tree.c	/^static inline int any_tag_set(struct radix_tree_node *node,unsigned int tag)$/;"	f	file:
+base	vsprintf.c	/^	u8 base;          \/* number base,8,10 or 16 only *\/$/;"	m	struct:printf_spec	file:
+bitmap_scnprintf	bitmap.c	/^int bitmap_scnprintf(char *buf,unsigned int buflen,$/;"	f
+clear_bit	bitmap.c	/^void clear_bit(int nr,unsigned int *byte)$/;"	f
+count	radix-tree.c	/^	unsigned int count;$/;"	m	struct:radix_tree_node	file:
+do_div	vsprintf.c	54;"	d	file:
+field_width	vsprintf.c	/^	s16 field_width;  \/* width of output field *\/$/;"	m	struct:printf_spec	file:
+find_next_bit	bitmap.c	/^int find_next_bit(unsigned int *addr,unsigned long size,$/;"	f
+find_next_zero_bit	bitmap.c	/^int find_next_zero_bit(unsigned int *byte,$/;"	f
+flags	vsprintf.c	/^	u8 flags;         \/* flags to number() *\/$/;"	m	struct:printf_spec	file:
+format_decode	vsprintf.c	/^static int format_decode(const char *fmt,struct printf_spec *spec)$/;"	f	file:
+format_type	vsprintf.c	/^enum format_type {$/;"	g	file:
+generic_swap	sort.c	/^static void generic_swap(void *a,void *b,int size)$/;"	f	file:
+get_option	cmdline.c	/^int get_option(char **str,int *pint)$/;"	f
+height	radix-tree.c	/^	unsigned int height;    \/* Height from the bottom *\/$/;"	m	struct:radix_tree_node	file:
+height_to_maxindex	radix-tree.c	/^static unsigned long height_to_maxindex[RADIX_TREE_MAX_PATH + 1]; $/;"	v	file:
+hex_asc	hexdump.c	/^const char hex_asc[] = "0123456789abcdef";$/;"	v
+indirect_to_ptr	radix-tree.c	/^static inline void *indirect_to_ptr(void *ptr)$/;"	f	file:
+kasprintf	kasprintf.c	/^char *kasprintf(gfp_t gfp,const char *fmt,...)$/;"	f
+kvasprintf	kasprintf.c	/^char *kvasprintf(gfp_t gfp,const char *fmt,va_list ap)$/;"	f
+mac_address_string	vsprintf.c	/^static char *mac_address_string(char *buf,char *end,u8 *addr,$/;"	f	file:
+memparse	cmdline.c	/^unsigned long long memparse(const char *ptr,char **retptr)$/;"	f
+node	radix-tree.c	/^	struct radix_tree_node *node;$/;"	m	struct:radix_tree_path	typeref:struct:radix_tree_path::radix_tree_node	file:
+number	vsprintf.c	/^static char *number(char *buf,char *end,unsigned long long num,$/;"	f	file:
+offset	radix-tree.c	/^	int offset;$/;"	m	struct:radix_tree_path	file:
+pointer	vsprintf.c	/^static char *pointer(const char *fmt,char *buf,char *end,$/;"	f	file:
+precision	vsprintf.c	/^	s16 precision;    \/* # of digits\/chars *\/$/;"	m	struct:printf_spec	file:
+printf_spec	vsprintf.c	/^struct printf_spec {$/;"	s	file:
+ptr_to_indirect	radix-tree.c	/^static inline void *ptr_to_indirect(void *ptr)$/;"	f	file:
+put_dec	vsprintf.c	/^static char *put_dec(char *buf,unsigned long long num)$/;"	f	file:
+put_dec_full	vsprintf.c	/^static char *put_dec_full(char *buf,unsigned q)$/;"	f	file:
+put_dec_trunc	vsprintf.c	/^static char *put_dec_trunc(char *buf,unsigned q)$/;"	f	file:
+qualifier	vsprintf.c	/^	u8 qualifier;     \/* number qualifier,one of 'hHILtzZ' *\/$/;"	m	struct:printf_spec	file:
+radix_tree_delete	radix-tree.c	/^void *radix_tree_delete(struct radix_tree_root *root,unsigned long index)$/;"	f
+radix_tree_maxindex	radix-tree.c	/^static inline unsigned long radix_tree_maxindex(unsigned int height)$/;"	f	file:
+radix_tree_node	radix-tree.c	/^struct radix_tree_node {$/;"	s	file:
+radix_tree_node_cachep	radix-tree.c	/^static struct kmem_cache *radix_tree_node_cachep;$/;"	v	typeref:struct:kmem_cache	file:
+radix_tree_node_free	radix-tree.c	/^static inline void radix_tree_node_free(struct radix_tree_node *node)$/;"	f	file:
+radix_tree_node_rcu_free	radix-tree.c	/^static void radix_tree_node_rcu_free(struct rcu_head *head)$/;"	f	file:
+radix_tree_path	radix-tree.c	/^struct radix_tree_path {$/;"	s	file:
+radix_tree_shrink	radix-tree.c	/^static inline void radix_tree_shrink(struct radix_tree_root *root)$/;"	f	file:
+radix_tree_tag_clear	radix-tree.c	/^void *radix_tree_tag_clear(struct radix_tree_root *root,$/;"	f
+rb_erase	rbtree.c	/^void rb_erase(struct rb_node *node,struct rb_root *root)$/;"	f
+rb_insert_color	rbtree.c	/^void rb_insert_color(struct rb_node *node,struct rb_root *root)$/;"	f
+rb_next	rbtree.c	/^struct rb_node *rb_next(struct rb_node *node)$/;"	f
+rb_prev	rbtree.c	/^struct rb_node *rb_prev(struct rb_node *node)$/;"	f
+rcu_head	radix-tree.c	/^	struct rcu_head rcu_head;$/;"	m	struct:radix_tree_node	typeref:struct:radix_tree_node::rcu_head	file:
+resource_string	vsprintf.c	/^static char *resource_string(char *buf,char *end,struct resource *res,$/;"	f	file:
+root_tag_clear	radix-tree.c	/^static inline void root_tag_clear(struct radix_tree_root *root,$/;"	f	file:
+root_tag_clear_all	radix-tree.c	/^static inline void root_tag_clear_all(struct radix_tree_root *root)$/;"	f	file:
+root_tag_get	radix-tree.c	/^static inline int root_tag_get(struct radix_tree_root *root,$/;"	f	file:
+scnprintf	vsprintf.c	/^int scnprintf(char *buf,size_t size,const char *fmt,...)$/;"	f
+set_bit	bitmap.c	/^void set_bit(int nr,unsigned int *byte)$/;"	f
+simple_guess_base	string.c	/^static unsigned int simple_guess_base(const char *cp)$/;"	f	file:
+simple_guess_base	vsprintf.c	/^static unsigned int simple_guess_base(const char *cp)$/;"	f	file:
+simple_strtol	vsprintf.c	/^long simple_strtol(const char *cp,char **endp,unsigned int base)$/;"	f
+simple_strtoul	vsprintf.c	/^unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)$/;"	f
+simple_strtoull	string.c	/^unsigned long long simple_strtoull(const char *cp,char **endp,$/;"	f
+simple_strtoull	vsprintf.c	/^static unsigned long long simple_strtoull(const char *cp,$/;"	f	file:
+skip_atoi	vsprintf.c	/^static int skip_atoi(const char **s)$/;"	f	file:
+skip_spaces	string.c	/^char *skip_spaces(const char *str)$/;"	f
+slots	radix-tree.c	/^	void __rcu *slots[RADIX_TREE_MAP_SIZE];$/;"	m	struct:radix_tree_node	file:
+sort	sort.c	/^void sort(void *base,size_t num,size_t size,$/;"	f
+string	vsprintf.c	/^static char *string(char *buf,char *end,const char *s,$/;"	f	file:
+symbol_string	vsprintf.c	/^static char *symbol_string(char *buf,char *end,void *ptr,$/;"	f	file:
+tag_clear	radix-tree.c	/^static inline void tag_clear(struct radix_tree_node *node,unsigned int tag,$/;"	f	file:
+tag_get	radix-tree.c	/^static inline int tag_get(struct radix_tree_node *node,$/;"	f	file:
+tags	radix-tree.c	/^	unsigned long tags[RADIX_TREE_MAX_TAGS][RADIX_TREE_TAG_LONGS];$/;"	m	struct:radix_tree_node	file:
+test_and_clear_bit	bitmap.c	/^int test_and_clear_bit(int nr,unsigned int *byte)$/;"	f
+test_and_set_bit	bitmap.c	/^int test_and_set_bit(int nr,unsigned int *byte)$/;"	f
+test_bit	bitmap.c	/^int test_bit(int nr,unsigned int *byte)$/;"	f
+type	vsprintf.c	/^	u8 type;          \/*format_type enum *\/$/;"	m	struct:printf_spec	file:
+u32_swap	sort.c	/^static void u32_swap(void *a,void *b,int size)$/;"	f	file:
+vscnprintf	vsprintf.c	/^int vscnprintf(char *buf,size_t size,const char *fmt,va_list args)$/;"	f
+vsnprintf	vsprintf.c	/^int vsnprintf(char *buf,size_t size,const char *fmt,va_list args)$/;"	f

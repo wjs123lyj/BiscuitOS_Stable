@@ -363,8 +363,7 @@ restart:
 	if(region)
 		return region;
 
-	list_for_each_entry(bdata,&bdata_list,list)
-	{
+	list_for_each_entry(bdata,&bdata_list,list) {
 		if(goal && bdata->node_low_pfn <= PFN_DOWN(goal))
 			continue;
 		if(limit && bdata->node_min_pfn >= PFN_DOWN(limit))
@@ -374,8 +373,7 @@ restart:
 		if(region)
 			return region;
 	}
-	if(goal)
-	{
+	if(goal) {
 		goal = 0;
 		goto restart;
 	}

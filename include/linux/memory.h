@@ -60,4 +60,24 @@ extern int __pte_alloc_kernel(pmd_t *pmd,unsigned long address);
  */
 #define FLUSH_BASE_PHYS   0x00000000
 #define FLUSH_BASE        0xdf000000
+
+/*
+ * Conversion between a struct page and a physical address.
+ *
+ * Note:when converting an unknow physical address to a 
+ * struct page,the resulting pointer must be validated
+ * unsigned VALID_PAGE().It must return an invalid struct page
+ * for any physical address not corresponding to a system
+ * RAM address.
+ *
+ * page_to_pfn(page) convert a struct page *to a PFN number
+ * pfn_to_page(pfn)  convert a _valid_PFN number to struct page *
+ *
+ * virt_to_page(k)   convert a _valid_virtual address to struct page *
+ * virt_addr_valid(k) indicates whether a virtual address is valid
+ */
+
+#define virt_addr_valid(kaddr) ((unsigned long)(kaddr) >= PAGE_OFFSET  \
+			&& (unsigned long)(kaddr) < (unsigned long)high_memory)
+
 #endif

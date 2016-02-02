@@ -129,5 +129,23 @@ static inline char *pack_hex_byte(char *buf,u8 byte)
 	return buf;
 }
 
+/*
+ * abs() handles unsigned and singed longs,inits,shorts and chars.For all
+ * input types abs() returns a signed long.
+ * abs() should not be used for 64-bit types(s64,u64,long long) - use abs64()
+ * for those.
+ */
+#define abs(x) ({                   \
+		long ret;                      \
+		if(sizeof(x) == sizeof(long)) {           \
+			long __x = (x);                       \
+			ret = (__x < 0) ? -__x : __x;         \
+		} else {                                  \
+			int __x = (x);                        \
+			ret = (__x < 0) ? -__x : __x;         \
+		}                                         \
+		ret;                                      \
+		})
+
 
 #endif

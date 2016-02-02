@@ -51,6 +51,8 @@ struct printf_spec {
 	s16 precision;    /* # of digits/chars */
 };
 
+extern size_t strnlen(const char *s,size_t count);
+
 #define do_div(a,b) ((a) / (b))
 static unsigned int simple_guess_base(const char *cp)
 {
@@ -500,28 +502,27 @@ static char *pointer(const char *fmt,char *buf,char *end,
 static char *string(char *buf,char *end,const char *s,
 		struct printf_spec spec)
 {
-	int len,i;
+	int len, i;
 
-	if((unsigned long)s < PAGE_SIZE)
+	if ((unsigned long)s < PAGE_SIZE)
 		s = "(null)";
 
-	len = strnlen(s,spec.precision);
+	len = strnlen(s, spec.precision);
 
-	if(!(spec.flags & LEFT)) {
-		while(len < spec.field_width--) {
-			if(buf < end)
+	if (!(spec.flags & LEFT)) {
+		while (len < spec.field_width--) {
+			if (buf < end)
 				*buf = ' ';
 			++buf;
 		}
 	}
-	for(i = 0 ; i < len ; i++) {
-		if(buf < end)
+	for (i = 0; i < len; ++i) {
+		if (buf < end)
 			*buf = *s;
-		++buf;
-		++s;
+		++buf; ++s;
 	}
-	while(len < spec.field_width--) {
-		if(buf < end)
+	while (len < spec.field_width--) {
+		if (buf < end)
 			*buf = ' ';
 		++buf;
 	}
@@ -530,14 +531,19 @@ static char *string(char *buf,char *end,const char *s,
 }
 /*
  * Helper function to decode printf style format.
+ * Each call decode a token from the format and return the 
+ * number of characters read (or likely the delta where it wants
+ * to go on the next call).
+ * The decoded token is returned through the parameters
+ *
  */
 static int format_decode(const char *fmt,struct printf_spec *spec)
 {
 	const char *start = fmt;
 
-	/* We finished early by reading the field width */
-	if(spec->type == FORMAT_TYPE_WIDTH) {
-		if(spec->field_width < 0) {
+	/* we finished early by reading the field width */
+	if (spec->type == FORMAT_TYPE_WIDTH) {
+		if (spec->field_width < 0) {
 			spec->field_width = -spec->field_width;
 			spec->flags |= LEFT;
 		}
@@ -545,9 +551,9 @@ static int format_decode(const char *fmt,struct printf_spec *spec)
 		goto precision;
 	}
 
-	/* We finished early by reading the percision */
-	if(spec->type == FORMAT_TYPE_PRECISION) {
-		if(spec->precision < 0)
+	/* we finished early by reading the precision */
+	if (spec->type == FORMAT_TYPE_PRECISION) {
+		if (spec->precision < 0)
 			spec->precision = 0;
 
 		spec->type = FORMAT_TYPE_NONE;
@@ -557,147 +563,158 @@ static int format_decode(const char *fmt,struct printf_spec *spec)
 	/* By default */
 	spec->type = FORMAT_TYPE_NONE;
 
-	for(; *fmt ; ++fmt) {
-		if(*fmt == '%')
+	for (; *fmt ; ++fmt) {
+		if (*fmt == '%')
 			break;
 	}
 
 	/* Return the current non-format string */
-	if(fmt != start || *fmt)
+	if (fmt != start || !*fmt)
 		return fmt - start;
 
 	/* Process flags */
 	spec->flags = 0;
 
-	while(1) { /* this also skip first % */
+	while (1) { /* this also skips first '%' */
 		bool found = true;
 
 		++fmt;
 
-		switch(*fmt) {
-			case '-': spec->flags |= LEFT; break;
-			case '+': spec->flags |= PLUS; break;
-			case ' ': spec->flags |= SPACE; break;
-			case '#': spec->flags |= SPECIAL; break;
-			case '0': spec->flags |= ZEROPAD; break;
-			default : found = false;
+		switch (*fmt) {
+		case '-': spec->flags |= LEFT;    break;
+		case '+': spec->flags |= PLUS;    break;
+		case ' ': spec->flags |= SPACE;   break;
+		case '#': spec->flags |= SPECIAL; break;
+		case '0': spec->flags |= ZEROPAD; break;
+		default:  found = false;
 		}
-	/* get field width */
-		spec->field_width = -1;
 
-		if(isdigit(*fmt))
-			spec->field_width = skip_atoi(&fmt);
-		else if(*fmt == '*') {
-			/* It's the next argument */
-			spec->type = FORMAT_TYPE_WIDTH;
+		if (!found)
+			break;
+	}
+
+	/* get field width */
+	spec->field_width = -1;
+
+	if (isdigit(*fmt))
+		spec->field_width = skip_atoi(&fmt);
+	else if (*fmt == '*') {
+		/* it's the next argument */
+		spec->type = FORMAT_TYPE_WIDTH;
+		return ++fmt - start;
+	}
+
+precision:
+	/* get the precision */
+	spec->precision = -1;
+	if (*fmt == '.') {
+		++fmt;
+		if (isdigit(*fmt)) {
+			spec->precision = skip_atoi(&fmt);
+			if (spec->precision < 0)
+				spec->precision = 0;
+		} else if (*fmt == '*') {
+			/* it's the next argument */
+			spec->type = FORMAT_TYPE_PRECISION;
 			return ++fmt - start;
 		}
-precision:
-		/* get the precision */
-		spec->precision = -1;
-		if(*fmt == '.') {
-			++fmt;
-			if(isdigit(*fmt)) {
-				spec->precision = skip_atoi(&fmt);
-				if(spec->precision < 0)
-					spec->precision = 0;
-			} else if(*fmt == '*') {
-				/* It's the next argument */
-				spec->type = FORMAT_TYPE_PRECISION;
-				return ++fmt - start;
-			}
-		}
-qualifier:
-		/* get the conversion qualifier */
-		spec->qualifier = -1;
-		if(*fmt == 'h' || TOLOWER(*fmt) == 'l' ||
-				TOLOWER(*fmt) == 'Z' || *fmt == 't') {
-			spec->qualifier = *fmt++;
-			if(unlikely(spec->qualifier == *fmt)) {
-				if(spec->qualifier == 'l') {
-					spec->qualifier = 'L';
-					++fmt;
-				} else if(spec->qualifier == 'h') {
-					spec->qualifier = 'H';
-					++fmt;
-				}
-			}
-		}
-		/* default base */
-		spec->base = 10;
-		switch(*fmt) {
-			case 'c':
-				spec->type = FORMAT_TYPE_CHAR;
-				return ++fmt - start;
-			
-			case 's':
-				spec->type = FORMAT_TYPE_STR;
-				return ++fmt - start;
-
-			case 'p':
-				spec->type = FORMAT_TYPE_PTR;
-				return fmt - start;
-
-			case 'n':
-				spec->type = FORMAT_TYPE_NRCHARS;
-				return ++fmt - start;
-			
-			case '%':
-				spec->type = FORMAT_TYPE_PERCENT_CHAR;
-				return ++fmt - start;
-
-			/* Interger number formats - set up the flags and break */
-			case 'o':
-				spec->base = 8;
-				break;
-
-			case 'x':
-				spec->flags |= SMALL;
-
-			case 'X':
-				spec->base = 16;
-				break;
-
-			case 'd':
-			case 'i':
-				spec->flags |= SIGN;
-			case 'u':
-				break;
-
-			default:
-				spec->type = FORMAT_TYPE_INVALID;
-				return fmt - start;
-		}
-
-		if(spec->qualifier == 'L')
-			spec->type = FORMAT_TYPE_LONG_LONG;
-		else if(spec->qualifier == 'l')
-			if(spec->flags & SIGN)
-				spec->type = FORMAT_TYPE_LONG;
-			else
-				spec->type = FORMAT_TYPE_ULONG;
-		else if(TOLOWER(spec->qualifier) == 'z') 
-			spec->type = FORMAT_TYPE_SIZE_T;
-		else if(spec->qualifier == 't')
-			spec->type = FORMAT_TYPE_PTRDIFF;
-		else if(spec->qualifier == 'H')
-			if(spec->flags & SIGN)
-				spec->type = FORMAT_TYPE_BYTE;
-			else
-				spec->type = FORMAT_TYPE_UBYTE;
-		else if(spec->qualifier == 'h')
-			if(spec->flags & SIGN)
-				spec->type = FORMAT_TYPE_SHORT;
-			else
-				spec->type = FORMAT_TYPE_USHORT;
-		else
-			if(spec->flags & SIGN)
-				spec->type = FORMAT_TYPE_INT;
-			else
-				spec->type = FORMAT_TYPE_UINT;
 	}
+
+qualifier:
+	/* get the conversion qualifier */
+	spec->qualifier = -1;
+	if (*fmt == 'h' || TOLOWER(*fmt) == 'l' ||
+	    TOLOWER(*fmt) == 'z' || *fmt == 't') {
+		spec->qualifier = *fmt++;
+		if (unlikely(spec->qualifier == *fmt)) {
+			if (spec->qualifier == 'l') {
+				spec->qualifier = 'L';
+				++fmt;
+			} else if (spec->qualifier == 'h') {
+				spec->qualifier = 'H';
+				++fmt;
+			}
+		}
+	}
+
+	/* default base */
+	spec->base = 10;
+	switch (*fmt) {
+	case 'c':
+		spec->type = FORMAT_TYPE_CHAR;
+		return ++fmt - start;
+
+	case 's':
+		spec->type = FORMAT_TYPE_STR;
+		return ++fmt - start;
+
+	case 'p':
+		spec->type = FORMAT_TYPE_PTR;
+		return fmt - start;
+		/* skip alnum */
+
+	case 'n':
+		spec->type = FORMAT_TYPE_NRCHARS;
+		return ++fmt - start;
+
+	case '%':
+		spec->type = FORMAT_TYPE_PERCENT_CHAR;
+		return ++fmt - start;
+
+	/* integer number formats - set up the flags and "break" */
+	case 'o':
+		spec->base = 8;
+		break;
+
+	case 'x':
+		spec->flags |= SMALL;
+
+	case 'X':
+		spec->base = 16;
+		break;
+
+	case 'd':
+	case 'i':
+		spec->flags |= SIGN;
+	case 'u':
+		break;
+
+	default:
+		spec->type = FORMAT_TYPE_INVALID;
+		return fmt - start;
+	}
+
+	if (spec->qualifier == 'L')
+		spec->type = FORMAT_TYPE_LONG_LONG;
+	else if (spec->qualifier == 'l') {
+		if (spec->flags & SIGN)
+			spec->type = FORMAT_TYPE_LONG;
+		else
+			spec->type = FORMAT_TYPE_ULONG;
+	} else if (TOLOWER(spec->qualifier) == 'z') {
+		spec->type = FORMAT_TYPE_SIZE_T;
+	} else if (spec->qualifier == 't') {
+		spec->type = FORMAT_TYPE_PTRDIFF;
+	} else if (spec->qualifier == 'H') {
+		if (spec->flags & SIGN)
+			spec->type = FORMAT_TYPE_BYTE;
+		else
+			spec->type = FORMAT_TYPE_UBYTE;
+	} else if (spec->qualifier == 'h') {
+		if (spec->flags & SIGN)
+			spec->type = FORMAT_TYPE_SHORT;
+		else
+			spec->type = FORMAT_TYPE_USHORT;
+	} else {
+		if (spec->flags & SIGN)
+			spec->type = FORMAT_TYPE_INT;
+		else
+			spec->type = FORMAT_TYPE_UINT;
+	}
+
 	return ++fmt - start;
 }
+
 
 /*
  * simple_strtoull - conver a string to an unsigned long long
@@ -762,148 +779,161 @@ long simple_strtol(const char *cp,char **endp,unsigned int base)
 int vsnprintf(char *buf,size_t size,const char *fmt,va_list args)
 {
 	unsigned long long num;
-	char *str,*end;
+	char *str, *end;
 	struct printf_spec spec = {0};
 
-	/* 
-	 * Reject out-of-range values early.Large positive sizes are 
-	 * used for unknow buffer sizes.
-	 */
-	if(WARN_ON_ONCE((int)size < 0))
+	/* Reject out-of-range values early.  Large positive sizes are
+	   used for unknown buffer sizes. */
+	if (WARN_ON_ONCE((int) size < 0))
 		return 0;
 
 	str = buf;
 	end = buf + size;
 
 	/* Make sure end is always >= buf */
-	if(end < buf) {
+	if (end < buf) {
 		end = ((void *)-1);
 		size = end - buf;
 	}
 
-	while(*fmt) {
+	while (*fmt) {
 		const char *old_fmt = fmt;
-		int read = format_decode(fmt,&spec);
+		int read = format_decode(fmt, &spec);
 
 		fmt += read;
 
-		switch(spec.type) {
-			case FORMAT_TYPE_NONE: {
-				int copy = read;
-				if(str < end) {
-					if(copy > end - str)
-						copy = end - str;
-					memcpy(str,old_fmt,copy);
-				}
-				str += read;
-				break;
+		switch (spec.type) {
+		case FORMAT_TYPE_NONE: {
+			int copy = read;
+			if (str < end) {
+				if (copy > end - str)
+					copy = end - str;
+				memcpy(str, old_fmt, copy);
 			}
-			case FORMAT_TYPE_WIDTH:
-				spec.field_width = va_arg(args,int);
-				break;
-			case FORMAT_TYPE_PRECISION:
-				spec.precision = va_arg(args,int);
-				break;
-			case FORMAT_TYPE_CHAR: {
-				char c;
+			str += read;
+			break;
+		}
 
-				if(!(spec.flags & LEFT)) {
-					while(--spec.field_width > 0) {
-						if(str < end)
-							*str = ' ';
-						++str;
-					}
-				}
-				c = (unsigned char)va_arg(args,int);
-				if(str < end)
-					*str = c;
-				++str;
-				while(--spec.field_width > 0) {
-					if(str < end)
+		case FORMAT_TYPE_WIDTH:
+			spec.field_width = va_arg(args, int);
+			break;
+
+		case FORMAT_TYPE_PRECISION:
+			spec.precision = va_arg(args, int);
+			break;
+
+		case FORMAT_TYPE_CHAR: {
+			char c;
+
+			if (!(spec.flags & LEFT)) {
+				while (--spec.field_width > 0) {
+					if (str < end)
 						*str = ' ';
 					++str;
-				}
-				break;				   
-			}
-			case FORMAT_TYPE_STR:
-				str = string(str,end,va_arg(args,char *),spec);
-				break;
-			case FORMAT_TYPE_PTR:
-				str = pointer(fmt + 1,str,end,va_arg(args,void *),
-						spec);
-				while(isalnum(*fmt))
-					fmt++;
-				break;
-			case FORMAT_TYPE_PERCENT_CHAR:
-				if(str < end)
-					*str = '%';
-				++str;
-				break;
-			case FORMAT_TYPE_INVALID:
-				if(str < end)
-					*str = '%';
-				++str;
-				break;
-			case FORMAT_TYPE_NRCHARS: {
-				u8 qualifier = spec.qualifier;
-				
-				if(qualifier == 'l') {
-					long *ip = va_arg(args,long *);
-					*ip = (str - buf);
-				} else if(TOLOWER(qualifier) == 'z') {
-					size_t *ip = va_arg(args,size_t *);
-					*ip = (str - buf);
-				} else {
-					int *ip = va_arg(args,int *);
-					*ip = (str - buf);
-				}
-				break;
-			  }
-			default:
-					switch(spec.type) {
-					case FORMAT_TYPE_LONG_LONG:
-						num = va_arg(args,long long);
-						break;
-					case FORMAT_TYPE_ULONG:
-						num = va_arg(args,unsigned long);
-						break;
-					case FORMAT_TYPE_LONG:
-						num = va_arg(args,long);
-						break;
-					case FORMAT_TYPE_SIZE_T:
-						num = va_arg(args,size_t);
-						break;
-					case FORMAT_TYPE_PTRDIFF:
-						num = va_arg(args,ptrdiff_t);
-						break;
-					case FORMAT_TYPE_UBYTE:
-						num = (unsigned char)va_arg(args,int);
-						break;
-					case FORMAT_TYPE_USHORT:
-						num = (unsigned short)va_arg(args,int);
-						break;
-					case FORMAT_TYPE_SHORT:
-						num = (short)va_arg(args,int);
-						break;
-					case FORMAT_TYPE_INT:
-						num = (int)va_arg(args,int);
-						break;
-					default:
-						num = va_arg(args,unsigned int);
-					}
 
-					str = number(str,end,num,spec);
+				}
 			}
+			c = (unsigned char) va_arg(args, int);
+			if (str < end)
+				*str = c;
+			++str;
+			while (--spec.field_width > 0) {
+				if (str < end)
+					*str = ' ';
+				++str;
+			}
+			break;
+		}
+
+		case FORMAT_TYPE_STR:
+			str = string(str, end, va_arg(args, char *), spec);
+			break;
+
+		case FORMAT_TYPE_PTR:
+			str = pointer(fmt+1, str, end, va_arg(args, void *),
+				      spec);
+			while (isalnum(*fmt))
+				fmt++;
+			break;
+
+		case FORMAT_TYPE_PERCENT_CHAR:
+			if (str < end)
+				*str = '%';
+			++str;
+			break;
+
+		case FORMAT_TYPE_INVALID:
+			if (str < end)
+				*str = '%';
+			++str;
+			break;
+
+		case FORMAT_TYPE_NRCHARS: {
+			u8 qualifier = spec.qualifier;
+
+			if (qualifier == 'l') {
+				long *ip = va_arg(args, long *);
+				*ip = (str - buf);
+			} else if (TOLOWER(qualifier) == 'z') {
+				size_t *ip = va_arg(args, size_t *);
+				*ip = (str - buf);
+			} else {
+				int *ip = va_arg(args, int *);
+				*ip = (str - buf);
+			}
+			break;
+		}
+
+		default:
+			switch (spec.type) {
+			case FORMAT_TYPE_LONG_LONG:
+				num = va_arg(args, long long);
+				break;
+			case FORMAT_TYPE_ULONG:
+				num = va_arg(args, unsigned long);
+				break;
+			case FORMAT_TYPE_LONG:
+				num = va_arg(args, long);
+				break;
+			case FORMAT_TYPE_SIZE_T:
+				num = va_arg(args, size_t);
+				break;
+			case FORMAT_TYPE_PTRDIFF:
+				num = va_arg(args, ptrdiff_t);
+				break;
+			case FORMAT_TYPE_UBYTE:
+				num = (unsigned char) va_arg(args, int);
+				break;
+			case FORMAT_TYPE_BYTE:
+				num = (signed char) va_arg(args, int);
+				break;
+			case FORMAT_TYPE_USHORT:
+				num = (unsigned short) va_arg(args, int);
+				break;
+			case FORMAT_TYPE_SHORT:
+				num = (short) va_arg(args, int);
+				break;
+			case FORMAT_TYPE_INT:
+				num = (int) va_arg(args, int);
+				break;
+			default:
+				num = va_arg(args, unsigned int);
+			}
+
+			str = number(str, end, num, spec);
+		}
 	}
-	if(size > 0) {
-		if(str < end)
+
+	if (size > 0) {
+		if (str < end)
 			*str = '\0';
 		else
 			end[-1] = '\0';
 	}
 
-	/* The trailing null byte doesn't count towards the total */
-	return str - buf;
+	/* the trailing null byte doesn't count towards the total */
+	return str-buf;
+
 }
 
 /**
@@ -927,7 +957,7 @@ int vscnprintf(char *buf,size_t size,const char *fmt,va_list args)
 	int i;
 
 	i = vsnprintf(buf,size,fmt,args);
-
+	
 	if(likely(i < size))
 		return i;
 	if(size != 0)
