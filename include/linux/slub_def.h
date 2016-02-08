@@ -115,7 +115,6 @@ struct kmem_cache {
 };
 
 extern void *kmem_cache_alloc(struct kmem_cache *s,gfp_t gfpflags);
-
 static inline void *kmem_cache_alloc_trace(struct kmem_cache *cachep,
 		gfp_t flags,size_t size)
 {
@@ -232,8 +231,10 @@ static inline void *kmalloc(size_t size,gfp_t flags)
 	return __kmalloc(size,flags);
 
 }
-extern void *kmem_cache_alloc_node(struct kmem_cache *s,
-		gfp_t gfpflags,int node);
+
+static inline void *kmem_cache_alloc_node(struct kmem_cache *cachep,
+		        gfp_t flags,int node);
+
 static inline void *kmem_cache_alloc_node_trace(
 		struct kmem_cache *s,gfp_t gfpflags,
 		int node,size_t size)

@@ -7,7 +7,9 @@
 static inline int get_order(unsigned long size)
 {
 	int order;
-	
+
+	if(size == 0)
+		return 0;
 	size = (size - 1) >> (PAGE_SHIFT - 1);
 	order = -1;
 	do {

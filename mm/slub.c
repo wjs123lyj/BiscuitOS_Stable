@@ -23,6 +23,7 @@
 #include "linux/printk.h"
 #include "linux/init.h"
 #include "linux/kmemcheck.h"
+#include "linux/bit_spinlock.h"
 
 
 /*
@@ -874,22 +875,34 @@ static void slab_out_of_memory(struct kmem_cache *s,
 				(void *)(unsigned long)nr_free);
 	}
 }
-#define slab_trylock(x) (0)
+
+static inline int slab_trylock(struct page *page)
+{
+	int rc = 1;
+
+	rc = bit_spin_trylock(PG_locked,&page->flags);
+	return rc;
+}
+
+
 static inline void __remove_partial(struct kmem_cache_node *n,
 		struct page *page);
 /*
  * Lock slab and remove from the partial list.
+ *
+ * Must hold list_lock.
  */
 static inline int lock_and_freeze_slab(struct kmem_cache_node *n,
 		struct page *page)
 {
 	if(slab_trylock(page)) {
 		__remove_partial(n,page);
-		//__SetPageSlubFrozen(page);
+		__SetPageSlubFrozen(page);
 		return 1;
 	}
 	return 0;
 }
+
 /*
  * Try to allocate a partial slab from a specific node.
  */
@@ -938,8 +951,22 @@ static struct page *get_partial(struct kmem_cache *s,gfp_t flags,int node)
 }
 static struct page *new_slab(struct kmem_cache *s,gfp_t flags,int node);
 /*
- * Slow path.The lockless freelist is empty or we need to perfom
+ * Slow path.The lockless freelist is empty or we need to perform
  * debugging duties.
+ *
+ * Interrupts are disalbed
+ * 
+ * Processing is still very fast if new objects have been freed to the
+ * regular freelist.In that case we simply take over the regular freelist
+ * as the lockless freelist and zap the regular freelist.
+ * 
+ * If that is not working then we fall back to the partial lists.We take the
+ * first element of the freelist as the object to allocate now and move the
+ * rest of the freelist to the lockless freelist.
+ *
+ * And if we were unable to get a new slab from the partial slab lists then
+ * we needs to allocate a new slab.This is the slowest path since it involves
+ * a call to the page allocator and the setup of a new slab.
  */
 static void *__slab_alloc(struct kmem_cache *s,gfp_t gfpflags,int node,
 		unsigned long addr,struct kmem_cache_cpu *c)
@@ -1521,6 +1548,7 @@ static struct page *new_slab(struct kmem_cache *s,gfp_t flags,int node)
 	void *start;
 	void *last;
 	void *p;
+	void *test;
 
 	BUG_ON(flags & GFP_SLAB_BUG_MASK);
 
@@ -1536,16 +1564,17 @@ static struct page *new_slab(struct kmem_cache *s,gfp_t flags,int node)
 	/* In order to simulate... */
 	start = phys_to_mem(__pa(page_address(page)));
 
-
 	if(unlikely(s->flags & SLAB_POISON))
 		memset(start,POISON_INUSE,PAGE_SIZE << compound_order(page));
 
 	last = start;
+	test = start;
 	for_each_object(p,s,start,page->objects) {
 		setup_object(s,page,last);
 		set_freepointer(s,last,p);
 		last = p;
 	}
+
 	setup_object(s,page,last);
 	set_freepointer(s,last,NULL);
 
@@ -1757,13 +1786,7 @@ void kmem_cache_free(struct kmem_cache *s,void *x)
 
 	slab_free(s,page,x,_RET_IP_);
 }
-void *kmem_cache_alloc_node(struct kmem_cache *s,
-		gfp_t gfpflags,int node)
-{
-	void *ret = slab_alloc(s,gfpflags,node,_RET_IP_);
 
-	return ret;
-}
 static void free_kmem_cache_nodes(struct kmem_cache *s)
 {
 	int node;
@@ -1802,6 +1825,7 @@ static int init_kmem_cache_nodes(struct kmem_cache *s)
 	}
 	return 1;
 }
+
 static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 {
 	BUILD_BUG_ON(PERCPU_DYNAMIC_EARLY_SIZE < 

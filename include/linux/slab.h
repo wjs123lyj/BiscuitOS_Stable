@@ -64,4 +64,13 @@ static inline void *kzalloc_node(size_t size,gfp_t flags,int node)
 }
 #define kmalloc_track_caller(size,flags) \
 	__kmalloc(size,flags)
+
+extern void *kmem_cache_alloc(struct kmem_cache *s,gfp_t gfpflags);
+
+static inline void *kmem_cache_alloc_node(struct kmem_cache *cachep,
+		gfp_t flags,int node)
+{
+	return kmem_cache_alloc(cachep,flags);
+}
+
 #endif

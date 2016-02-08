@@ -142,6 +142,8 @@ struct page;     /* forward declaration */
 
 PAGEFLAG(Reserved,reserved) __CLEARPAGEFLAG(Reserved,reserved)
 
+__PAGEFLAG(SlubFrozen,slub_frozen)
+
 #ifdef CONFIG_MMU
 PAGEFLAG(Mlocked,mlocked) __CLEARPAGEFLAG(Mlocked,mlocked)    
 	TESTSCFLAG(Mlocked,mlocked) __TESTCLEARFLAG(Mlocked,mlocked)
