@@ -128,6 +128,9 @@ static LIST_HEAD(slab_caches);
 
 extern char *kstrdup(const char *s,gfp_t gfp);
 
+#define down_write(x) do {} while(0)
+#define up_write(x)   do {} while(0)
+
 /*
  * Merge control.If this is set then no merging of slab caches will occur.
  * (Could be removed.This was introduced to pacify the merge skeptics.)
@@ -142,6 +145,13 @@ static int slub_nomerge;
 
 #define SLAB_DEBUG_FLAGS (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER | \
 		SLAB_TRACE | SLAB_DEBUG_FREE)
+
+/*
+ * Set of flags that will prevent slab merging
+ */
+#define SLUB_NEVER_MERGE (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER | \
+		SLAB_TRACE | SLAB_DESTROY_BY_RCU | SLAB_NOLEAKTRACE | \
+		SLAB_FAILSALB)
 
 struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];
 
@@ -168,6 +178,22 @@ static char *slub_debug_slabs;
 
 static struct kmem_cache *kmem_cache;
 static int slub_debug = DEBUG_DEFAULT_FLAGS;
+
+#ifdef CONFIG_SYSFS
+
+#else
+static inline int sysfs_slab_add(struct kmem_cache *s) {return 0;}
+static inline int sysfs_slab_alias(struct kmem_cache *s,const char *p)
+{
+	return 0; 
+}
+static inline void sysfs_slab_remove(struct kmem_cache *s)
+{
+	kfree(s->name);
+	kfree(s);
+}
+#endif
+
 
 static inline struct kmem_cache_order_objects oo_make(int order,
 		unsigned long size)
@@ -2108,6 +2134,128 @@ void __init kmem_cache_init(void)
 			(void *)(unsigned long)nr_cpu_ids,
 			(void *)(unsigned long)nr_node_ids);
 }
+
+/*
+ * Find a mergeable slab cache
+ */
+static int slab_unmergeable(struct kmem_cache *s)
+{
+	if(slab_nomerge || (s->flags & SLUB_NEVER_MERGE))
+		return 1;
+
+	if(s->ctor)
+		return 1;
+
+	/* 
+	 * We may have set a slab to be unmergeable during bootstrap.
+	 */
+	if(s->refcount < 0)
+		return 1;
+
+	return 0;
+}
+
+static struct kmem_cache *find_mergeable(size_t size,
+		size_t align,unsigned long flags,const char *name,
+		void (*ctor)(void *))
+{
+	struct kmem_cache *s;
+
+	if(slub_nomerge || (flags & SLUB_NEVER_MERGE))
+		return NULL;
+
+	if(ctor)
+		return NULL;
+
+	size = ALIGN(size,sizeof(void *));
+	align = calculate_alignment(flags,align,size);
+	size = ALIGN(size,align);
+	flags = kmem_cache_flags(size,flags,name,NULL);
+
+	list_for_each_entry(s,&slab_caches,list) {
+		if(slab_unmergeable(s))
+			continue;
+
+		if(size > s->size)
+			continue;
+
+		if((flags & SLUB_MERGE_SAME) != (s->flags & SLUB_MERGE_SAME))
+			continue;
+
+		/*
+		 * Check if alignment is compatible
+		 */
+		if((s->size & ~(align - 1)) != s->size)
+			continue;
+
+		if(s->size - size >= sizeof(void *))
+			continue;
+
+		return s;
+	}
+	return NULL;
+}
+
+/**** API layer *****/
+struct kmem_cache *kmem_cache_create(const char *name,size_t size,
+		size_t align,unsigned long flags,void (*ctor)(void *))
+{
+	struct kmem_cache *s;
+	char *n;
+
+	if(WARN_ON(!name))
+		return NULL;
+
+	down_write(&slub_lock);
+	s = find_mergeable(size,align,flags,name,ctor);
+	if(s) {
+		s->refcount++;
+		/*
+		 * Adjust the object sizes so that we clear
+		 * the complete object on kzalloc.
+		 */
+		s->objsize = max(s->objsize,(int)size);
+		s->inuse = max_t(int,s->inuse,ALIGN(size,sizeof(void *)));
+
+		if(sysfs_slab_alias(s,name)) {
+			s->refcount--;
+			goto err;
+		}
+		up_write(&slub_lock);
+	}
+
+	n = kstrdup(name,GFP_KERNEL);
+	if(!n)
+		goto err;
+
+	s = kmalloc(kmem_size,GFP_KERNEL);
+	if(s) {
+		if(kmem_cache_open(s,n,size,
+					align,flags,ctor)) {
+			list_add(&s->list,&slub_caches);
+			if(sysfs_slab_add(s)) {
+				list_del(&s->list);
+				kfree(n);
+				kfree(s);
+				goto err;
+			}
+			up_write(&slub_lock);
+			return s;
+		}
+		kfree(n);
+		kfree(s);
+	}
+err:
+	up_write(&slub_lock);
+
+	if(flags & SLAB_PANIC)
+		panic("Cannot create slabcache %s\n",name);
+	else
+		s = NULL;
+	return s;
+}
+
+
 
 static int __init setup_slub_min_order(char *str)
 {

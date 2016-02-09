@@ -81,6 +81,18 @@ enum pageflags {
 	PG_comound_lock,
 #endif
 	__NR_PAGEFLAGS,
+
+	/* Filesystems */
+	PG_checked = PG_owner_priv_1,
+
+	/* Two page bits are conscripted by FS-Cache to maintain local caching
+	 * state.These bits are set on pages belonging to the netfs's inodes
+	 * when those inodes are being locally cached.
+	 */
+	PG_fscache = PG_private_2, /* page blocked by cache */
+
+	/* SLUB */
+	PG_slub_frozen = PG_active,
 };
 
 /*
