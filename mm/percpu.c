@@ -67,6 +67,12 @@
 #define PCPU_SLOT_BASE_SHIFT    5  /* 1-31 shares the same slot */
 #define PCPU_DFL_MAP_ALLOC      16 /* start a map with 16 ents */
 
+#ifdef CONFIG_NEED_PER_CPU_KM
+#include "percpu-km.c"
+#else
+#include "percpu-vm.c"
+#endif
+
 
 enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
 
@@ -104,6 +110,8 @@ size_t *pcpu_group_sizes __read_mostly;
 static struct pcpu_chunk *pcpu_reserved_chunk;
 static int pcpu_reserved_chunk_limit;
 static struct list_head *pcpu_slot __read_mostly; /* chunk list slots */
+
+#define schedule_work(x) do {} while(0)
 
 extern void insert_vmalloc_vm(struct vm_struct *vm,struct vmap_area *va,
 		unsigned long flags,void *caller);
@@ -1504,5 +1512,93 @@ void __init percpu_init_late(void)
 	}
 }
 
+static bool pcpu_addr_in_first_chunk(void *addr)
+{
+	void *first_start = pcpu_first_chunk->base_addr;
 
+	return addr >= first_start && addr < first_start + pcpu_unit_size;
+}
 
+static bool pcpu_addr_in_reserved_chunk(void *addr)
+{
+	void *first_start = pcpu_first_chunk->base_addr;
+
+	return addr >= first_start &&
+		addr < first_start + pcpu_reserved_chunk_limit;
+}
+
+/* obtain pointer to a chunk from a page struct */
+static struct pcpu_chunk *pcpu_get_page_chunk(struct page *page)
+{
+	return (struct pcpu_chunk *)page->index;
+}
+
+/**
+ * pcpu_chunk_addr_search - determine chunk containing specified address
+ * @addr:address for which the chunk needs to be determined.
+ *
+ * RETURNS:
+ * The address of the found chunk.
+ */
+static struct pcpu_chunk *pcpu_chunk_addr_search(void *addr)
+{
+	/* is it the first chunk? */
+	if(pcpu_addr_in_first_chunk(addr)) {
+		/* is it in the reserved area? */
+		if(pcpu_addr_in_reserved_chunk(addr))
+			return pcpu_reserved_chunk;
+		return pcpu_first_chunk;
+	}
+
+	/*
+	 * The address is relative to unit0 which might be unused and 
+	 * thus unmapped.Offset the address to the unit space of the 
+	 * current processor befor looking it up in the vmalloc
+	 * space.Note that any possible cpu id can be used here,so
+	 * there's no need to worry about preemption or cpu hotplug.
+	 */
+	addr += pcpu_unit_offsets[raw_smp_processor_id()];
+	return pcpu_get_page_chunk(pcpu_addr_to_page(addr));
+}
+
+/**
+ * free_percpu - free percpu area
+ * @ptr:pointer to area to free
+ *
+ * Free percpu area @ptr
+ *
+ * CONTEXT:
+ * Can be called from atomic context.
+ */
+void free_percpu(void *ptr)
+{
+	void *addr;
+	struct pcpu_chunk *chunk;
+	unsigned long flags;
+	int off;
+
+	if(!ptr)
+		return;
+
+	addr = __pcpu_ptr_to_addr(ptr);
+
+	spin_lock_irqsave(&pcpu_lock,flags);
+
+	chunk = pcpu_chunk_addr_search(addr);
+	off = addr - chunk->base_addr;
+
+	pcpu_free_area(chunk,off);
+
+	/* If there are more than one fully free chunks,wake up grim reaper */
+	if(chunk->free_size == pcpu_unit_size) {
+		struct pcpu_chunk *pos;
+
+		list_for_each_entry(pos,&pcpu_slot[pcpu_nr_slots - 1],list)
+			if(pos != chunk) {
+				schedule_work(&pcpu_reclaim_work);
+				break;
+			}
+	}
+
+	spin_unlock_irqrestore(&pcpu_lock,flags);
+}

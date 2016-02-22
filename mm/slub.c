@@ -24,6 +24,8 @@
 #include "linux/init.h"
 #include "linux/kmemcheck.h"
 #include "linux/bit_spinlock.h"
+#include "linux/rcutiny.h"
+#include "linux/lock.h"
 
 
 /*
@@ -151,7 +153,10 @@ static int slub_nomerge;
  */
 #define SLUB_NEVER_MERGE (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER | \
 		SLAB_TRACE | SLAB_DESTROY_BY_RCU | SLAB_NOLEAKTRACE | \
-		SLAB_FAILSALB)
+		SLAB_FAILSLAB)
+
+#define SLUB_MERGE_SAME (SLAB_DEBUG_FREE | SLAB_RECLAIM_ACCOUNT | \
+		SLAB_CACHE_DMA | SLAB_NOTRACK)
 
 struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];
 
@@ -169,6 +174,7 @@ static inline int kmem_cache_debug(struct kmem_cache *s)
 }
 static char *slub_debug_slabs;
 
+void kfree(const void *x);
 /* Internal SLUB flags */
 #define __OBJECT_POISON   0x80000000UL   /* Poison object */
 
@@ -458,6 +464,7 @@ static void discard_slab(struct kmem_cache *s,struct page *page)
  */
 static inline void slab_lock(struct page *page)
 {
+	bit_spin_lock(PG_locked,&page->flags);
 }
 static inline void slab_unlock(struct page *page)
 {
@@ -923,7 +930,9 @@ static inline int lock_and_freeze_slab(struct kmem_cache_node *n,
 {
 	if(slab_trylock(page)) {
 		__remove_partial(n,page);
+		PageFlage(page);
 		__SetPageSlubFrozen(page);
+		PageFlage(page);
 		return 1;
 	}
 	return 0;
@@ -1033,10 +1042,10 @@ another_slab:
 
 new_slab:
 	new = get_partial(s,gfpflags,node);
-	if(new)
-	{
+	if(new) {
 		c->page = new;
 		stat(s,ALLOC_FROM_PARTIAL);
+		goto load_freelist;
 	}
 
 	gfpflags &= gfp_allowed_mask;
@@ -1096,7 +1105,9 @@ static void *slab_alloc(struct kmem_cache *s,
 	c = __this_cpu_ptr(s->cpu_slab);
 	object = c->freelist;
 	if(unlikely(!object || !node_match(c,node)))
+		
 		object = __slab_alloc(s,gfpflags,node,addr,c);
+
 	else {
 		c->freelist = get_freepointer(s,object);
 		stat(s,ALLOC_FASTPATH);
@@ -1176,6 +1187,11 @@ static void add_full(struct kmem_cache_node *n,struct page *page)
 #else
 static void add_full(struct kmem_cache_node *n,struct page *page)
 {
+}
+
+static inline unsigned long slabs_node(struct kmem_cache *s,int node) 
+{
+	return 0;
 }
 #endif
 
@@ -1594,7 +1610,6 @@ static struct page *new_slab(struct kmem_cache *s,gfp_t flags,int node)
 		memset(start,POISON_INUSE,PAGE_SIZE << compound_order(page));
 
 	last = start;
-	test = start;
 	for_each_object(p,s,start,page->objects) {
 		setup_object(s,page,last);
 		set_freepointer(s,last,p);
@@ -1765,12 +1780,10 @@ static inline void slab_free(struct kmem_cache *s,
 
 	local_irq_save(flags);
 	c = (struct kmem_cache_cpu *)__this_cpu_ptr(s->cpu_slab);
-	mm_debug("c %p\n",c->page);
 
 	slab_free_hook_irq(s,x);
 
 	if(likely(page == c->page && c->node != NUMA_NO_NODE)) {
-		mm_debug("dfds\n");
 		set_freepointer(s,object,c->freelist);
 		c->freelist = object;
 		stat(s,FREE_FASTPATH);
@@ -2140,7 +2153,7 @@ void __init kmem_cache_init(void)
  */
 static int slab_unmergeable(struct kmem_cache *s)
 {
-	if(slab_nomerge || (s->flags & SLUB_NEVER_MERGE))
+	if(slub_nomerge || (s->flags & SLUB_NEVER_MERGE))
 		return 1;
 
 	if(s->ctor)
@@ -2196,6 +2209,83 @@ static struct kmem_cache *find_mergeable(size_t size,
 	return NULL;
 }
 
+static void list_slab_objects(struct kmem_cache *s,struct page *page,
+		const char *text)
+{
+#ifdef CONFIG_SLUB_DEBUG
+
+#else
+
+#endif
+}
+
+/*
+ * Attempt to free all partial slabs on a node
+ */
+static void free_partial(struct kmem_cache *s,struct kmem_cache_node *n)
+{
+	unsigned long flags;
+	struct page *page,*h;
+
+	spin_lock_irqsave(&n->list_lock,flags);
+	list_for_each_entry_safe(page,h,&n->partial,lru) {
+		if(!page->inuse) {
+			__remove_partial(n,page);
+			discard_slab(s,page);
+		} else {
+			list_slab_objects(s,page,
+					"Objects remaining on kmem_cache_close()");
+		}
+	}
+	spin_unlock_irqrestore(&n->list_lock,flags);
+}
+
+/*
+ * Flush cpu slab.
+ *
+ * Called from IPI handler with interrupts disabled.
+ */
+static inline void __flush_cpu_slab(struct kmem_cache *s,int cpu)
+{
+	struct kmem_cache_cpu *c = per_cpu_ptr(s->cpu_slab,cpu);
+
+	if(likely(c && c->page))
+		flush_slab(s,c);
+}
+
+static void flush_cpu_slab(void *d)
+{
+	struct kmem_cache *s = d;
+
+	__flush_cpu_slab(s,smp_processor_id());
+}
+
+static void flush_all(struct kmem_cache *s)
+{
+	on_each_cpu(flush_cpu_slab,s,1);
+}
+
+/*
+ * Release all resource used by a slab cache.
+ */
+static inline int kmem_cache_close(struct kmem_cache *s)
+{
+	int node;
+
+	flush_all(s);
+	free_percpu(s->cpu_slab);
+	/* Attempt to free all objects */
+	for_each_node_state(node,N_NORMAL_MEMORY) {
+		struct kmem_cache_node *n = get_node(s,node);
+
+		free_partial(s,n);
+		if(n->nr_partial || slabs_node(s,node))
+			return 1;
+	}
+	free_kmem_cache_nodes(s);
+	return 0;
+}
+
 /**** API layer *****/
 struct kmem_cache *kmem_cache_create(const char *name,size_t size,
 		size_t align,unsigned long flags,void (*ctor)(void *))
@@ -2232,7 +2322,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size,
 	if(s) {
 		if(kmem_cache_open(s,n,size,
 					align,flags,ctor)) {
-			list_add(&s->list,&slub_caches);
+			list_add(&s->list,&slab_caches);
 			if(sysfs_slab_add(s)) {
 				list_del(&s->list);
 				kfree(n);
@@ -2255,7 +2345,27 @@ err:
 	return s;
 }
 
-
+/*
+ * Close a cache and release the kmem_cache_structure
+ * (must be used for caches created using kmem_cache_create)
+ */
+void kmem_cache_destroy(struct kmem_cache *s)
+{
+	down_write(&slab_lock);
+	s->refcount--;
+	if(!s->refcount) {
+		list_del(&s->list);
+		if(kmem_cache_close(s)) {
+			mm_debug("SLUB %s: %s called for cache that "
+					"still has objects.\n",s->name,__func__);
+			dump_stack();
+		}
+		if(s->flags & SLAB_DESTROY_BY_RCU)
+			rcu_barrier();
+		sysfs_slab_remove(s);
+	}
+	up_write(&slab_lock);
+}
 
 static int __init setup_slub_min_order(char *str)
 {

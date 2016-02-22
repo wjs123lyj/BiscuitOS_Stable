@@ -46,6 +46,14 @@
 #define ZERO_OR_NULL_PTR(x)  ((unsigned long)(x) <= \
 						(unsigned long)ZERO_SIZE_PTR)
 
+#define SLAB_NOLEAKTRACE    0x00800000UL
+
+#ifdef CONFIG_FAILSLAB 
+#define SLAB_FAILSLAB      0x02000000UL    /* Fault injection mark */
+#else
+#define SLAB_FAILSLAB      0x00000000UL
+#endif
+
 extern inline void *kmalloc(size_t size,gfp_t flags);
 /*
  * Kzalloc - allocate memory.The memory is set to zero. 

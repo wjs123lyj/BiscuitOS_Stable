@@ -227,6 +227,7 @@ static inline void free_memmap(unsigned long start_pfn,unsigned long end_pfn)
 	 */
 	start_pg = pfn_to_page(start_pfn - 1) + 1;
 	end_pg   = pfn_to_page(end_pfn);
+	mm_debug("start_pg %p start %p\n",start_pg,pfn_to_page(start_pfn));
 
 	/*
 	 * Convert to physical addresses,and
@@ -353,6 +354,7 @@ void __init mem_init(void)
 	unsigned long reserved_pages,free_pages;
 	struct memblock_region *reg;
 	int i;
+
 
 	max_mapnr = (struct page *)(unsigned long)mem_to_phys(pfn_to_page(max_pfn 
 				+ PHYS_PFN_OFFSET)) - mem_map;

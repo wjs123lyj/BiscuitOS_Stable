@@ -527,10 +527,10 @@ static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
 		map = bdata->node_bootmem_map;
 		idx = start - bdata->node_min_pfn;
 		vec = ~map[idx / BITS_PER_LONG];
-	
+
 		if(aligned && vec == ~0U && start + BITS_PER_LONG < end) {
-			int order = ilog2(BITS_PER_LONG);	
-		
+			int order = ilog2(BITS_PER_LONG);
+
 			__free_pages_bootmem(pfn_to_page(start),order);
 			count += BITS_PER_LONG;
 		} else {

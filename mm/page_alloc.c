@@ -1309,9 +1309,10 @@ void free_hot_cold_page(struct page *page,int cold)
 	int migratetype;
 	int wasMlocked = __TestClearPageMlocked(page);
 
+
 	if(!free_pages_prepare(page,0))
 		return;
-	
+
 	migratetype = get_pageblock_migratetype(page);
 	set_page_private(page,migratetype);
 	local_irq_save(flags);

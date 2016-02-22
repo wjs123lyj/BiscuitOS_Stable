@@ -151,6 +151,12 @@
  * Configure the address of PAGE_OFFSET
  */
 #define CONFIG_PAGE_OFFSET 0xc0000000
-
-
+/*
+ * Configure to support percpu kernel address.
+ */
+#define CONFIG_NEED_PER_CPU_KM 1
+/*
+ * Support spinlock debug
+ */
+#define CONFIG_DEBUG_SPINLOCK 1
 #endif

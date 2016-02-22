@@ -11,6 +11,7 @@ CURRENT_SOURCE += mm_init.c
 CURRENT_SOURCE += mmzone.c
 CURRENT_SOURCE += page_cgroup.c
 CURRENT_SOURCE += percpu.c
+CURRENT_SOURCE += percpu-km.c
 CURRENT_SOURCE += pte.c
 CURRENT_SOURCE += slub.c
 CURRENT_SOURCE += swap.c

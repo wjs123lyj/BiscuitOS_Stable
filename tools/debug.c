@@ -11,6 +11,63 @@ extern struct meminfo meminfo;
 extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
 extern unsigned int memory_array1[CONFIG_BANK1_SIZE / BYTE_MODIFY];
 
+char *page_flags_names[] = {
+	"PG_locked",
+	"PG_error",
+	"PG_referenced",
+	"PG_uptodate",
+	"PG_dirty",
+	"PG_lru",
+	"PG_active",
+	"PG_slab",
+	"PG_owner_priv_1",
+	"PG_arch_1",
+	"PG_reserved",
+	"PG_private",
+	"PG_writeback",
+#ifdef CONFIG_PAGEFLAGS_EXTENDED
+	"PG_head",
+	"PG_tail",
+#else
+	"PG_compound",
+#endif
+	"PG_swapcache",
+	"PG_mappedtodisk",
+	"PG_reclaim",
+	"PG_swapbacked",
+	"PG_unevictable",
+#ifdef CONFIG_MMU
+	"PG_mlocked",
+#endif
+#ifdef CONFIG_ARCH_USES_PG_UNCACHED
+	"PG_uncached",
+#endif
+#ifdef CONFIG_MEMORY_FAILURE
+	"PG_hwpoison",
+#endif
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	"PG_comound_lock",
+#endif
+};
+
+/*
+ * Get the name of page-flags
+ */
+void PageFlage(struct page *page)
+{
+	unsigned long flags = page->flags;
+	unsigned long i = 0;
+
+	mm_debug("Page->flags:");
+	while(flags) {
+		if(flags & 0x1)
+			mm_debug(" %s",page_flags_names[i]);
+		flags >>= 1;
+		i++;
+	}
+	mm_debug("\n");
+}
+
 unsigned int high_to_low(unsigned int old)
 {
 	unsigned int hold = 0x00;
