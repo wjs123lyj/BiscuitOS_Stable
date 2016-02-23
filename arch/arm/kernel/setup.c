@@ -338,7 +338,6 @@ static void __init cacheid_init(void)
 	unsigned int cachetype = read_cpuid_cachetype();
 	unsigned int arch = cpu_architecture();
 
-	mm_debug("CACHE type %d\n",cachetype);
 	if(arch >= CPU_ARCH_ARMv6) {
 		if((cachetype & (7 << 29)) == 4 << 29) {
 			/* ARMv7 register format */

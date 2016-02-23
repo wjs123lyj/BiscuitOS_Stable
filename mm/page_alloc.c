@@ -1187,17 +1187,21 @@ static inline void __free_one_page(struct page *page,
 
 	VM_BUG_ON(migratetype == -1);
 
+	/** 
+	 * Need more debug..
+	 * If the pfn 0x34000 and 0x65000 have same page_idx,
+	 * kernel will deal with buddy_idx?
+	 */
 	page_idx = page_to_pfn(page) & ((1 << MAX_ORDER) - 1);
 
 	VM_BUG_ON(page_idx & (( 1 << order) - 1));
 	VM_BUG_ON(bad_range(zone,page));
-	
+
 	while(order < MAX_ORDER - 1) {
 		buddy_idx = __find_buddy_index(page_idx,order);
 		buddy = page + (buddy_idx - page_idx);
 		if(!page_is_buddy(page,buddy,order))
 			break;
-
 
 		/* Our buddy is free.merge with if and move up one order */
 		list_del(&buddy->lru);
@@ -1209,6 +1213,7 @@ static inline void __free_one_page(struct page *page,
 		order++;
 	}
 	set_page_order(page,order);
+
 	/*
 	 * If this is not the largest possible page,check if the buddy
 	 * of the next-highest order is free.If it is,it's possible
@@ -1246,6 +1251,7 @@ static void free_one_page(struct zone *zone,struct page *page,int order,
 	__mod_zone_page_state(zone,NR_FREE_PAGES,1 << order);
 	spin_unlock(&zone->lock);
 }
+
 /*
  * Frees a number of pages from the PCP lists.
  * Assumes all pages on list are in same zone,and of same order.
@@ -1297,6 +1303,7 @@ static void free_pcppages_bulk(struct zone *zone,int count,
 	__mod_zone_page_state(zone,NR_FREE_PAGES,count);
 	spin_unlock(&zone->lock);
 }
+
 /*
  * Free a 0-order page
  * cold == 1 ? free cold page: free a hot page
@@ -1333,6 +1340,11 @@ void free_hot_cold_page(struct page *page,int cold)
 		}
 		migratetype = MIGRATE_MOVABLE;
 	}
+
+	/**
+	 * Need more debug ... pcp->high ?= 0,where do I set the value 
+	 * of pcp->high? 
+	 */
 	pcp = &this_cpu_ptr(zone->pageset)->pcp;
 	if(cold)
 		list_add_tail(&page->lru,&pcp->lists[migratetype]);
@@ -1835,6 +1847,7 @@ static nodemask_t *zlc_setup(struct zonelist *zonelist,int alloc_flags)
 {
 	return NULL;
 }
+
 /*
  * get_page_from_freelist goes through the zonelist trying to allocate
  * a page.
@@ -2226,6 +2239,7 @@ got_pg:
 		kmemcheck_pagealloc_alloc(page,order,gfp_mask);
 	return page;
 }
+
 /*
  * This is the 'heart' of the zoned buddy allocator.
  */

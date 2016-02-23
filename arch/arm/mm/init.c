@@ -275,14 +275,14 @@ static void __init free_unused_memmap(struct meminfo *mi)
 		prev_bank_end = ALIGN(bank_pfn_end(bank),MAX_ORDER_NR_PAGES);
 	}
 }
+
 static inline int free_area(unsigned long pfn,unsigned long end,char *s)
 {
 	unsigned int pages = 0,size = (end - pfn) << (PAGE_SHIFT - 10);
 
-
 	for(; pfn < end ; pfn++) {
 		struct page *page = pfn_to_page(pfn);
-		
+	
 		ClearPageReserved(page);
 		init_page_count(page);
 		__free_page(page);
@@ -312,7 +312,7 @@ static void __init free_highpages(void)
 		/* Truncate partial highmem entries */
 		if(start < max_low)
 			start = max_low;
-
+		
 		/* Find and exclude any reserved regions */
 		for_each_memblock(reserved,res) {
 			unsigned long res_start,res_end;
@@ -330,7 +330,7 @@ static void __init free_highpages(void)
 				res_end = end;
 			if(res_start != start) 
 				totalhigh_pages += free_area(start,res_start,NULL);
-			
+		
 			start = res_end;
 			if(start == end)
 				break;

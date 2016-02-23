@@ -506,6 +506,9 @@ static unsigned long __init free_all_bootmem_core(struct bootmem_data *bdata)
 	if(!bdata->node_bootmem_map)
 		return 0;
 
+	/**
+	 * Need more debug...Wether kernel only free lowmem pages?
+	 */
 	start = bdata->node_min_pfn;
 	end   = bdata->node_low_pfn;
 

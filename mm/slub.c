@@ -1990,6 +1990,7 @@ panic:
 	mm_err("Creation of kmalloc slab %s size = %d failed.\n",name,size);
 	return NULL;
 }
+
 void __init kmem_cache_init(void)
 {
 	int i;

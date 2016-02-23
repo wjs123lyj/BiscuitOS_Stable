@@ -1,0 +1,4 @@
+page_alloc.c: In function ‘zone_watermark_ok’:
+page_alloc.c:1433:4: warning: format ‘%p’ expects argument of type ‘void *’, but argument 2 has type ‘long unsigned int’ [-Wformat=]
+    zone_page_state(z,NR_FREE_PAGES));
+    ^

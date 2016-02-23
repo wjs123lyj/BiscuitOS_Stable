@@ -53,12 +53,12 @@ char *page_flags_names[] = {
 /*
  * Get the name of page-flags
  */
-void PageFlage(struct page *page)
+void PageFlage(struct page *page,char *s)
 {
 	unsigned long flags = page->flags;
 	unsigned long i = 0;
 
-	mm_debug("Page->flags:");
+	mm_debug("[%s]Page->flags:",s);
 	while(flags) {
 		if(flags & 0x1)
 			mm_debug(" %s",page_flags_names[i]);
