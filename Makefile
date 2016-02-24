@@ -5,6 +5,7 @@ SUBDIRS := init \
 		   mm \
 		   lib \
 		   tools \
+		   fs \
 		   obj \
 
 

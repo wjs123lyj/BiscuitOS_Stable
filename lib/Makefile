@@ -8,6 +8,7 @@ CURRENT_SOURCE += radix-tree.c
 CURRENT_SOURCE += rbtree.c
 CURRENT_SOURCE += bitmap.c
 CURRENT_SOURCE += kasprintf.c
+CURRENT_SOURCE += prio_tree.c
 
 
 

@@ -18,4 +18,8 @@ struct page_cgroup {
 	struct list_head lru; /* per cgroup LRU list */
 };
 
+static inline void __init page_cgroup_init(void)
+{
+}
+
 #endif

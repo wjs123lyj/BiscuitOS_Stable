@@ -28,6 +28,7 @@
 #define __initconst
 #define __initdata_memblock
 #define __init_data
+#define __exit
 
 #define UINT_MAX (~0U)
 

@@ -70,6 +70,9 @@ struct vmap_block {
 	struct list_head purge;
 };
 
+/* Queue of free and dirty vmap blocks,for allocation and flushing purposes */
+static DEFINE_PER_CPU(struct vmap_block_queue,vmap_block_queue);
+
 int vmlist_lock;
 //DEFINE_RWLOCK(vmlist_lock);
 struct vm_struct *vmlist;
@@ -1106,7 +1109,6 @@ struct page *vmalloc_to_page(const void *vmalloc_addr)
 
 void __init vmalloc_init(void)
 {
-#ifdef NO_DEBUG_CURRENT
 	struct vmap_area *va;
 	struct vm_struct *tmp;
 	int i;
@@ -1131,7 +1133,6 @@ void __init vmalloc_init(void)
 	vmap_area_pcpu_hole = VMALLOC_END;
 
 	vmap_initialized = true;
-#endif
 }
 
 

@@ -133,6 +133,7 @@ static inline void *kmalloc_order_trace(size_t size,gfp_t flags,
 {
 	return kmalloc_order(size,flags,order);
 }
+
 static inline void *kmalloc_large(size_t size,gfp_t flags)
 {
 	unsigned int order = get_order(size);
@@ -209,17 +210,14 @@ static inline struct kmem_cache *kmalloc_slab(size_t size)
 	return kmalloc_caches[index];
 }
 extern void *__kmalloc(size_t size,gfp_t flags);
-/*
- * kmalloc!!!!
- */
+
 static inline void *kmalloc(size_t size,gfp_t flags)
 {
 	if(__builtin_constant_p(size)) {
 		if(size > SLUB_MAX_SIZE)
 			return kmalloc_large(size,flags);
 
-		if(!(flags & SLUB_DMA))
-		{
+		if(!(flags & SLUB_DMA)) {
 			struct kmem_cache *s = kmalloc_slab(size);
 
 			if(!s)

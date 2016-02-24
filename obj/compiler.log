@@ -1,4 +1,0 @@
-highmem.c: In function ‘page_address’:
-highmem.c:56:2: warning: format ‘%p’ expects argument of type ‘void *’, but argument 2 has type ‘int’ [-Wformat=]
-  mm_debug("Pageslab %p\n",PageHighMem(page));
-  ^

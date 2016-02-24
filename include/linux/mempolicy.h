@@ -5,4 +5,8 @@ static inline void check_highest_zone(int k)
 {
 }
 
+static inline void numa_policy_init(void)
+{
+}
+
 #endif

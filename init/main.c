@@ -3,6 +3,16 @@
 #include "linux/setup.h"
 #include "linux/init.h"
 #include "linux/smp.h"
+#include "linux/pgtable.h"
+#include "linux/gfp.h"
+#include "linux/page_cgroup.h"
+#include "linux/mm.h"
+#include "linux/kmemleak.h"
+#include "linux/debugobjects.h"
+#include "linux/mempolicy.h"
+#include "linux/cgroup.h"
+#include "linux/cpuset.h"
+#include "linux/slab.h"
 
 extern struct task_struct init_task;
 extern struct mm_struct init_mm;
@@ -30,6 +40,9 @@ static void __init mm_init(void)
 	page_cgroup_init_flatmem();
 	mem_init();
 	kmem_cache_init();
+	percpu_init_late();
+	pgtable_cache_init();
+	vmalloc_init();
 }
 void __init smp_setup_processor_id(void)
 {
@@ -100,6 +113,25 @@ static void start_kernel(void)
 	mm_debug("Kernel command line:%s\n",boot_command_line);
 	parse_early_param();
 	mm_init();
+	radix_tree_init();
+	prio_tree_init();
+
+	/* Interrupt are enabled now so all GFP allocations are safe. */
+	gfp_allowed_mask = __GFP_BITS_MASK;
+
+	kmem_cache_init_late();
+
+	page_cgroup_init();
+	enable_debug_pagealloc();
+	kmemleak_init();
+	debug_objects_mem_init();
+	setup_per_cpu_pageset();
+	numa_policy_init();
+
+	anon_vma_init();
+	buffer_init();
+	cgroup_init();
+	cpuset_init();
 }
 
 /*
@@ -110,13 +142,25 @@ __attribute__((constructor)) __uboot U_boot(void)
 	mm_debug("[%s]Boot From U_Boot\n",__FUNCTION__);
 	u_boot_start();
 	mm_debug("[%s]Uboot finish,start kernel...\n",__FUNCTION__);
+	start_kernel();
+	mm_debug("Kernel Running.....\n=====Hello World=====\n");
+}
+/*
+ * Simulate power-down.
+ */
+__attribute__((destructor)) __exit Pown_down(void)
+{
+	mm_debug("=======Goodbye=======\n");
+	mm_debug("[%s]Pown down......\n",__func__);
 }
 
+/**
+ * =============================================
+ *                 User Space
+ * =============================================
+ */
 int main()
 {
-
-	start_kernel();
-
-	printf("Hello World\n");
+	
 	return 0;
 }

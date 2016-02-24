@@ -917,9 +917,9 @@ static inline int slab_trylock(struct page *page)
 	return rc;
 }
 
-
 static inline void __remove_partial(struct kmem_cache_node *n,
 		struct page *page);
+
 /*
  * Lock slab and remove from the partial list.
  *
@@ -961,6 +961,7 @@ out:
 	spin_unlock(&n->list_lock);
 	return page;
 }
+
 /*
  * Get a page from somewhere.Search in increasing NUMA distances.
  */
@@ -968,6 +969,7 @@ static struct page *get_any_partial(struct kmem_cache *s,gfp_t flags)
 {
 	return NULL;
 }
+
 /*
  * Get a partial page,lock it and return it.
  */
@@ -982,7 +984,9 @@ static struct page *get_partial(struct kmem_cache *s,gfp_t flags,int node)
 
 	return get_any_partial(s,flags);
 }
+
 static struct page *new_slab(struct kmem_cache *s,gfp_t flags,int node);
+
 /*
  * Slow path.The lockless freelist is empty or we need to perform
  * debugging duties.
@@ -1055,15 +1059,13 @@ new_slab:
 	if(gfpflags & __GFP_WAIT)
 		local_irq_disable();
 
-	if(new)
-	{
+	if(new) {
 		c = __this_cpu_ptr(s->cpu_slab);
 		stat(s,ALLOC_SLAB);
 		if(c->page)
 			flush_slab(s,c);
 		slab_lock(new);
-		/* Need debug */
-		//__SetPageSlubForzen(new);
+		__SetPageSlubFrozen(new);
 		c->page = new;
 		goto load_freelist;
 	}
@@ -1079,6 +1081,7 @@ debug:
 	c->node = NUMA_NO_NODE;
 	goto unlock_out;
 }
+
 /*
  * Inlined fastpath so that allocation function functions
  * have the fastpath folded into their functions.So no function call
@@ -1137,6 +1140,7 @@ void *__kmalloc(size_t size,gfp_t flags)
 
 	return ret;
 }
+
 void *kmem_cache_alloc(struct kmem_cache *s,gfp_t gfpflags)
 {
 	void *ret = slab_alloc(s,gfpflags,NUMA_NO_NODE,_RET_IP_);
@@ -1348,6 +1352,7 @@ static void *kmalloc_large_node(size_t size,gfp_t flags,int node)
 	kmemleak_alloc(ptr,size,1,flags);
 	return ptr;
 }
+
 static struct kmem_cache *get_slab(size_t size,gfp_t flags)
 {
 	int index;
@@ -1418,6 +1423,7 @@ static unsigned long calculate_alignment(unsigned long flags,
 
 	return ALIGN(align,sizeof(void *));
 }
+
 /*
  * Calculate_size() determines the order and the distribution of data within
  * a slab object.
@@ -1919,7 +1925,6 @@ static inline unsigned long kmem_cache_flags(unsigned long objsize,
 	return flags;
 }
 
-
 static int kmem_cache_open(struct kmem_cache *s,
 		const char *name,size_t size,
 		size_t align,unsigned long flags,
@@ -1974,6 +1979,7 @@ error:
 
 	return 0;
 }
+
 /*
  * Used for early kmem_cache structures that were allocated using
  * the page allocator.
@@ -2317,6 +2323,24 @@ static inline int kmem_cache_close(struct kmem_cache *s)
 	return 0;
 }
 
+void *__kmalloc_track_caller(size_t size,gfp_t gfpflags,unsigned long caller)
+{
+	struct kmem_cache *s;
+	void *ret;
+
+	if(unlikely(size > SLUB_MAX_SIZE))
+		return kmalloc_large(size,gfpflags);
+
+	s = get_slab(size,gfpflags);
+
+	if(unlikely(ZERO_OR_NULL_PTR(s)))
+		return s;
+
+	ret = slab_alloc(s,gfpflags,NUMA_NO_NODE,caller);
+
+	return ret;
+}
+
 /**** API layer *****/
 struct kmem_cache *kmem_cache_create(const char *name,size_t size,
 		size_t align,unsigned long flags,void (*ctor)(void *))
@@ -2396,6 +2420,10 @@ void kmem_cache_destroy(struct kmem_cache *s)
 		sysfs_slab_remove(s);
 	}
 	up_write(&slab_lock);
+}
+
+void __init kmem_cache_init_late(void)
+{
 }
 
 static int __init setup_slub_min_order(char *str)

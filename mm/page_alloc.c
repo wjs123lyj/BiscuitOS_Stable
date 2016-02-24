@@ -77,6 +77,7 @@ gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;
 
 /* movable_zone is the "real" zone pages in ZONE_MOVABLE are taken from */
 int movable_zone;
+int percpu_pagelist_fraction;
 
 extern long vm_total_pages;
 extern unsigned long highest_memmap_pfn;
@@ -2610,4 +2611,58 @@ __init void free_area_init_node(int nid,unsigned long *zone_sizes,
 			pgdat->node_id,(void *)pgdat,(void *)pgdat->node_mem_map);
 #endif
 	free_area_init_core(pgdat,zone_sizes,zhole_size);
+}
+
+/*
+ * setup_pagelist_highmark() sets the high mark for hot per_cpu_pagelist
+ * to the value high for the pageset p.
+ */
+static void setup_pagelist_highmark(struct per_cpu_pageset *p,
+		unsigned long high)
+{
+	struct per_cpu_pages *pcp;
+
+	pcp = &p->pcp;
+	pcp->high = high;
+	pcp->batch = max(1UL,high / 4);
+	if((high / 4) > (PAGE_SHIFT * 8))
+		pcp->batch = PAGE_SHIFT * 8;
+}
+
+static __meminit void setup_zone_pageset(struct zone *zone)
+{
+	int cpu;
+
+	zone->pageset = alloc_percpu(struct per_cpu_pageset);
+
+	for_each_possible_cpu(cpu) {
+		struct per_cpu_pageset *pcp = per_cpu_ptr(zone->pageset,cpu);
+
+		setup_pageset(pcp,zone_batchsize(zone));
+
+		if(percpu_pagelist_fraction)
+			setup_pagelist_highmark(pcp,
+					(zone->present_pages /
+					 percpu_pagelist_fraction));
+	}
+}
+
+/*
+ * Allocate per cpu pagesets and initialize them.
+ * Before this call only boot pagesets were available.
+ */
+void __init setup_per_cpu_pageset(void)
+{
+	struct zone *zone;
+
+	for_each_populated_zone(zone)
+		setup_zone_pageset(zone);
+}
+
+/*
+ * Amount of free RAM allocatable within ZONE_DMA and ZONE_NORMAL
+ */
+unsigned int nr_free_buffer_pages(void)
+{
+	return nr_free_zone_pages(gfp_zone(GFP_USER));
 }

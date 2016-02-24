@@ -3,6 +3,9 @@
 #include "linux/gfp.h"
 #include "linux/rcupdate.h"
 #include "linux/debug.h"
+#include "linux/slab.h"
+#include "linux/notifier.h"
+#include "linux/cpu.h"
 
 
 #define RADIX_TREE_MAP_SHIFT     3
@@ -34,7 +37,14 @@ struct radix_tree_path {
 #define RADIX_TREE_INDEX_BITS  ( 8 * sizeof(unsigned long))
 #define RADIX_TREE_MAX_PATH  (DIV_ROUND_UP(RADIX_TREE_INDEX_BITS,   \
 			RADIX_TREE_MAP_SHIFT))
-
+/*
+ * Per-cpu pool of preloaded nodes.
+ */
+struct radix_tree_preload {
+	int nr;
+	struct radix_tree_node *nodes[RADIX_TREE_MAX_PATH];
+};
+static DEFINE_PER_CPU(struct radix_tree_preload,radix_tree_preloads) = {0,};
 
 /*
  * The height_to_maximum array needs to be one deeper than the maximum
@@ -335,4 +345,63 @@ static inline void radix_tree_shrink(struct radix_tree_root *root)
 
 		radix_tree_node_free(to_free);
 	}
+}
+
+static __init unsigned long __maxindex(unsigned int height)
+{
+	unsigned int width = height * RADIX_TREE_MAP_SHIFT;
+	int shift = RADIX_TREE_INDEX_BITS - width;
+
+	/**
+	 * Need more debug...Should use 0U not 0UL?
+	 */
+	if(shift < 0)
+		return ~0UL;
+	if(shift >= BITS_PER_LONG)
+		return 0UL;
+	return ~0UL >> shift;
+}
+
+static __init void radix_tree_init_maxindex(void)
+{
+	unsigned int i;
+
+	for(i = 0 ; i < ARRAY_SIZE(height_to_maxindex) ; i++)
+		height_to_maxindex[i] = __maxindex(i);
+}
+
+static void radix_tree_node_ctor(void *node)
+{
+	memset(node,0,sizeof(struct radix_tree_node));
+}
+
+static int radix_tree_callback(struct notifier_block *nfb,
+		unsigned long action,
+		void *hcpu)
+{
+	int cpu = (long)hcpu;
+	struct radix_tree_preload *rtp;
+
+	/* Free per-cpu pool of perloaded nodes */
+	if(action == CPU_DEAD || action == CPU_DEAD_FROZEN) {
+		rtp = &per_cpu(radix_tree_preloads,cpu);
+		while(rtp->nr) {
+			kmem_cache_free(radix_tree_node_cachep,
+					rtp->nodes[rtp->nr - 1]);
+			rtp->nodes[rtp->nr - 1] = NULL;
+			rtp->nr--;
+		}
+	}
+	return NOTIFY_OK;
+}
+
+void __init radix_tree_init(void)
+{
+	radix_tree_node_cachep = (struct kmem_cache *)
+		(unsigned long)(kmem_cache_create("radix_tree_node",
+			sizeof(struct radix_tree_node),0,
+			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
+			radix_tree_node_ctor));
+	radix_tree_init_maxindex();
+	hotcpu_notifier(radix_tree_callback,0);
 }

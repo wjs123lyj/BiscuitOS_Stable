@@ -55,8 +55,11 @@
 #endif
 
 extern inline void *kmalloc(size_t size,gfp_t flags);
-/*
- * Kzalloc - allocate memory.The memory is set to zero. 
+
+/**
+ * kzalloc - allocate memory.The memory is set to zero.
+ * @size: how many bytes of memory are required.
+ * @flags: the type of memory to allocate (see kmalloc)
  */
 static inline void *kzalloc(size_t size,gfp_t flags)
 {
@@ -70,8 +73,9 @@ static inline void *kzalloc_node(size_t size,gfp_t flags,int node)
 {
 	return kmalloc_node(size,flags | __GFP_ZERO ,node);
 }
+
 #define kmalloc_track_caller(size,flags) \
-	__kmalloc(size,flags)
+	__kmalloc_track_caller(size,flags,_RET_IP_)
 
 extern void *kmem_cache_alloc(struct kmem_cache *s,gfp_t gfpflags);
 
@@ -80,5 +84,21 @@ static inline void *kmem_cache_alloc_node(struct kmem_cache *cachep,
 {
 	return kmem_cache_alloc(cachep,flags);
 }
+
+extern struct kmem_cache *kmem_cache_create(const char *name,size_t size,
+		size_t align,unsigned long flags,void (*ctor)(void *));
+
+/*
+ * Please use this macro to create slab caches.Simply specify the 
+ * name of the structure and maybe some flags that are listed above.
+ *
+ * The alignment of the struct determines object alignment.If you
+ * f.e. add ____cacaheline_aligned_in_smp to the struct declaration
+ * then the objects will be properly alignment in SMP configurations.
+ */
+#define KMEM_CACHE(__struct,__flags) kmem_cache_create(#__struct, \
+		sizeof(struct __struct),__alignof__(struct __struct), \
+		(__flags),NULL)
+
 
 #endif

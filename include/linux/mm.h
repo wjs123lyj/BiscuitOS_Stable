@@ -324,6 +324,10 @@ static inline void enable_debug_pagealloc(void)
 }
 #else
 
+static inline void enable_debug_pagealloc(void)
+{
+}
+
 static inline void kernel_map_pages(struct page *page,int numpages,int enable)
 {
 }

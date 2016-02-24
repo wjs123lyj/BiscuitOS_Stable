@@ -11,4 +11,6 @@ struct cgroup_subsys {
 	struct list_head sibling;
 };
 
+static inline int cgroup_init(void) {return 0;}
+
 #endif
