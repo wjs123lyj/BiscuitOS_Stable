@@ -334,6 +334,7 @@ static void set_pageblock_migratetype(struct page *page,int migratetype)
 	set_pageblock_flags_group(page,(unsigned long)migratetype,
 			PB_migrate,PB_migrate_end);
 }
+
 /*
  * Initially all pages are reserved - free ones are freed
  * up by free_all_bootmem() once the early boot process is
@@ -442,6 +443,23 @@ static int zone_batchsize(struct zone *zone)
 	batch = rounddown_pow_of_two(batch + batch / 2) - 1;
 
 	return batch;
+
+#else
+	/*
+	 * The deferral and batching of frees should be suppressed under NOMMU
+	 * conditions.
+	 * 
+	 * The problem is that NOMMU needs to be able to allocate large chunks
+	 * of contiguous memory as there's no hardware page translation to 
+	 * assemble apparent contiguous memory from discontiguous pages.
+	 *
+	 * Queueing large contiguous runs of pages for batching,however,
+	 * causes the pages to actually be freed in smaller chunks.As there
+	 * can be a significant delay between the individual batches being
+	 * recycled,this leads to the once large chunks of space being
+	 * fragmented and becoming unavailable for high-order allocatation.
+	 */
+	return 0;
 #endif
 }
 
@@ -517,6 +535,7 @@ __meminit int init_currently_empty_zone(struct zone *zone,
 
 	return 0;
 }
+
 /*
  * Calculate the size of the zone->blockflags rounded to an unsigned long
  * Start by making sure zonesize is a mulitple of pageblock_order by rounding
@@ -534,9 +553,7 @@ static unsigned long __init usemap_size(unsigned long zonesize)
 
 	return usemapsize / 8;
 }
-/*
- * setup usemap.
- */
+
 static void __init setup_usemap(struct pglist_data *pgdat,
 		struct zone *zone,unsigned long zonesize)
 {
@@ -660,6 +677,7 @@ static void zoneref_set_zone(struct zone *zone,struct zoneref *zoneref)
 	zoneref->zone = zone;
 	zoneref->zone_idx = zone_idx(zone);
 }
+
 /*
  * Builds allocation fallback zone lists.
  *
@@ -753,6 +771,7 @@ static unsigned int nr_free_zone_pages(int offset)
 		if(size > high)
 			sum += size - high;
 	}
+
 	return sum;
 }
 /*
@@ -777,7 +796,6 @@ static void setup_pageset(struct per_cpu_pageset *p,unsigned long batch)
 	for(migratetype = 0 ; migratetype < MIGRATE_PCPTYPES ; migratetype++)
 		INIT_LIST_HEAD(&pcp->lists[migratetype]);
 }
-
 
 /* return values in  ...just for stop_machine() */
 static __init_refok int __build_all_zonelists(void *data)
@@ -809,9 +827,9 @@ static __init_refok int __build_all_zonelists(void *data)
 		setup_pageset(&per_cpu(boot_pageset,cpu),0);
 
 
-//	check("B");
 	return 0;
 }
+
 /*
  * Called with zonelist_mutex held always
  * Unless system_state == SYSTEM_BOOTING.
@@ -1414,11 +1432,16 @@ static bool __zone_watermark_ok(struct zone *z,int order,unsigned long mark,
 
 	if(free_pages <= min + z->lowmem_reserve[classzone_idx])
 		return false;
+
 	for(o = 0 ; o < order ; o++) {
 		/* At the next order,this order's pages become unavailable */
 		free_pages -= z->free_area[o].nr_free << o;
 
 		/* Require fewer higher order pages to be free */
+		/**
+		 * We can set right shift is min_free_order_shift,set default as 4.
+		 * Need more debug... Why does min right shift?
+		 **/
 		min >>= 1;
 
 		if(free_pages <= min)
@@ -1432,6 +1455,8 @@ bool zone_watermark_ok(struct zone *z,int order,unsigned long mark,
 	return __zone_watermark_ok(z,order,mark,classzone_idx,alloc_flags,
 			zone_page_state(z,NR_FREE_PAGES));
 }
+
+
 /*
  * The order of subdivision here is critical for the IO subsystem.
  * Pls don't alter this order without good reasons and regression
@@ -1449,7 +1474,7 @@ static inline void expand(struct zone *zone,struct page *page,
 		int migratetype)
 {
 	unsigned long size = 1 << high;
-	
+
 	while(high > low) {
 		area--;
 		high--;
@@ -1460,6 +1485,7 @@ static inline void expand(struct zone *zone,struct page *page,
 		set_page_order(&page[size],high);
 	}
 }
+
 /*
  * Go through the free lists for the given migratetype and remove
  * the smallest available page from the freelists.
@@ -1485,9 +1511,9 @@ static inline struct page *__rmqueue_smallest(struct zone *zone,
 		expand(zone,page,order,current_order,area,migratetype);
 		return page;
 	}
-	
 	return NULL;
 }
+
 /*
  * Move the free pages in a range to the free lists of the requested type.
  * Note that start_page and end_pages are not aligned on a pageblock
@@ -1520,7 +1546,7 @@ static int move_freepages(struct zone *zone,
 			page++;
 			continue;
 		}
-		
+	
 		if(!PageBuddy(page)) {
 			page++;
 			continue;
@@ -1536,6 +1562,7 @@ static int move_freepages(struct zone *zone,
 
 	return pages_moved;
 }
+
 static int move_freepages_block(struct zone *zone,struct page *page,
 		int migratetype)
 {
@@ -1567,6 +1594,7 @@ static void change_pageblock_range(struct page *pageblock_page,
 		pageblock_page += pageblock_nr_pages;
 	}
 }
+
 /*
  * Remove an element from the buddy allocateor from the fallback list.
  */
@@ -1594,6 +1622,7 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 			page = list_entry(area->free_list[migratetype].next,
 					struct page,lru);
 			area->nr_free--;
+			
 			/*
 			 * If breaking a large block of pages,move all free
 			 * pages to the preferred allocation list.If falling
@@ -1604,7 +1633,7 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 					start_migratetype == MIGRATE_RECLAIMABLE ||
 					page_group_by_mobility_disabled) {
 				unsigned long pages;
-			
+		
 				pages = move_freepages_block(zone,page,
 						start_migratetype);
 
@@ -1612,7 +1641,7 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 				if(pages >= (1 << (pageblock_order -1)) ||
 						page_group_by_mobility_disabled) 
 					set_pageblock_migratetype(page,start_migratetype);
-
+				
 				migratetype = start_migratetype;
 			}
 
@@ -1624,6 +1653,7 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 			if(current_order >= pageblock_order) 
 				change_pageblock_range(page,current_order,
 						start_migratetype);
+
 			expand(zone,page,order,current_order,area,migratetype);
 			
 			return page;
@@ -1697,6 +1727,7 @@ static int rmqueue_bulk(struct zone *zone,unsigned int order,
 	spin_unlock(&zone->lock);
 	return i;
 }
+
 /*
  * This page is about to be retured from the page allocator.
  */
@@ -1746,6 +1777,7 @@ void prep_compound_page(struct page *page,unsigned long order)
 		p->first_page = page;
 	}
 }
+
 static int prep_new_page(struct page *page,int order,gfp_t gfp_flags)
 {
 	int i;
@@ -1770,6 +1802,7 @@ static int prep_new_page(struct page *page,int order,gfp_t gfp_flags)
 
 	return 0;
 }
+
 /*
  * Really,prep_compound_page() should be called from __rmqueue_bulk().But 
  * we cheat by calling it from here.int the order > 0 path.Saves a branch
@@ -1885,6 +1918,9 @@ zonelist_scan:
 			unsigned long mark;
 			int ret;
 
+			/**
+			 * Need more debug.Where does kernel set watermark.
+			 **/
 			mark = zone->watermark[alloc_flags & ALLOC_WMARK_MASK];
 			if(zone_watermark_ok(zone,order,mark,
 						classzone_idx,alloc_flags))
@@ -1909,6 +1945,7 @@ zonelist_scan:
 						goto this_zone_full;
 			}
 		}
+
 try_this_zone:
 		page = buffered_rmqueue(preferred_zone,zone,order,
 				gfp_mask,migratetype);
@@ -2054,6 +2091,7 @@ static inline int should_alloc_retry(gfp_t gfp_mask,unsigned int order,
 
 	return 0;
 }
+
 static inline struct page *__alloc_pages_slowpath(gfp_t gfp_mask,
 		unsigned int order,struct zonelist *zonelist,
 		enum zone_type high_zoneidx,
@@ -2073,8 +2111,7 @@ static inline struct page *__alloc_pages_slowpath(gfp_t gfp_mask,
 	 * be using allocators in order of preference for an area that is
 	 * too large.
 	 */
-	if(order >= MAX_ORDER)
-	{
+	if(order >= MAX_ORDER) {
 		WARN_ON_ONCE(!(gfp_mask & __GFP_NOWARN));
 		return NULL;
 	}
@@ -2269,9 +2306,7 @@ struct page *__alloc_pages_nodemask(gfp_t gfp_mask,unsigned int order,
 		return NULL;
 
 	get_mems_allowed();
-	/*
-	 * The preferred zone is used for statistics later.
-	 */
+	/* The preferred zone is used for statistics later. */
 	first_zones_zonelist(zonelist,high_zoneidx,
 			nodemask ? : &cpuset_current_mems_allowed,
 			&preferred_zone);
@@ -2287,6 +2322,7 @@ struct page *__alloc_pages_nodemask(gfp_t gfp_mask,unsigned int order,
 			nodemask,order,zonelist,high_zoneidx,
 			ALLOC_WMARK_LOW | ALLOC_CPUSET,
 			preferred_zone,migratetype);
+
 	if(unlikely(!page))
 		page = __alloc_pages_slowpath(gfp_mask,order,
 				zonelist,high_zoneidx,nodemask,

@@ -8,9 +8,7 @@
 
 int mminit_loglevel;
 
-/*
- * The zonelist are simply reported,validation is manual.
- */
+/* The zonelist are simply reported,validation is manual. */
 void mminit_verify_zonelist(void)
 {
 	int nid;

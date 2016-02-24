@@ -40,9 +40,12 @@ static struct page_address_slot *page_slot(struct page *page)
 {
 	return &page_address_htable[hash_ptr(page,PA_HASH_ORDER)];
 }
-/*
+
+/**
  * page_address - get the mapped virtual address of a page
  * @page:&struct page to get the virtual address of
+ *
+ * Return the page's virtual address.
  */
 void *page_address(struct page *page)
 {

@@ -430,7 +430,7 @@ void buddy_free(char *name)
 			else 
 				list_for_each(list,&free->free_list[j])
 					total += 1;
-			mm_debug("MIGRATETYPE %d total %p\n",
+			mm_debug("|-->MIGRATETYPE %d total %p\n",
 					j,(void *)(unsigned long)total);
 		}
 	}

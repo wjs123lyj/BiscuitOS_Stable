@@ -930,9 +930,7 @@ static inline int lock_and_freeze_slab(struct kmem_cache_node *n,
 {
 	if(slab_trylock(page)) {
 		__remove_partial(n,page);
-		PageFlage(page);
 		__SetPageSlubFrozen(page);
-		PageFlage(page);
 		return 1;
 	}
 	return 0;
@@ -1234,6 +1232,28 @@ static inline void inc_slabs_node(struct kmem_cache *s,int node,
 
 /*
  * Calculate the order of allocation given an slab object size.
+ *
+ * The order of allocation has significant impact on performance and other
+ * system components.Generally order 0 allocations should be preferred since
+ * order 0 does not cause fragmentation in the page allocator.Large objects
+ * be problematic to put into order 0 slabs because there may be too much
+ * unused space left.We go to a higher order if more than 1/16th of the slab
+ * would be wasted.
+ *
+ * In order to reach satisfactory performance we must ensure that a minium
+ * number of objects is in one slab.Otherwise we may generate too much
+ * activity on the partial lists which requires taking the list_lock.This is
+ * less a concern for large slabs though which are rarely used.
+ *
+ * slub_max_order specifies the order where we begin to stop considering the
+ * number of objects in a slab as critical.If we reach slub_max_order then
+ * we try to keep the page order as low as possible.So we accept more waste
+ * of space in favor of a small page order.
+ *
+ * Higher order allocations also allow the placement of more objects in a
+ * slab and thereby reduce onject handing overhead.If the user has
+ * requested a higher mininum order then we start with one instead of
+ * the smallest order which wil fit the object.
  */
 static inline int slab_order(int size,int min_objects,
 		int max_order,int fract_leftover)
@@ -1245,6 +1265,9 @@ static inline int slab_order(int size,int min_objects,
 	if((PAGE_SIZE << min_order) / size > MAX_OBJS_PER_PAGE)
 		return get_order(size * MAX_OBJS_PER_PAGE) - 1;
 
+	/**
+	 * Need more debug...fls(?) -> slub_min_order ?= !0.
+	 */
 	for(order = max(min_order,
 				fls(min_objects * size - 1) - PAGE_SHIFT) ;
 			order <= max_order ; order++) {
@@ -1273,6 +1296,7 @@ static inline int calculate_order(int size)
 	 * Attempt to find best configuration for a slab.This
 	 * works by first attempting to generate a layout with
 	 * the best configuration and backing off gradually.
+	 *
 	 * First we reduce the acceptable waste in a slab.Then
 	 * we reduce the minimum objects required in a slab.
 	 */
@@ -1367,6 +1391,7 @@ void *__kmalloc_node(size_t size,gfp_t flags,int node)
 
 	return ret;
 }
+
 /*
  * Figure out what the alignment of the object will be.
  */
@@ -1387,7 +1412,7 @@ static unsigned long calculate_alignment(unsigned long flags,
 			ralign /= 2;
 		align = max(align,ralign);
 	}
-	
+
 	if(align < ARCH_SLAB_MINALIGN)
 		align = ARCH_SLAB_MINALIGN;
 
@@ -1408,6 +1433,10 @@ static int calculate_sizes(struct kmem_cache *s,int forced_order)
 	 * Round up object size to the next word boundary.We can only 
 	 * place the free pointer at word boundaries and this determines
 	 * the possible location of the free pointer.
+	 */
+	/**
+	 * Need more debug...For this system,we use 32bit address!!!
+	 * If size is small than 8? (ALIGN() up alignment!)
 	 */
 	size = ALIGN(size,sizeof(void *));
 
@@ -1580,7 +1609,7 @@ static struct page *allocate_slab(struct kmem_cache *s,gfp_t flags,int node)
 			(s->flags & SLAB_RECLAIM_ACCOUNT) ?
 			NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
 			1 << oo_order(oo));
-	
+
 	return page;
 }
 
@@ -1625,6 +1654,7 @@ static struct page *new_slab(struct kmem_cache *s,gfp_t flags,int node)
 out:
 	return page;
 }
+
 /*
  * No kmalloc_node yet so do it by hand.We know that this is the first
  * slab on the node for slabcache.There are no concurrent accesses
