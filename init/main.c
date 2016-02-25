@@ -13,6 +13,7 @@
 #include "linux/cgroup.h"
 #include "linux/cpuset.h"
 #include "linux/slab.h"
+#include "linux/testcase.h"
 
 extern struct task_struct init_task;
 extern struct mm_struct init_mm;
@@ -163,6 +164,7 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-		
+	TestCase_slab_alloc0();
+
 	return 0;
 }

@@ -613,6 +613,7 @@ static void slab_fix(struct kmem_cache *s,char *fmt,...)
 static void add_full(struct kmem_cache_node *n,struct page *page);
 static void add_partial(struct kmem_cache_node *n,
 		struct page *page,int tail);
+
 /*
  * Move a page back to the lists.
  *
@@ -624,26 +625,21 @@ static void unfreeze_slab(struct kmem_cache *s,struct page *page,int tail)
 {
 	struct kmem_cache_node *n = get_node(s,page_to_nid(page));
 
-	// Need debug
-	//__ClearPageSlubFrozen(page);
-	if(page->inuse)
-	{
-		if(page->freelist)
-		{
+	__ClearPageSlubFrozen(page);
+	if(page->inuse) {
+
+		if(page->freelist) {
 			add_partial(n,page,tail);
 			stat(s,tail ? DEACTIVATE_TO_TAIL : DEACTIVATE_TO_HEAD);
-		} else
-		{
+		} else {
 			stat(s,DEACTIVATE_FULL);
 			if(kmem_cache_debug(s) && (s->flags & SLAB_STORE_USER))
 				add_full(n,page);
 		}
 		slab_unlock(page);
-	} else
-	{
+	} else {
 		stat(s,DEACTIVATE_EMPTY);
-		if(n->nr_partial < s->min_partial)
-		{
+		if(n->nr_partial < s->min_partial) {
 			/*
 			 * Adding an empty slab to the partial slabs in order
 			 * to avoid page allocator overhead.This slab needs
@@ -656,14 +652,14 @@ static void unfreeze_slab(struct kmem_cache *s,struct page *page,int tail)
 			 */
 			add_partial(n,page,1);
 			slab_unlock(page);
-		} else
-		{
+		} else {
 			slab_unlock(page);
 			stat(s,FREE_SLAB);
 			discard_slab(s,page);
 		}
 	}
 }
+
 /*
  * Remove the cpu slab
  */
@@ -679,8 +675,7 @@ static void deactive_slab(struct kmem_cache *s,struct kmem_cache_cpu *c)
 	 * because both freelists are empty.So this is unlikely
 	 * to occur.
 	 */
-	while(unlikely(c->freelist))
-	{
+	while(unlikely(c->freelist)) {
 		void **object;
 
 		tail = 0; /* Hot object.Put the slab first */
@@ -1013,7 +1008,7 @@ static void *__slab_alloc(struct kmem_cache *s,gfp_t gfpflags,int node,
 
 	/* We handle __GFP_ZERO in the caller */
 	gfpflags &= ~__GFP_ZERO;
-
+	
 	if(!c->page)
 		goto new_slab;
 	
@@ -1108,7 +1103,7 @@ static void *slab_alloc(struct kmem_cache *s,
 	if(unlikely(!object || !node_match(c,node)))
 		
 		object = __slab_alloc(s,gfpflags,node,addr,c);
-
+	
 	else {
 		c->freelist = get_freepointer(s,object);
 		stat(s,ALLOC_FASTPATH);
@@ -1723,6 +1718,7 @@ static inline int free_debug_processing(struct kmem_cache *s,
 {
 	return 0;
 }
+
 /*
  * Slow pathch handing.This may still be called frequently since objects
  * have a longer lifetime than the cpu slabs in most processing loads.
@@ -1737,7 +1733,6 @@ static void __slab_free(struct kmem_cache *s,struct page *page,
 	void *prior;
 	void **object = (void *)x;
 
-	
 	stat(s,FREE_SLOWPATH);
 	slab_lock(page);
 
@@ -1750,10 +1745,7 @@ check_ok:
 	page->freelist = object;
 	page->inuse--;
 
-	/* Need debug */
-	//if(unlikely(PageSlubFrozen(page)))
-	if(0)
-	{
+	if(unlikely(PageSlubFrozen(page))) {
 		stat(s,FREE_FROZEN);
 		goto out_unlock;
 	}
@@ -1765,8 +1757,7 @@ check_ok:
 	 * Objects left in the slab.If it was not on the partial list before
 	 * then add it.
 	 */
-	if(unlikely(!prior))
-	{
+	if(unlikely(!prior)) {
 		add_partial(get_node(s,page_to_nid(page)),page,1);
 		stat(s,FREE_ADD_PARTIAL);
 	}
@@ -1778,6 +1769,8 @@ out_unlock:
 slab_empty:
 	if(prior)
 	{
+		mm_debug("[%s]\n",__func__);
+		stop();
 		/*
 		 * Slab still on the partial list.
 		 */
@@ -1794,6 +1787,7 @@ debug:
 		goto out_unlock;
 	goto check_ok;
 }
+
 /*
  * Fastpath with forced inlining to produce a kfree and kmem_cache_free that
  * can perform fastpath freeing without additional function calls.
@@ -1815,7 +1809,7 @@ static inline void slab_free(struct kmem_cache *s,
 	slab_free_hook(s,x);
 
 	local_irq_save(flags);
-	c = (struct kmem_cache_cpu *)__this_cpu_ptr(s->cpu_slab);
+	c = __this_cpu_ptr(s->cpu_slab);
 
 	slab_free_hook_irq(s,x);
 
@@ -1826,7 +1820,7 @@ static inline void slab_free(struct kmem_cache *s,
 	} else
 		__slab_free(s,page,x,addr);
 
-//	local_irq_restore(flags);
+	local_irq_restore(flags);
 }
 
 void kfree(const void *x)
@@ -1856,7 +1850,8 @@ void kmem_cache_free(struct kmem_cache *s,void *x)
 {
 	struct page *page;
 
-	page = virt_to_head_page(x);
+	page = virt_to_head_page(
+			(const void *)(unsigned long)__va(mem_to_phys(x)));
 
 	slab_free(s,page,x,_RET_IP_);
 }
@@ -2000,6 +1995,7 @@ static void __init kmem_cache_bootstrap_fixup(struct kmem_cache *s)
 		}
 	}
 }
+
 /*
  * Create kmalloc cache.
  */
@@ -2239,7 +2235,6 @@ static struct kmem_cache *find_mergeable(size_t size,
 
 		if(s->size - size >= sizeof(void *))
 			continue;
-
 		return s;
 	}
 	return NULL;
@@ -2345,6 +2340,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size,
 		size_t align,unsigned long flags,void (*ctor)(void *))
 {
 	struct kmem_cache *s;
+	struct kmem_cache *p;
 	char *n;
 
 	if(WARN_ON(!name))
@@ -2366,6 +2362,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size,
 			goto err;
 		}
 		up_write(&slub_lock);
+		return s;
 	}
 
 	n = kstrdup(name,GFP_KERNEL);
@@ -2484,8 +2481,14 @@ int kmem_cache_shrink(struct kmem_cache *s)
 		 * Rebuild the partial list with the slabs filled up most
 		 * first and the least used slabs at the end.
 		 */
-		for(i = )
+		for(i = objects - 1 ; i >= 0 ; i--)
+			list_splice(slabs_by_inuse + i,n->partial.prev);
+
+		spin_unlock_irqrestore(&n->list_lock,flags);
 	}
+
+	kfree(slabs_by_inuse);
+	return 0;
 }
 
 void __init kmem_cache_init_late(void)

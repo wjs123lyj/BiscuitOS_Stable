@@ -58,7 +58,7 @@ void PageFlage(struct page *page,char *s)
 	unsigned long flags = page->flags;
 	unsigned long i = 0;
 
-	mm_debug("[%s]Page->flags:",s);
+	mm_debug("[%s][%p]Page->flags:",s,page);
 	while(flags) {
 		if(flags & 0x1)
 			mm_debug(" %s",page_flags_names[i]);

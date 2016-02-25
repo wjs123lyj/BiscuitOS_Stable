@@ -1,6 +1,7 @@
 CURRENT_SOURCE := boot_arch.c
 CURRENT_SOURCE += debug.c
 CURRENT_SOURCE += register_simulate.c
+CURRENT_SOURCE += TestCase_slub.c
 
 all:
 	@cp ${CURRENT_SOURCE} ${OBJS_PATH}
