@@ -1834,7 +1834,6 @@ void kfree(const void *x)
 	struct page *page;
 	void *object = (void *)x;
 
-	//trace_kfree(_RET_IP_,x);
 
 	if(unlikely(ZERO_OR_NULL_PTR(x)))
 		return;
@@ -2420,6 +2419,73 @@ void kmem_cache_destroy(struct kmem_cache *s)
 		sysfs_slab_remove(s);
 	}
 	up_write(&slab_lock);
+}
+
+/*
+ * kmem_cache_shrink removes empty slabs from the partial lists and sorts
+ * the remaining slabs by the number of items in use.The slabs with the
+ * most items in use come first.New allocations will then fill those up
+ * and thus they can be removed from the partial lists.
+ *
+ * The slabs with the least items are placed last.This results in them
+ * being allocated from last increasing the chance that the last objects
+ * are freed in them.
+ */
+int kmem_cache_shrink(struct kmem_cache *s)
+{
+	int node;
+	int i;
+	struct kmem_cache_node *n;
+	struct page *page;
+	struct page *t;
+	int objects = oo_objects(s->max);
+	struct list_head *slabs_by_inuse = 
+		kmalloc(sizeof(struct list_head) * objects,GFP_KERNEL);
+	unsigned long flags;
+
+	if(!slabs_by_inuse)
+		return -ENOMEM;
+
+	flush_all(s);
+	for_each_node_state(node,N_NORMAL_MEMORY) {
+		n = get_node(s,node);
+
+		if(!n->nr_partial)
+			continue;
+
+		for(i = 0 ; i < objects ; i++)
+			INIT_LIST_HEAD(slabs_by_inuse + i);
+
+		spin_lock_irqsave(&n->list_lock,flags);
+
+		/*
+		 * Build lists indexed the items in use in each slab.
+		 *
+		 * Note that concurrent frees may occur while we hold the
+		 * list_lock.page->inuse here is the upper limit.
+		 */
+		list_for_each_entry_safe(page,t,&n->partial,lru) {
+			if(!page->inuse && slab_trylock(page)) {
+				/*
+				 * Must hold slab lock here because slab_free
+				 * may have freed the last object and be 
+				 * waiting to release the slab.
+				 */
+				__remove_partial(n,page);
+				slab_unlock(page);
+				discard_slab(s,page);
+			} else {
+				list_move(&page->lru,
+						slabs_by_inuse + page->inuse);
+			}
+		}
+
+		/*
+		 * Rebuild the partial list with the slabs filled up most
+		 * first and the least used slabs at the end.
+		 */
+		for(i = )
+	}
 }
 
 void __init kmem_cache_init_late(void)

@@ -19,6 +19,7 @@ extern struct mm_struct init_mm;
 #ifdef CONFIG_DEBUG_PAGEALLOC
 int debug_pagealloc_enabled = 0;
 #endif
+extern const char linux_banner[];
 
 enum system_states system_state __read_mostly;
 /* Extern for uboot */
@@ -101,6 +102,7 @@ static void start_kernel(void)
 	smp_setup_processor_id();
 
 	page_address_init();
+	mm_debug("%s",linux_banner);
 	setup_arch(&command_line);
 	mm_init_owner(&init_mm,&init_task);
 	setup_nr_cpu_ids();
@@ -161,6 +163,6 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-	
+		
 	return 0;
 }
