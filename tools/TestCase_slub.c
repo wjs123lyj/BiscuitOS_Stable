@@ -1,5 +1,5 @@
 /*
- * This file use to test function in some case.
+ * This file use to test Slub Allocator.
  * 
  * Create By: Buddy@2016-2-25
  */
@@ -20,32 +20,69 @@
 void TestCase_slab_alloc0(void)
 {
 #define NUM_SLAB_PAGE  3
-#define OBJ_SIZE       51
-	unsigned long num_objects = PAGE_SIZE / OBJ_SIZE;
+#define OBJ_SIZE       512
+	unsigned long num_objects = PAGE_SIZE / ALIGN(OBJ_SIZE,8);
 	struct kmem_cache *kmem_cache_test;
 	struct test_struct {
 		char array[OBJ_SIZE];
 	} *objects[NUM_SLAB_PAGE * num_objects];
+	struct test_struct *last_objects[NUM_SLAB_PAGE];
+	unsigned long first_slab_page_objects;
+	unsigned long inuse_objects;
 	struct page *slab_page[NUM_SLAB_PAGE];
 	struct page *page;
 	int i,j;
 
 	kmem_cache_test = kmem_cache_create(__func__,
 				sizeof(struct test_struct),0,0,NULL);
+	KmemCache(kmem_cache_test,__func__);
 
-	mm_debug("Kmem_cache: %s\n",kmem_cache_test->name);
-	for(i = 0 ; i < NUM_SLAB_PAGE ; i++) {
-		for(j = 0 ; j < num_objects ; j++) 
+	/* Alloc object from fist slab page */
+	first_slab_page_objects = 
+		(PAGE_SIZE - kmem_cache_test->inuse) / ALIGN(OBJ_SIZE,8);
+	inuse_objects = kmem_cache_test->inuse / ALIGN(ONJ_SIZE,9);
+
+	for(i = 0 ; i < first_slab_page_objects ;i++) 
+		objects[i] = kmem_cache_alloc(kmem_cache_test,0);
+	slab_page[0] = virt_to_page(
+			__va(mem_to_phys(objects[i - 1])));
+
+	/* Alloc object from remain slab page */
+	for(i = 1 ; i < NUM_SLAB_PAGE ; i++) {
+		for(j = 0 ; j < num_objects ; j++) {
 			objects[i * num_objects + j] =
 				kmem_cache_alloc(kmem_cache_test,0);
+			last_objects[i] = objects[i * num_objects + j];
+		}
 		slab_page[i] = virt_to_page(
 				__va(mem_to_phys(objects[i *num_objects])));
-		PageFlage(slab_page[i],"Alloc Page");
 	}
+
+	/* Check slab page state */
+	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
+		PageFlage(slab_page[i],"Slab Page");
 
 	/* Check the list of kmem_cache->node[0]->partial */
 	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
 		PageFlage(page,"Check list");
+
+	/* For each object address */
+	mm_debug("PageNum:0\n");
+	for(i = 0 ; i < first_slab_page_objects ; i++)
+		mm_debug("object[%2d]%p\n",i,(void *)(unsigned long)(
+					__va(mem_to_phys(objects[i]))));
+
+	for(i = 1 ; i < NUM_SLAB_PAGE ; i++) {
+		mm_debug("PageNum:%d\n",i);
+		for(j = 0 ; j < num_objects ; j++)
+			mm_debug("object[%2d]%p\n",(int)(i * num_objects + j),
+					(void *)(unsigned long)(
+					__va(mem_to_phys(objects[i * num_objects + j]))));
+	}
+
+	/* The current cpu_slab state */
+	mm_debug("kmem_cache->cpu_slab->Freelist %p\n",
+			kmem_cache_test->cpu_slab->freelist);
 
 #undef OBJ_SIZE
 #undef NUM_SLAB_PAGE
@@ -76,7 +113,7 @@ void TestCase_slab_alloc1(void)
 
 	/* Create kmem_cache */
 	kmem_cache_test = kmem_cache_create(
-			__func__,sizeof(struct test_struct),0,0,NULL);
+			__func__,sizeof(struct test_struct),8,0,NULL);
 
 	/* Alloc NUM_SLAB_PAGE slab page */
 	for(i = 0 ; i < NUM_SLAB_PAGE ; i++) {
@@ -86,9 +123,12 @@ void TestCase_slab_alloc1(void)
 		/* Get the slab page forobject*/
 		slab_page[i] = virt_to_page(
 				__va(mem_to_phys(objects[i * num_objects])));
-		PageFlage(slab_page[i],"Slab_page");
 	}
-	
+
+	/* Check slab page state */
+	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
+		PageFlage(slab_page[i],"Slab Page");
+
 	/* Check list of kmem_cache->node[0]->partial */
 	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
 		PageFlage(page,"Check_page_partial");

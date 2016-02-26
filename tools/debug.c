@@ -6,6 +6,7 @@
 #include "linux/atomic.h"
 #include "linux/list.h"
 #include "linux/vmstat.h"
+#include "linux/slab.h"
 
 extern struct meminfo meminfo;
 extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
@@ -58,7 +59,7 @@ void PageFlage(struct page *page,char *s)
 	unsigned long flags = page->flags;
 	unsigned long i = 0;
 
-	mm_debug("[%s][%p]Page->flags:",s,page);
+	mm_debug("[%s][%p]Page->flags:",s,page_address(page));
 	while(flags) {
 		if(flags & 0x1)
 			mm_debug(" %s",page_flags_names[i]);
@@ -495,5 +496,21 @@ void zone_information(char *name)
 	
 }
 
-
+/*
+ * Show information of kmem_cache.
+ */
+void KmemCache(struct kmem_cache *k,char *s)
+{
+	mm_debug("[%s]%s:\n"
+			"\tsize %p \tobjsize %p\n"
+			"\toffset %p \trefcount %p\n"
+			"\tinuse %p \talignment %p \n"
+			"\tmin_partial %p\n",s,k->name,
+			(void *)(unsigned long)k->size,(void *)(unsigned long)k->objsize,
+			(void *)(unsigned long)k->offset,
+			(void *)(unsigned long)k->refcount,
+			(void *)(unsigned long)k->inuse,
+			(void *)(unsigned long)k->align,
+			(void *)(unsigned long)k->min_partial);
+}
 

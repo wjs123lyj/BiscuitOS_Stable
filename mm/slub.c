@@ -1017,7 +1017,7 @@ static void *__slab_alloc(struct kmem_cache *s,gfp_t gfpflags,int node,
 		goto another_slab;
 
 	stat(s,ALLOC_REFILL);
-
+	
 load_freelist:
 	object = c->page->freelist;
 	if(unlikely(!object))
@@ -2235,6 +2235,7 @@ static struct kmem_cache *find_mergeable(size_t size,
 
 		if(s->size - size >= sizeof(void *))
 			continue;
+
 		return s;
 	}
 	return NULL;
