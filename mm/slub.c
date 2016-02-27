@@ -411,8 +411,7 @@ static void __free_slab(struct kmem_cache *s,struct page *page)
 	int order = compound_order(page);
 	int pages = 1 << order;
 
-	if(kmem_cache_debug(s))
-	{
+	if(kmem_cache_debug(s)) {
 		void *p;
 
 		slab_pad_check(s,page);
@@ -428,7 +427,7 @@ static void __free_slab(struct kmem_cache *s,struct page *page)
 			NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
 			-pages);
 
-	//__ClearPageSlab(page);
+	__ClearPageSlab(page);
 	reset_page_mapcount(page);
 	if(current->reclaim_state)
 		current->reclaim_state->reclaimed_slab += pages;
@@ -443,17 +442,19 @@ static void rcu_free_slab(struct rcu_head *h)
 }
 static void free_slab(struct kmem_cache *s,struct page *page)
 {
-	if(unlikely(s->flags & SLAB_DESTROY_BY_RCU))
-	{
+	if(unlikely(s->flags & SLAB_DESTROY_BY_RCU)) {
 		/* 
 		 * RCU free overloads the RCU head over the LRU
 		 */
 		struct rcu_head *head = (void *)&page->lru;
 
+		mm_debug("Need debug %s\n",__func__);
+		stop();
 		call_rcu(head,rcu_free_slab);
 	} else
 		__free_slab(s,page);
 }
+
 static void discard_slab(struct kmem_cache *s,struct page *page)
 {
 	dec_slabs_node(s,page_to_nid(page),page->objects);
@@ -692,6 +693,7 @@ static void deactive_slab(struct kmem_cache *s,struct kmem_cache_cpu *c)
 	c->page = NULL;
 	unfreeze_slab(s,page,tail);
 }
+
 static inline void flush_slab(struct kmem_cache *s,struct kmem_cache_cpu *c)
 {
 	stat(s,CPUSLAB_FLUSH);
@@ -1767,10 +1769,7 @@ out_unlock:
 	return;
 
 slab_empty:
-	if(prior)
-	{
-		mm_debug("[%s]\n",__func__);
-		stop();
+	if(prior) {
 		/*
 		 * Slab still on the partial list.
 		 */
@@ -1832,13 +1831,10 @@ void kfree(const void *x)
 	if(unlikely(ZERO_OR_NULL_PTR(x)))
 		return;
 
-	page = virt_to_head_page(x);
-	/* Need debug */
-//	if(unlikely(!PageSlab(page)))
-	if(0)
-	{
-		/* Need debug */
-//		BUG_ON(!PageCompound(page));
+	page = virt_to_head_page((const void *)(unsigned long)(
+			__va(mem_to_phys(x))));
+	if(unlikely(!PageSlab(page))) {
+		BUG_ON(!PageCompound(page));
 		kmemleak_free(x);
 		put_page(page);
 		return;

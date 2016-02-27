@@ -505,12 +505,18 @@ void KmemCache(struct kmem_cache *k,char *s)
 			"\tsize %p \tobjsize %p\n"
 			"\toffset %p \trefcount %p\n"
 			"\tinuse %p \talignment %p \n"
-			"\tmin_partial %p\n",s,k->name,
+			"\torder %p \tobjects %p\n"
+			"\tmin_partial %p\n"
+			"\tFreelist %p\n",s,k->name,
 			(void *)(unsigned long)k->size,(void *)(unsigned long)k->objsize,
 			(void *)(unsigned long)k->offset,
 			(void *)(unsigned long)k->refcount,
 			(void *)(unsigned long)k->inuse,
 			(void *)(unsigned long)k->align,
-			(void *)(unsigned long)k->min_partial);
+			(void *)(unsigned long)(k->oo.x >> 16), 
+			(void *)(unsigned long)(k->oo.x & ((1 << 16) - 1)),
+			(void *)(unsigned long)k->min_partial,
+			k->cpu_slab->freelist ? (void *)(unsigned long)(
+			__va(mem_to_phys((k->cpu_slab->freelist)))) : NULL);
 }
 

@@ -227,7 +227,6 @@ static inline void *kmalloc(size_t size,gfp_t flags)
 		}
 	}
 	return __kmalloc(size,flags);
-
 }
 
 static inline void *kmem_cache_alloc_node(struct kmem_cache *cachep,

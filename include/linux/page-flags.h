@@ -153,7 +153,7 @@ static inline int Page##uname(struct page *page)     \
 struct page;     /* forward declaration */
 
 PAGEFLAG(Reserved,reserved) __CLEARPAGEFLAG(Reserved,reserved)
-
+__PAGEFLAG(Slab,slab)
 __PAGEFLAG(SlubFrozen,slub_frozen)
 
 #ifdef CONFIG_MMU

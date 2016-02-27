@@ -164,7 +164,7 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-	TestCase_slab_alloc0();
+	TestCase_slab_alloc1();
 
 	return 0;
 }
