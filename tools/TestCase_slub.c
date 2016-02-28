@@ -1,5 +1,5 @@
 /*
- * This file use to test Slub Allocator.
+ * This file use to debug Slub Allocator.
  * 
  * Create By: Buddy@2016-2-25
  */
