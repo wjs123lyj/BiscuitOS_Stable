@@ -159,13 +159,13 @@ __attribute__((destructor)) __exit Pown_down(void)
 
 /**
  * =============================================
- *                 User Space
+ *                 Kernel Space
  * =============================================
  */
 int main()
 {
 
-	TestCase_calculate_sizes();
+	TestCase_kmem_cache_shrink();
 	
 	return 0;
 }

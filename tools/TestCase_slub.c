@@ -340,7 +340,7 @@ void TestCase_slab_alloc1(void)
 }
 
 /*
- * TestCase_kmem_cache_shrink - 
+ * TestCase_kmem_cache_shrink - Need more debug after debug Buddy Allocator.
  */
 void TestCase_kmem_cache_shrink(void)
 {
@@ -361,7 +361,7 @@ void TestCase_kmem_cache_shrink(void)
 	kmem_cache_test = kmem_cache_create(__func__,
 			sizeof(struct test_struct),8,0,NULL);
 	KmemCache(kmem_cache_test,__func__);
-
+	
 	/* Calcuate the value for loop */
 	page_mask = (PAGE_SIZE << oo_order(kmem_cache_test->oo)) - 1;
 	if(kmem_cache_test->cpu_slab->freelist) {
@@ -398,7 +398,7 @@ void TestCase_kmem_cache_shrink(void)
 
 	/* Pagelist view */
 	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
-		PageFlage(slab_page[i],"PageView");
+		PageFlage(slab_page[i],"SlabPageView");
 
 	/* Check the list of kmem_cache->node[0]->partial */
 	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
@@ -411,41 +411,43 @@ void TestCase_kmem_cache_shrink(void)
 
 	/* Check the partial list */
 	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
-		PageFlage(page,"Second SlabList");
+		PageFlage(page,"2th SlabList");
 
 	/* 
 	 * Remove empty slab from the partial list and sort the remaining slabs
 	 * by the number of items in use .
 	 */
-	mm_debug("Before shrink,kmem_cache->cpu_slab->page %p\n",
-			kmem_cache_test->cpu_slab->page);
+	PageFlage(kmem_cache_test->cpu_slab->page,"BeforeShrink");
 	kmem_cache_shrink(kmem_cache_test);
 
 	/* Add a TestCase: get a new object from partial list */
 	objects[0] = kmem_cache_alloc(kmem_cache_test,0);
-	PageFlage(virt_to_page(__va(mem_to_phys(objects[0]))),"PartialSlab");
+	PageFlage(virt_to_page(__va(mem_to_phys(objects[0]))),"Partial Slab");
+	PageFlage(kmem_cache_test->cpu_slab->page,"After-Shrink");
 
 	/* Check partial list */
 	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
-		PageFlage(page,"Third SlabList");
+		PageFlage(page,"3th SlabList");
 
 	/* Previous TestCase complete.. */
 	kmem_cache_free(kmem_cache_test,objects[0]);
 
 	/* Pagelist view */
 	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
-		PageFlage(slab_page[i],"PageView-shrink");
+		PageFlage(slab_page[i],"PGViewShrink");
 
 	/* Free all objects */
 	for(i = 1 ; i < first_slab_page_objects ; i++)
 		kmem_cache_free(kmem_cache_test,objects[i]);
 
 	/* Shrink and check partial list */
-	mm_debug("Before shrink,kmem_cache->cpu_slab->page %p\n",
-			kmem_cache_test->cpu_slab->page);
 	kmem_cache_shrink(kmem_cache_test);
 	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
-		PageFlage(page,"Fourth SlabList");
+		PageFlage(page,"4th SlabList");
+	
+	/* Pagelist view */
+	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
+		PageFlage(slab_page[i],"Fpage-shrink");
 
 	for(i = 1 ; i < NUM_SLAB_PAGE - 1 ; i++)
 		for(j = 1 ; j < oo_objects(kmem_cache_test->oo) ; j++)
@@ -456,11 +458,14 @@ void TestCase_kmem_cache_shrink(void)
 		kmem_cache_free(kmem_cache_test,objects[(NUM_SLAB_PAGE - 1) * 
 				oo_objects(kmem_cache_test->oo) + i - inuse_objects]);
 
+	/* Pagelist view */
+	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
+		PageFlage(slab_page[i],"Final-shrink");
+
 	kfree(objects);
 	kmem_cache_destroy(kmem_cache_test);
 	mm_debug("Test complete..\n");
 	
-
 #undef NUM_SLAB_PAGE
 #undef OBJ_SIZE    
 }
@@ -751,5 +756,41 @@ void TestCase_calculate_sizes(void)
 
 	kmem_cache_destroy(kmem_cache_test);
 	mm_debug("Test Complete.....\n");
+#undef OBJ_SIZE
+}
+
+#ifdef SLUB_DEBUG_ALLOCATE_SLAB
+extern struct page *allocate_slab(struct kmem_cache *,gfp_t,int);
+#define for_each_object(__p,__s,__addr,__objects) \
+	for(__p = (__addr) ; __p < (__addr) + (__objects) * (__s)->size; \
+			__p += (__s)->size)
+#endif
+/**
+ * TestCase_allocate_slab -
+ */
+void TestCase_allocate_slab(void)
+{
+#define OBJ_SIZE 135
+	struct kmem_cache *kmem_cache_test;
+	struct test_struct {
+		char array[OBJ_SIZE];
+	} *objects;
+	struct page *page;
+	void *start;
+	void *last;
+	void *p;
+
+	kmem_cache_test = kmem_cache_create(__func__,OBJ_SIZE,8,0,NULL);
+	KmemCache(kmem_cache_test,__func__);
+	
+	/*
+	 * TestCase0:call allocate_slab()
+	 */
+#ifdef SLUB_DEBUG_ALLOCATE_SLAB
+	page = allocate_slab(kmem_cache_test,0,0);
+#endif
+
+	kmem_cache_destroy(kmem_cache_test);
+	mm_debug("Test complete...\n");
 #undef OBJ_SIZE
 }

@@ -460,6 +460,7 @@ static void discard_slab(struct kmem_cache *s,struct page *page)
 	dec_slabs_node(s,page_to_nid(page),page->objects);
 	free_slab(s,page);
 }
+
 /*
  * Per slab locking using the pagelock.
  */
@@ -469,6 +470,7 @@ static inline void slab_lock(struct page *page)
 }
 static inline void slab_unlock(struct page *page)
 {
+	__bit_spin_unlock(PG_locked,&page->flags);
 }
 static inline void *get_freepointer(struct kmem_cache *s,void *object)
 {
@@ -1103,7 +1105,7 @@ static void *slab_alloc(struct kmem_cache *s,
 	c = __this_cpu_ptr(s->cpu_slab);
 	object = c->freelist;
 	if(unlikely(!object || !node_match(c,node)))
-		
+	
 		object = __slab_alloc(s,gfpflags,node,addr,c);
 	
 	else {
@@ -1572,7 +1574,11 @@ static inline struct page *alloc_slab_page(gfp_t flags,int node,
 		return alloc_pages_exact_node(node,flags,order);
 }
 
+#ifdef SLUB_DEBUG_ALLOCATE_SLAB
+struct page *allocate_slab(struct kmem_cache *s,gfp_t flags,int node)
+#else
 static struct page *allocate_slab(struct kmem_cache *s,gfp_t flags,int node)
+#endif
 {
 	struct page *page;
 	struct kmem_cache_order_objects oo = s->oo;
@@ -2377,7 +2383,7 @@ struct kmem_cache *kmem_cache_create(const char *name,size_t size,
 	n = kstrdup(name,GFP_KERNEL);
 	if(!n)
 		goto err;
-
+	
 	s = kmalloc(kmem_size,GFP_KERNEL);
 	if(s) {
 		if(kmem_cache_open(s,n,size,
