@@ -159,4 +159,8 @@
  * Support spinlock debug
  */
 #define CONFIG_DEBUG_SPINLOCK 1
+/*
+ * Debug flush_all() in slub allocator
+ */
+#define SLUB_DEBUG_FLUSH_ALL 1
 #endif

@@ -214,7 +214,7 @@ find_success	swap_state.c	/^	unsigned long find_success;$/;"	m	struct:__anon1	fi
 find_total	swap_state.c	/^	unsigned long find_total;$/;"	m	struct:__anon1	file:
 find_vmap_area	vmalloc.c	/^static struct vmap_area *find_vmap_area(unsigned long addr)$/;"	f	file:
 first_online_pgdat	mmzone.c	/^struct pglist_data *first_online_pgdat(void)$/;"	f
-flush_all	slub.c	/^static void flush_all(struct kmem_cache *s)$/;"	f	file:
+flush_all	slub.c	/^void flush_all(struct kmem_cache *s)$/;"	f
 flush_cpu_slab	slub.c	/^static void flush_cpu_slab(void *d)$/;"	f	file:
 flush_slab	slub.c	/^static inline void flush_slab(struct kmem_cache *s,struct kmem_cache_cpu *c)$/;"	f	file:
 for_each_object	slub.c	243;"	d	file:

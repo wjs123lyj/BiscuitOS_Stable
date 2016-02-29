@@ -1860,8 +1860,7 @@ static void free_kmem_cache_nodes(struct kmem_cache *s)
 		struct kmem_cache_node *n = s->node[node];
 
 		if(n)
-			kmem_cache_free(kmem_cache_node,
-					(void *)(unsigned long)__va(mem_to_phys(n))); // simulate.
+			kmem_cache_free(kmem_cache_node,n);
 
 		s->node[node] = NULL;
 	}
@@ -2288,7 +2287,11 @@ static void flush_cpu_slab(void *d)
 	__flush_cpu_slab(s,smp_processor_id());
 }
 
+#ifdef SLUB_DEBUG_FLUSH_ALL
+void flush_all(struct kmem_cache *s)
+#else
 static void flush_all(struct kmem_cache *s)
+#endif
 {
 	on_each_cpu(flush_cpu_slab,s,1);
 }

@@ -201,8 +201,8 @@ void TestCase_slab_alloc0(void)
 }
 
 /**
- * TestCase_slab_alloc1() - Let slab page that flags isn't PG_active
- * join to list of kmem_cache->node[0]->partial.
+ * TestCase_slab_alloc1() - Let unative slab page join to list of
+ * kmem_cache->node[0]->partial.
  *
  * For this case,we will alloc some objects that from different slab page,
  * and we will free an object that from an unactive slab page,we will trace 
@@ -337,3 +337,362 @@ void TestCase_slab_alloc1(void)
 #undef OBJ_SIZE
 #undef NUM_SLAB_PAGE
 }
+
+/*
+ * TestCase_kmem_cache_shrink - 
+ */
+void TestCase_kmem_cache_shrink(void)
+{
+#define NUM_SLAB_PAGE 3
+#define OBJ_SIZE      56
+	struct kmem_cache *kmem_cache_test;
+	struct test_struct {
+		char array[OBJ_SIZE];
+	} **objects;
+	struct page *slab_page[NUM_SLAB_PAGE];
+	struct page *page;
+	unsigned int inuse_objects;
+	unsigned int first_slab_page_objects;
+	unsigned int page_mask;
+	int i,j;
+
+	/* Create the kmem_cache */
+	kmem_cache_test = kmem_cache_create(__func__,
+			sizeof(struct test_struct),8,0,NULL);
+	KmemCache(kmem_cache_test,__func__);
+
+	/* Calcuate the value for loop */
+	page_mask = (PAGE_SIZE << oo_order(kmem_cache_test->oo)) - 1;
+	if(kmem_cache_test->cpu_slab->freelist) {
+		unsigned int freelist = (unsigned int)(unsigned long)(
+				kmem_cache_test->cpu_slab->freelist);
+
+		inuse_objects = (freelist & page_mask) / ALIGN(OBJ_SIZE,8);
+		first_slab_page_objects = DIV_ROUND_UP(
+				(PAGE_SIZE << oo_order(kmem_cache_test->oo)) - 
+				(freelist & page_mask),ALIGN(OBJ_SIZE,8));
+	} else {
+		inuse_objects = 0;
+		first_slab_page_objects = oo_objects(kmem_cache_test->oo);
+	}
+
+	objects = (struct test_struct **)kmalloc((NUM_SLAB_PAGE *
+			oo_objects(kmem_cache_test->oo) - inuse_objects) *
+			sizeof(struct test_struct **),GFP_KERNEL);
+
+	/* Get a lot of objects from different slab page */
+	for(i = 0 ; i < first_slab_page_objects ; i++)
+		objects[i] = kmem_cache_alloc(kmem_cache_test,0);
+	slab_page[0] = virt_to_page(__va(mem_to_phys(
+					objects[0])));
+
+	for(i = 1 ; i < NUM_SLAB_PAGE ; i++) {
+		for(j = 0 ; j < oo_objects(kmem_cache_test->oo) ; j++)
+			objects[i * oo_objects(kmem_cache_test->oo) + j - 
+				inuse_objects] = kmem_cache_alloc(kmem_cache_test,0);
+		slab_page[i] = virt_to_page(__va(mem_to_phys(
+						objects[i * oo_objects(kmem_cache_test->oo) -
+							inuse_objects])));
+	}
+
+	/* Pagelist view */
+	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
+		PageFlage(slab_page[i],"PageView");
+
+	/* Check the list of kmem_cache->node[0]->partial */
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"First SlabList");
+
+	/* Let unative slab page join to list of kmem_cache->node[0]->partial */
+	for(i = 0 ; i < NUM_SLAB_PAGE - 1 ; i++)
+		kmem_cache_free(kmem_cache_test,objects[i * 
+				oo_objects(kmem_cache_test->oo) - inuse_objects]);
+
+	/* Check the partial list */
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"Second SlabList");
+
+	/* 
+	 * Remove empty slab from the partial list and sort the remaining slabs
+	 * by the number of items in use .
+	 */
+	mm_debug("Before shrink,kmem_cache->cpu_slab->page %p\n",
+			kmem_cache_test->cpu_slab->page);
+	kmem_cache_shrink(kmem_cache_test);
+
+	/* Add a TestCase: get a new object from partial list */
+	objects[0] = kmem_cache_alloc(kmem_cache_test,0);
+	PageFlage(virt_to_page(__va(mem_to_phys(objects[0]))),"PartialSlab");
+
+	/* Check partial list */
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"Third SlabList");
+
+	/* Previous TestCase complete.. */
+	kmem_cache_free(kmem_cache_test,objects[0]);
+
+	/* Pagelist view */
+	for(i = 0 ; i < NUM_SLAB_PAGE ; i++)
+		PageFlage(slab_page[i],"PageView-shrink");
+
+	/* Free all objects */
+	for(i = 1 ; i < first_slab_page_objects ; i++)
+		kmem_cache_free(kmem_cache_test,objects[i]);
+
+	/* Shrink and check partial list */
+	mm_debug("Before shrink,kmem_cache->cpu_slab->page %p\n",
+			kmem_cache_test->cpu_slab->page);
+	kmem_cache_shrink(kmem_cache_test);
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"Fourth SlabList");
+
+	for(i = 1 ; i < NUM_SLAB_PAGE - 1 ; i++)
+		for(j = 1 ; j < oo_objects(kmem_cache_test->oo) ; j++)
+			kmem_cache_free(kmem_cache_test,objects[
+					i * oo_objects(kmem_cache_test->oo) + j - inuse_objects]);
+
+	for(i = 0 ; i < oo_objects(kmem_cache_test->oo) ; i++)
+		kmem_cache_free(kmem_cache_test,objects[(NUM_SLAB_PAGE - 1) * 
+				oo_objects(kmem_cache_test->oo) + i - inuse_objects]);
+
+	kfree(objects);
+	kmem_cache_destroy(kmem_cache_test);
+	mm_debug("Test complete..\n");
+	
+
+#undef NUM_SLAB_PAGE
+#undef OBJ_SIZE    
+}
+
+/*
+ * TestCaes_flush_all - debug function flush_all().
+ *   
+ * If you want debug this function,please open macro SLUB_DEBUG_FLUSH_ALL 
+ * in autoconfig.h
+ *
+ * Create by Buddy.D.Zhang
+ */
+void TestCase_flush_all(void)
+{
+#define NUM_SLAB_PAGE 3
+#define OBJ_SIZE      1024
+	struct kmem_cache *kmem_cache_test;
+	struct test_struct {
+		char array[OBJ_SIZE];
+	} **objects;
+	struct page *slab_page[NUM_SLAB_PAGE];
+	struct page *page;
+	unsigned int page_mask;
+	unsigned int inuse_objects;
+	unsigned int first_slab_page_objects;
+	int i,j;
+	int new_num;
+
+	kmem_cache_test = kmem_cache_create(__func__,
+			sizeof(struct test_struct),8,0,NULL);
+	KmemCache(kmem_cache_test,__func__);
+
+	page_mask = (PAGE_SIZE << oo_order(kmem_cache_test->oo)) - 1;
+	if(kmem_cache_test->cpu_slab->freelist) {
+		unsigned int freelist = (unsigned int)(unsigned long)(
+				kmem_cache_test->cpu_slab->freelist);
+
+		inuse_objects = (freelist & page_mask) / ALIGN(OBJ_SIZE,8);
+		first_slab_page_objects = DIV_ROUND_UP(
+				(PAGE_SIZE << oo_order(kmem_cache_test->oo)) - 
+				 (freelist & page_mask),ALIGN(OBJ_SIZE,8));
+	} else {
+		inuse_objects = 0;
+		first_slab_page_objects = oo_objects(kmem_cache_test->oo);
+	}
+
+	objects = (struct test_struct **)kmalloc((NUM_SLAB_PAGE *
+				oo_objects(kmem_cache_test->oo) - inuse_objects) *
+				sizeof(struct test_struct **),GFP_KERNEL);
+
+	/*
+	 * TestCase0: Alloc an object from new kmem_cache,and use flush_all().
+	 */
+	mm_debug("TestCase0\n");
+	objects[0] = kmem_cache_alloc(kmem_cache_test,0);
+	slab_page[0] = virt_to_page(__va(mem_to_phys(objects[0])));
+	
+	PageFlage(slab_page[0],"TestCase0");
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"PartialListCase0");
+	
+	mm_debug("Bslab_page->inuse %d\n",slab_page[0]->inuse);
+#ifndef SLUB_DEBUG_FLUSH_ALL
+	flush_all(kmem_cache_test);
+#endif
+	mm_debug("Aslab_page->inuse %d\n",slab_page[0]->inuse);
+	
+	PageFlage(slab_page[0],"FlushCase0");
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"PartialFlush");
+	
+	kmem_cache_free(kmem_cache_test,objects[0]);
+	PageFlage(slab_page[0],"Nofree");
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"Nouse");
+
+	/*
+	 * TestCase1: alloc a lot objects that from same slab page,and then
+	 * the freelist of slab page is null.We free all objects to slab page,
+	 * and none object in used.
+	 */
+	mm_debug("TestCase1\n");
+	for(i = 0 ; i < first_slab_page_objects ; i++)
+		objects[i] = kmem_cache_alloc(kmem_cache_test,0);
+	slab_page[0] = virt_to_page(__va(mem_to_phys(objects[0])));
+
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"TC1->partial");
+	PageFlage(slab_page[0],"TC1->NewSlab");
+
+	for(i = 0 ; i < first_slab_page_objects ; i++)
+		kmem_cache_free(kmem_cache_test,objects[i]);
+
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"TC1->freepartial");
+	PageFlage(slab_page[0],"TC1->oldslab");
+
+	mm_debug("BSlab_page->inuse %d\n",slab_page[0]->inuse);
+#ifdef SLUB_DEBUG_FLUSH_ALL
+	flush_all(kmem_cache_test);
+#endif
+	mm_debug("ASlab_page->inuse %d\n",slab_page[0]->inuse);
+
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"TC1->flushall");
+	PageFlage(slab_page[0],"TC1->FA");
+
+	/* End of Testing,free alloc memory */
+	kfree(objects);
+	kmem_cache_destroy(kmem_cache_test);
+	mm_debug("TestCase Complete...\n");
+
+#undef NUM_SLAB_PAGE
+#undef OBJ_SIZE
+}
+
+/*
+ * TestCase_flush_all0 - 
+ */
+void TestCase_flush_all0(void)
+{
+#define NUM_SLAB_PAGE 3
+#define OBJ_SIZE      344
+	struct kmem_cache *kmem_cache_test;
+	struct test_struct {
+		char array[OBJ_SIZE];
+	} **objects;
+	struct page **slab_page;
+	struct page *page;
+	unsigned int page_mask;
+	unsigned int first_slab_page_objects;
+	unsigned int inuse_objects;
+	unsigned int page_num;
+	int i,j;
+
+	kmem_cache_test = kmem_cache_create(__func__,
+			sizeof(struct test_struct),8,0,NULL);
+	KmemCache(kmem_cache_test,__func__);
+
+	if(NUM_SLAB_PAGE < kmem_cache_test->min_partial) 
+		page_num = kmem_cache_test->min_partial + 2;
+	else
+		page_num = NUM_SLAB_PAGE;
+
+	page_mask = (PAGE_SIZE << oo_order(kmem_cache_test->oo)) - 1;
+	if(kmem_cache_test->cpu_slab->freelist) {
+		unsigned int freelist = (unsigned int)(unsigned long)(
+				kmem_cache_test->cpu_slab->freelist);
+
+		inuse_objects = (freelist & page_mask) / ALIGN(OBJ_SIZE,8);
+		first_slab_page_objects = DIV_ROUND_UP(
+				(PAGE_SIZE << oo_order(kmem_cache_test->oo)) -
+				(freelist & page_mask),ALIGN(OBJ_SIZE,8));
+	} else {
+		inuse_objects = 0;
+		first_slab_page_objects = oo_objects(kmem_cache_test->oo);
+	}
+
+	objects = (struct test_struct **)kmalloc(((page_num * 
+				oo_objects(kmem_cache_test->oo)) - inuse_objects) *
+				sizeof(struct test_struct **),GFP_KERNEL);
+	slab_page = (struct page **)kmalloc(page_num *
+				sizeof(struct page **),GFP_KERNEL);
+
+	/* Alloc object from slab page */
+	for(i = 0 ; i < first_slab_page_objects ; i++)
+		objects[i] = kmem_cache_alloc(kmem_cache_test,0);
+	slab_page[0] = virt_to_page(__va(mem_to_phys(objects[0])));
+
+	for(i = 1 ; i < page_num ; i++) {
+		for(j = 0 ; j < oo_objects(kmem_cache_test->oo) ; j++)
+			objects[i * oo_objects(kmem_cache_test->oo) + j - inuse_objects] =
+				kmem_cache_alloc(kmem_cache_test,0);
+		slab_page[i] = virt_to_page(__va(mem_to_phys(
+						objects[i * oo_objects(kmem_cache_test->oo) -
+						inuse_objects])));
+	}
+
+	/* Check slab page */
+	for(i = 0 ; i < page_num ; i++) 
+		PageFlage(slab_page[i],"TC0");
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"TC0->Partial");
+
+	/* Print all objects */
+	mm_debug("SlabPage:0\n");
+	mm_debug("Object[%3d]%p\n|\n",0,(void *)(unsigned long)
+			__va(mem_to_phys(objects[i])));
+	mm_debug("Object[%3d]%p\n",first_slab_page_objects - 1
+			,(void *)(unsigned long)(
+				__va(mem_to_phys(objects[first_slab_page_objects - 1]))));
+
+	for(i = 1 ; i < page_num ; i++) {
+		mm_debug("SlabPage:%d\n",i);
+		mm_debug("Object[%3d]%p\n|\n",i * oo_objects(kmem_cache_test->oo) - 
+				inuse_objects,(void *)(unsigned long)(
+					__va(mem_to_phys(objects[
+						i * oo_objects(kmem_cache_test->oo) -
+						inuse_objects]))));
+		mm_debug("Object[%3d]%p\n",(i + 1) * oo_objects(kmem_cache_test->oo) -
+				inuse_objects - 1,(void *)(unsigned long)(
+					__va(mem_to_phys(objects[
+						(i + 1) * oo_objects(kmem_cache_test->oo) - 
+						inuse_objects - 1]))));
+	}
+
+	/* Free all objects */
+	for(i = 0 ; i < page_num * oo_objects(kmem_cache_test->oo) - 
+			inuse_objects ; i++)
+		kmem_cache_free(kmem_cache_test,objects[i]);
+
+	for(i = 0 ; i < page_num ; i++) 
+		PageFlage(slab_page[i],"TCE0");
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"TCG0");
+
+#ifdef SLUB_DEBUG_FLUSH_ALL
+	flush_all(kmem_cache_test);
+#endif
+
+	for(i = 0 ; i < page_num ; i++)
+		PageFlage(slab_page[i],"TCP");
+	list_for_each_entry(page,&kmem_cache_test->node[0]->partial,lru)
+		PageFlage(page,"TGG0");
+	/* TestCase complete.. */
+	kfree(slab_page);
+	kfree(objects);
+	kmem_cache_destroy(kmem_cache_test);
+	mm_debug("Test Complete...\n");
+#undef NUM_SLAB_PAGE
+#undef OBJ_SIZE
+}
+
+/*
+ * TestCase_slub_order
+ */
