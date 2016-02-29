@@ -1256,8 +1256,13 @@ static inline void inc_slabs_node(struct kmem_cache *s,int node,
  * requested a higher mininum order then we start with one instead of
  * the smallest order which wil fit the object.
  */
+#ifdef SLUB_DEBUG_SLAB_ORDER
+int slab_order(int size,int min_objects,
+		int max_order,int fract_leftover)
+#else
 static inline int slab_order(int size,int min_objects,
 		int max_order,int fract_leftover)
+#endif
 {
 	int order;
 	int rem;
@@ -1266,9 +1271,6 @@ static inline int slab_order(int size,int min_objects,
 	if((PAGE_SIZE << min_order) / size > MAX_OBJS_PER_PAGE)
 		return get_order(size * MAX_OBJS_PER_PAGE) - 1;
 
-	/**
-	 * Need more debug...fls(?) -> slub_min_order ?= !0.
-	 */
 	for(order = max(min_order,
 				fls(min_objects * size - 1) - PAGE_SHIFT) ;
 			order <= max_order ; order++) {
@@ -1286,7 +1288,12 @@ static inline int slab_order(int size,int min_objects,
 
 	return order;
 }
+
+#ifdef SLUB_DEBUG_CALCULATE_ORDER
+int calculate_order(int size) 
+#else
 static inline int calculate_order(int size)
+#endif
 {
 	int order;
 	int min_objects;
@@ -1314,6 +1321,7 @@ static inline int calculate_order(int size)
 					slub_max_order,fraction);
 			if(order <= slub_max_order)
 				return order;
+			mm_debug("SSSS\n");
 			fraction /= 2;
 		}
 		min_objects--;
@@ -1323,6 +1331,7 @@ static inline int calculate_order(int size)
 	 * We were unable to place multiple objects in a slab.Now
 	 * lets see if we can place a single object there.
 	 */
+	mm_debug("DDDDD\n");
 	order = slab_order(size,1,slub_max_order,1);
 	if(order <= slub_max_order)
 		return order;
@@ -1417,7 +1426,7 @@ static unsigned long calculate_alignment(unsigned long flags,
 
 	if(align < ARCH_SLAB_MINALIGN)
 		align = ARCH_SLAB_MINALIGN;
-
+	
 	return ALIGN(align,sizeof(void *));
 }
 

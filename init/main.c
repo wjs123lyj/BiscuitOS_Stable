@@ -164,7 +164,8 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-	TestCase_flush_all0();
 
+	TestCase_calculate_sizes();
+	
 	return 0;
 }

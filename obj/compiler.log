@@ -1,0 +1,4 @@
+slub.c: In function ‘calculate_sizes’:
+slub.c:1551:2: warning: format ‘%p’ expects argument of type ‘void *’, but argument 2 has type ‘struct kmem_cache_order_objects’ [-Wformat=]
+  mm_debug("max %p\n",s->max);
+  ^

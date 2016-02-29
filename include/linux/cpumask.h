@@ -18,7 +18,11 @@ extern const struct cpumask *const cpu_possible_mask;
 #define for_each_online_cpu(cpu)  for_each_cpu((cpu),cpu_online_mask)
 #define for_each_possible_cpu(cpu)  for_each_cpu((cpu),cpu_possible_mask)
 
+#ifdef SLUB_DEBUG_CALCULATE_ORDER
+extern int nr_cpu_ids;
+#else
 #define nr_cpu_ids    1
+#endif
 #define num_online_cpus()   1U
 #define cpu_possible(cpu)  ((cpu) == 0)
 

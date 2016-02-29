@@ -6,6 +6,7 @@
 #include "linux/kernel.h"
 #include "linux/slab.h"
 #include "linux/mm.h"
+#include "linux/cpumask.h"
 #define OO_SHIFT 16
 #define OO_MASK  ((1 << OO_SHIFT) - 1)
 
@@ -693,6 +694,62 @@ void TestCase_flush_all0(void)
 #undef OBJ_SIZE
 }
 
+#ifdef SLUB_DEBUG_CALCULATE_ORDER
+int nr_cpu_ids = 1;
+#endif
 /*
- * TestCase_slub_order
+ * TestCase_calculate_sizes - Testing the kernel how to calculate the value
+ *                            for kmem_cache.
+ *
+ * We we calculate the alignment of kmem_cache,if ALIGN(size,align) is equal 
+ * to exist size of kmem_cache,the kmem_cache will reuse this kmem_cache not
+ * create a new kmem_cache.
+ *
+ * min_objects = (fls(nr_cpu_ids) + 1) * 4.
+ * When we calculate the order of slab page,the minimum order:
+ * order = fls(min_objects * size - 1) - PAGE_SHIFT.
+ *
+ * Create by Buddy.D.Zhang
  */
+void TestCase_calculate_sizes(void)
+{
+#define OBJ_SIZE        33
+	struct kmem_cache *kmem_cache_test;
+	int i;
+	unsigned long objsize = 1024;
+
+	kmem_cache_test = kmem_cache_create(__func__,OBJ_SIZE,
+			8,0,NULL);
+	KmemCache(kmem_cache_test,__func__);
+
+	/*
+	 * TestCase0: slab_order()
+	 * 1. waste 1/16 memory.
+	 */
+#ifdef SLUB_DEBUG_SLAB_ORDER
+	while(objsize) {
+		mm_debug("Obj %6p slab_order %p\n",(void *)objsize,
+				(void *)(unsigned long)slab_order(objsize,8,3,16));
+		objsize >>= 1;
+	}
+#endif
+	/*
+	 * TestCase1: Calculate_order() full test!
+	 * We must define macro SLUB_DEBUG_CALCULATE_ORDER and set
+	 * nr_cpu_ids as 2,4,8,16,32...
+	 */
+#ifdef SLUB_DEBUG_CALCULATE_ORDER
+	mm_debug("min_objects %p\n",(void *)(unsigned long)(
+			(4 * (fls(nr_cpu_ids) + 1))));
+	objsize = 4096;
+	while(objsize) {
+		mm_debug("Size %5p order %p\n",(void *)(unsigned long)objsize,
+				(void *)(unsigned long)calculate_order(objsize));
+		objsize >>= 1;
+	}
+#endif
+
+	kmem_cache_destroy(kmem_cache_test);
+	mm_debug("Test Complete.....\n");
+#undef OBJ_SIZE
+}
