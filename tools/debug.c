@@ -368,7 +368,7 @@ void ST_pglist_data(void)
 	ST_bootmem_data(pgdat->bdata);
 	ST_node_zones(pgdat->node_zones,MAX_NR_ZONES);
 	ST_zonelist(pgdat->node_zonelists);
-	mm_debug("pglist.node_id %ld\n",pgdat->node_id);
+	mm_debug("pglist.node_id %d\n",pgdat->node_id);
 	mm_debug("pglist.node_start_pfn %p\n",(void *)pgdat->node_start_pfn);
 	mm_debug("pglist.node_spanned_pages %p\n",
 			(void *)pgdat->node_spanned_pages);
@@ -412,7 +412,7 @@ void binary(unsigned int data)
 		data >>= 1;
 	}
 	value[32] = '\0';
-	mm_debug("binary %s\n",value);
+	mm_debug(" %s\n",value);
 }
 void buddy_free(char *name)
 {

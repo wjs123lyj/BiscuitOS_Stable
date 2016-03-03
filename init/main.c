@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_kmem_cache_shrink();
+	TestCase_PCP();
 	
 	return 0;
 }

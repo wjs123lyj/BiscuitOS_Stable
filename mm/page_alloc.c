@@ -526,11 +526,12 @@ __meminit int init_currently_empty_zone(struct zone *zone,
 
 	zone->zone_start_pfn = zone_start_pfn;
 
-	mm_debug("memmap_init initialising map node %ld zone %lu"
+	mm_debug("memmap_init initialising map node %d zone %lu"
 			" pfns %p -> %p\n",
 			pgdat->node_id,
 			(unsigned long)zone_idx(zone),
-			(void *)zone_start_pfn,(void *)(zone_start_pfn + size));
+			(void *)(unsigned long)zone_start_pfn,
+			(void *)(unsigned long)(zone_start_pfn + size));
 
 	zone_init_free_lists(zone);
 
@@ -2592,7 +2593,7 @@ static void calculate_node_totalpages(struct pglist_data *pgdat,
 				i,zhole_size);
 	
 	pgdat->node_present_pages = realpages;
-	mm_debug("On node %p totalpages %p\n",(void *)pgdat->node_id,
+	mm_debug("On node %d totalpages %p\n",pgdat->node_id,
 			(void *)(unsigned long)realpages);
 }
 
@@ -2607,7 +2608,7 @@ __init void free_area_init_node(int nid,unsigned long *zone_sizes,
 
 	alloc_node_mem_map(pgdat);
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
-	mm_debug("free_area_init_node:node %lu,pgdat %p,node_mem_map %p\n",
+	mm_debug("free_area_init_node:node %d,pgdat %p,node_mem_map %p\n",
 			pgdat->node_id,(void *)pgdat,(void *)pgdat->node_mem_map);
 #endif
 	free_area_init_core(pgdat,zone_sizes,zhole_size);

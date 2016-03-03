@@ -146,7 +146,11 @@
 /*
  * Configure wether has hold in zone.
  */
-#define CONFIG_HOLES_IN_ZONE
+#define CONFIG_HOLES_IN_ZONE 1
+/*
+ * Support debug VM
+ */
+#define CONFIG_DEBUG_VM 1
 /*
  * Configure the address of PAGE_OFFSET
  */
@@ -159,6 +163,10 @@
  * Support spinlock debug
  */
 #define CONFIG_DEBUG_SPINLOCK 1
+/*
+ * Suppor CGROUP
+ */
+#define CONFIG_CGROUP_MEM_RES_CTLR 1
 /*
  * Debug function in slub allocator
  */

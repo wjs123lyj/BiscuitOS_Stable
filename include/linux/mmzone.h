@@ -304,24 +304,49 @@ struct zone {
 	const char *name;
 };
 
+/*
+ * The pg_data_t structure is used in machines with CONFIG_DISCONTIGMEM
+ * (mostly NUMA machines?) to denote a higher-level memory zone than the 
+ * zone denotes.
+ *
+ * On NUMA machines,each NUMA node would have a pg_data_t to describe
+ * it's memory layout.
+ *
+ * Memory statics and page replacement data structures are maintained on a 
+ * per - zone basis.
+ */
 typedef struct pglist_data {
+	struct zone node_zones[MAX_NR_ZONES];
+	struct zonelist node_zonelists[MAX_ZONELISTS];
+	int nr_zones;
+#ifdef CONFIG_FLAT_NODE_MEM_MAP /* means !SPARSEMEM */
+	struct page *node_mem_map;
+#ifdef CONFIG_CGROUP_MEM_RES_CTLR
+	struct page_cgroup *node_page_cgroup;
+#endif
+#endif
 #ifndef CONFIG_NO_BOOTMEM
 	struct bootmem_data *bdata;
 #endif
-    struct zone node_zones[MAX_NR_ZONES];
-	struct zonelist node_zonelists[MAX_ZONELISTS];
-    unsigned long node_id;
-    unsigned long node_start_pfn;
-    unsigned long node_spanned_pages;
-    unsigned long node_present_pages;
-    int nr_zones;
-    int kswapd_max_order;
-    struct page *node_mem_map;
-#ifndef CONFIG_NO_CGROUP_MEM_RES_CTLR
-	struct page_cgroup *node_page_cgroup;
+#ifdef CONFIG_MEMORY_HOTPLUG
+	/*
+	 * Must be held any time you expect node_start_pfn,node_present_pages
+	 * or node_spanned_pages stay constant.Holding this will also
+	 * guarantee that any pfn_valid() stays that way.
+	 * 
+	 * Nests above zone->lock and zone->size_seqlock.
+	 */
+	spinlock_t node_size_lock;
 #endif
+	unsigned long node_start_pfn;
+	unsigned long node_present_pages; /* Total number of physical pages */
+	unsigned long node_spanned_pages; /* Total size of physical page 
+									    range,including holes */
+	int node_id;
 	wait_queue_head_t kswapd_wait;
-
+	struct task_struct *kswapd;
+	int kswapd_max_order;
+	enum zone_type classzone_idx;
 } pg_data_t;
 
 extern struct pglist_data contig_pglist_data;

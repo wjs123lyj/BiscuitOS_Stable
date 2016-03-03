@@ -784,7 +784,7 @@ void TestCase_allocate_slab(void)
 	KmemCache(kmem_cache_test,__func__);
 	
 	/*
-	 * TestCase0:call allocate_slab()
+	 * TestCase0:: PG_acall allocate_slab()
 	 */
 #ifdef SLUB_DEBUG_ALLOCATE_SLAB
 	page = allocate_slab(kmem_cache_test,0,0);
