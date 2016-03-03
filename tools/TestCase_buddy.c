@@ -274,7 +274,10 @@ void TestCase_WMARK(void)
 /*
  * TestCase_PCP - Debug Per-CPU Allocator.
  *
- * Note:Don't use SLUB alloctor.
+ * Note:Don't use SLUB alloctor.When you alloc memory from buddy system,
+ * kernel will check PCP alloctor,if PCP has free pages and get page from
+ * PCP.If PCP doesn't have free page,PCP with request more pages from 
+ * Buddy Allocator.
  *
  */
 void TestCase_PCP(void)
@@ -363,4 +366,24 @@ void TestCase_PCP(void)
 	}
 	/* End test */
 	mm_debug("Test Complete...\n");
+}
+
+/*
+ * TestCase_rmqueue_smallest()
+ */
+void TestCase_rmqueu_smallest(void)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zoneref *zrf;
+	struct zone *zone;
+	int migratetype;
+	int order;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+
+	for_each_zones_zonelist(zone,zrf,zonelist,1) {
+		
+	}
 }
