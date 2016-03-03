@@ -1,4 +1,0 @@
-TestCase_buddy.c: In function ‘TestCase_rmqueu_smallest’:
-TestCase_buddy.c:386:47: error: expected ‘;’ before ‘{’ token
-  for_each_zones_zonelist(zone,zrf,zonelist,1) {
-                                               ^
