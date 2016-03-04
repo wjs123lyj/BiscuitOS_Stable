@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_PCP();
+	TestCase_rmqueu_smallest();
 	
 	return 0;
 }

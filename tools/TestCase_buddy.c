@@ -377,13 +377,26 @@ void TestCase_rmqueu_smallest(void)
 	struct zonelist *zonelist;
 	struct zoneref *zrf;
 	struct zone *zone;
+	struct page *page;
+	struct free_area *area;
 	int migratetype;
-	int order;
 
 	pgdat = NODE_DATA(0);
 	zonelist = pgdat->node_zonelists;
 
-	for_each_zones_zonelist(zone,zrf,zonelist,1) {
-		
+	for_each_zone_zonelist(zone,zrf,zonelist,0) {
+		int i;
+
+		for(i = 0 ; i < MAX_ORDER ; i++) {
+			area = &zone->free_area[i];
+			for(migratetype = 0 ; migratetype < 3 ; migratetype++) {
+				mm_debug("%s order %d %s:\n",zone->name,i,MigrateName[i]);
+				if(list_empty(&area->free_list[migratetype]))
+					continue;
+
+				list_for_each_entry(page,&area->free_list[migratetype],lru)
+					PageFlage(page,"A");
+			}
+		}
 	}
 }

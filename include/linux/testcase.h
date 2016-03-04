@@ -20,4 +20,5 @@ extern TestCase_GFP_ZONE(void);
 extern TestCase_zonelist(void);
 extern TestCase_WMARK(void);
 extern TestCase_PCP(void);
+extern TestCase_rmqueu_smallest(void);
 #endif
