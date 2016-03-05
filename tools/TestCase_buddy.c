@@ -41,6 +41,15 @@ static char *GFP_NAME[] = {
 	"GFP_THISNODE"
 };
 
+static fallback[][3] = {
+	[MIGRATE_MOVABLE] = {MIGRATE_RECLAIMABLE , MIGRATE_UNMOVABLE ,
+		MIGRATE_RESERVE},
+	[MIGRATE_UNMOVABLE] = {MIGRATE_RECLAIMABLE , MIGRATE_MOVABLE , 
+		MIGRATE_RESERVE},
+	[MIGRATE_RECLAIMABLE] = {MIGRATE_MOVABLE , MIGRATE_UNMOVABLE , 
+		MIGRATE_RESERVE},
+};
+
 static char *const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_ZONE_DMA
 	"DMA",
@@ -549,4 +558,368 @@ void TestCase_Get_Buddy_Page(void)
 out:
 	BuddyPageMigrate(migratetype,"After");
 	PageFlage(page,"F");
+}
+
+/*
+ * TestCase_fallback - When MIGRATE_RECLAIME list is empty,we move free pages
+ * from MIGRATE_MOVABLE to MIGRATE_RECLAIMABLE.
+ * 
+ * Create by Buddy.D.Zhang
+ */
+void TestCase_fallback(void)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zone *zone;
+	struct free_area *area;
+	struct page *page;
+	int migratetype;
+	int current_order,order;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_RECLAIMABLE;
+	order = 7;
+
+	BuddyPageMigrate(MIGRATE_MOVABLE,"A");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"A");
+	for(current_order = MAX_ORDER - 1 ; current_order > order ; 
+			current_order++) {
+		struct page *start_page,*end_page;
+		unsigned long start_pfn,end_pfn;
+
+		area = &zone->free_area[current_order];
+		if(list_empty(&area->free_list[MIGRATE_MOVABLE]))
+			continue;
+
+		page = list_entry(area->free_list[MIGRATE_MOVABLE].next,
+						struct page,lru);
+
+		start_pfn = page_to_pfn(page);
+		start_pfn = start_pfn & ~(pageblock_nr_pages - 1);
+		start_page = pfn_to_page(start_pfn);
+		end_page = start_page + pageblock_nr_pages - 1;
+		end_pfn = start_pfn + pageblock_nr_pages - 1;
+
+		if(start_pfn < zone->zone_start_pfn)
+			start_page = page;
+		if(end_pfn > zone->zone_start_pfn + zone->spanned_pages)
+			return;
+
+		BUG_ON(page_zone(start_page) != page_zone(end_page));
+
+		for(page = start_page ; page < end_page ; ) {
+			unsigned long order;
+
+			if(!pfn_valid_within(page_to_pfn(page))) {
+				page++;
+				continue;
+			}
+
+			if(!PageBuddy(page)) {
+				page++;
+				continue;
+			}
+
+			order = page->private;
+			list_del(&page->lru);
+			list_add(&page->lru,
+					&zone->free_area[order].free_list[migratetype]);
+			page += 1 << order;
+		}
+		if(!list_empty(&area->free_list[migratetype]))
+			break;
+	}
+
+	BuddyPageMigrate(MIGRATE_MOVABLE,"B");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"B");
+	for(; current_order < MAX_ORDER ; current_order++) {
+		unsigned long size;
+
+		area = &zone->free_area[current_order];
+
+		if(list_empty(&area->free_list[migratetype]))
+			continue;
+
+		page = list_entry(area->free_list[migratetype].next,
+							struct page,lru);
+
+		list_del(&page->lru);
+		rmv_page_order(page);
+		area->nr_free--;
+
+		size = 1 << current_order;
+		while(order < current_order) {
+			area--;
+			size >>= 1;
+			current_order--;
+			list_add(&page[size].lru,
+					&area->free_list[migratetype]);
+			area->nr_free++;
+		}
+		if(!PageBuddy(page))
+			break;
+	}
+	BuddyPageMigrate(MIGRATE_MOVABLE,"C");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"C");
+	PageFlage(page,"Correct Page");
+}
+
+/*
+ * TestCase_move_pages - Move free pages between different migrate type.
+ *                       Include high order to low order,and low order
+ *                       to high order.
+ * 
+ *  Create by Buddy.D.Zhang
+ */
+void TestCase_MovePage(void)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zone *zone;
+	struct free_area *area;
+	struct page *page;
+	int migratetype;
+	int order,current_order;
+
+	/*
+	 * TestCase0: If we move free page between different migrate type and
+	 * from lower order upto higher order,we will get incorrect result.
+	 * We shouldn't change the free page with lower order.
+	 */
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_RECLAIMABLE;
+	order = 4;
+
+	BuddyPageMigrate(MIGRATE_MOVABLE,"A");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"A");
+	for(current_order = order ; current_order < MAX_ORDER ; current_order++) {
+		struct page *start_page,*end_page;
+		unsigned long start_pfn,end_pfn;
+
+		area = &zone->free_area[current_order];
+		if(list_empty(&area->free_list[MIGRATE_MOVABLE]))
+			continue;
+
+		page = list_entry(area->free_list[MIGRATE_MOVABLE].next,
+						struct page,lru);
+
+		start_pfn = page_to_pfn(page);
+		start_pfn = start_pfn & ~(pageblock_nr_pages - 1);
+		start_page = pfn_to_page(start_pfn);
+		end_page = start_page + pageblock_nr_pages - 1;
+		end_pfn  = start_pfn + pageblock_nr_pages - 1;
+
+		if(start_pfn < zone->zone_start_pfn)
+			start_page = page;
+		if(end_pfn > zone->zone_start_pfn + zone->spanned_pages)
+			return;
+
+		BUG_ON(page_zone(start_page) != page_zone(end_page));
+
+		for(page = start_page ; page < end_page ; ) {
+			unsigned long order;
+
+			BUG_ON(page_to_nid(page) != zone_to_nid(zone));
+
+			if(!pfn_valid_within(page_to_pfn(page))) {
+				page++;
+				continue;
+			}
+
+			if(!PageBuddy(page)) {
+				page++;
+				continue;
+			}
+			
+			order = page->private;
+			list_del(&page->lru);
+			list_add(&page->lru,
+					&zone->free_area[order].free_list[migratetype]);
+
+			page += 1 << order;
+
+		} 
+		break;
+	}
+	BuddyPageMigrate(MIGRATE_MOVABLE,"B");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"B");
+
+	/*
+	 * TestCase1: Get free page from higer order to lower order.
+	 */
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_RECLAIMABLE;
+	order = 4;
+
+	for(current_order = MAX_ORDER - 1 ; 
+			current_order > order ; current_order--) {
+		struct page *start_page,*end_page;
+		unsigned long start_pfn,end_pfn;
+
+		area = &zone->free_area[current_order];
+		if(list_empty(&area->free_list[MIGRATE_MOVABLE]))
+			continue;
+
+		page = list_entry(area->free_list[MIGRATE_MOVABLE].next,
+							struct page,lru);
+
+		start_pfn = page_to_pfn(page);
+		start_pfn = start_pfn & ~(pageblock_nr_pages - 1);
+		start_page = pfn_to_page(start_pfn);
+		end_page = start_page + pageblock_nr_pages - 1;
+		end_pfn  = start_pfn + pageblock_nr_pages - 1;
+
+		if(start_pfn < zone->zone_start_pfn)
+			start_page = page;
+		if(end_pfn > zone->zone_start_pfn + zone->spanned_pages)
+			return;
+
+		BUG_ON(page_zone(start_page) != page_zone(end_page));
+		
+		for(page = start_page ; page < end_page ;) {
+			unsigned int order;
+
+			if(!pfn_valid_within(page_to_pfn(page))) {
+				page++;
+				continue;
+			}
+
+			if(!PageBuddy(page)) {
+				page++;
+				continue;
+			}
+
+			order = page->private;
+			list_del(&page->lru);
+			list_add(&page->lru,
+					&zone->free_area[order].free_list[migratetype]);
+
+			page += 1 << order;
+
+		}
+		break;
+	}
+	BuddyPageMigrate(MIGRATE_MOVABLE,"G");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"H");
+}
+
+/*
+ * TestCase_rmqueue_fallback - Get free page from other migrate type.
+ */
+void TestCase_rmqueue_fallback(void)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zone *zone;
+	struct page *page;
+	struct free_area *area;
+	int migratetype;
+	int order,current_order;
+	int i;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_RECLAIMABLE;
+	order = 4;
+
+	BuddyPageMigrate(MIGRATE_MOVABLE,"A");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"A");
+	for(current_order = MAX_ORDER - 1 ; current_order >= order ;
+			current_order--) {
+		int migrate;
+
+		area = &zone->free_area[current_order];
+
+		for(i = 0 ; i < 3 ; i++) {
+			struct page *start_page,*end_page;
+			unsigned long start_pfn,end_pfn;
+
+			migrate = fallback[migratetype][i];
+
+			if(list_empty(&area->free_list[migrate]))
+				continue;
+
+			page = list_entry(area->free_list[migrate].next,
+							struct page,lru);
+
+			start_pfn = page_to_pfn(page);
+			start_pfn = start_pfn & ~(pageblock_nr_pages - 1);
+			start_page = pfn_to_page(start_pfn);
+			end_page = start_page + pageblock_nr_pages - 1;
+			end_pfn = start_pfn + pageblock_nr_pages - 1;
+
+			if(start_pfn < zone->zone_start_pfn)
+				start_page = page;
+			if(end_pfn > zone->zone_start_pfn + zone->spanned_pages)
+				return;
+
+			BUG_ON(page_zone(start_page) != page_zone(end_page));
+
+			for(page = start_page ; page < end_page ; ) {
+				int small_order;
+
+				if(!pfn_valid_within(page_to_pfn(page))) {
+					page++;
+					continue;
+				}
+
+				if(!PageBuddy(page)) {
+					page++;
+					continue;
+				}
+
+				small_order = page->private;
+				list_del(&page->lru);
+				list_add(&page->lru,
+						&zone->free_area[small_order].free_list[migratetype]);
+				page += 1 << small_order;
+			}
+			if(!list_empty(&area->free_list[migratetype]))
+				goto find_page;
+		}
+	}
+	mm_debug("Can't find free page\n");
+	return;
+
+find_page:
+	BuddyPageMigrate(MIGRATE_MOVABLE,"B");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"B");
+
+	for(current_order = order ; current_order < MAX_ORDER ; current_order++) {
+		unsigned long size;
+		
+		area = &zone->free_area[current_order];
+
+		if(list_empty(&area->free_list[migratetype]))
+			continue;
+
+		page = list_entry(area->free_list[migratetype].next,
+						struct page,lru);
+		list_del(&page->lru);
+		rmv_page_order(page);
+		area->nr_free--;
+
+		size = 1 << current_order;
+		while(order < current_order) {
+			area--;
+			current_order--;
+			size >>= 1;
+			list_add(&page[size].lru,
+					&area->free_list[migratetype]);
+			set_page_order(&page[size],current_order);
+			area->nr_free++;
+		}
+		if(!PageBuddy(page))
+			break;
+	}
+	BuddyPageMigrate(MIGRATE_MOVABLE,"C");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"C");
+	PageFlage(page,"Find Page");
 }

@@ -425,15 +425,15 @@ void buddy_free(char *name)
 		struct list_head *list;
 
 		mm_debug("[%s]Order %d nr_free %p\n",name,i,(void *)free->nr_free);
-		for(j = 0 ; j < MIGRATE_TYPES ; j++) {
+		for(j = 0 ; j < 3 ; j++) {
 			int total = 0;
 			if(list_empty(&free->free_list[j]))
 				total = 0;
 			else 
 				list_for_each(list,&free->free_list[j])
 					total += 1;
-			mm_debug("|-->MIGRATETYPE %d total %p\n",
-					j,(void *)(unsigned long)total);
+			mm_debug("|-->%s \ttotal %p\n",
+					MigrateName[j],(void *)(unsigned long)total);
 		}
 	}
 }
@@ -546,7 +546,7 @@ void BuddyPageMigrate(int Migratetype,char *s)
 
 			list_for_each_entry(page,&area->free_list[Migratetype],lru)
 				total += 1;
-			mm_debug("%s Order %d: %p\n",MigrateName[Migratetype],order,
+			mm_debug("%s Order %2d: %p\n",MigrateName[Migratetype],order,
 					(void *)(unsigned long)total);
 		}
 	}

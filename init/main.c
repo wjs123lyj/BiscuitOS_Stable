@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_Get_Buddy_Page();
+	TestCase_rmqueue_fallback();
 	
 	return 0;
 }

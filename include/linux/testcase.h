@@ -23,4 +23,7 @@ extern TestCase_PCP(void);
 extern TestCase_rmqueu_smallest(void);
 extern TestCase_page_order(void);
 extern TestCase_Get_Buddy_Page(void);
+extern TestCase_fallback(void);
+extern TestCase_MovePage(void);
+extern TestCase_rmqueue_fallback(void);
 #endif
