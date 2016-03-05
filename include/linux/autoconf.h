@@ -174,4 +174,8 @@
 #define SLUB_DEBUG_SLAB_ORDER 1
 #define SLUB_DEBUG_CALCULATE_ORDER 1
 #define SLUB_DEBUG_ALLOCATE_SLAB 1
+/*
+ * Debug function in Buddy allocator.
+ */
+#define BUDDY_DEBUG_PAGE_ORDER 1
 #endif

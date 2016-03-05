@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_rmqueu_smallest();
+	TestCase_Get_Buddy_Page();
 	
 	return 0;
 }

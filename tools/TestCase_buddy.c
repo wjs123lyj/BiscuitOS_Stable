@@ -9,6 +9,7 @@
 #include "linux/mmzone.h"
 #include "linux/list.h"
 #include "linux/mm_types.h"
+#include "linux/atomic.h"
 
 #define TEST_GFP_NUM 12
 static gfp_t GFP_ARRAY[] = {
@@ -54,7 +55,7 @@ static char *const zone_names[MAX_NR_ZONES] = {
 	"Movable",
 };
 
-static char *MigrateName[] = {
+char *MigrateName[] = {
 	"MIGRATE_UNMOVABLE",
 	"MIGRATE_RECLAIMABLE",
 	"MIGRATE_MOVABLE",
@@ -377,26 +378,175 @@ void TestCase_rmqueu_smallest(void)
 	struct zonelist *zonelist;
 	struct zoneref *zrf;
 	struct zone *zone;
-	struct page *page;
 	struct free_area *area;
+	struct page *page;
 	int migratetype;
+	int order;
+	int current_order;
 
 	pgdat = NODE_DATA(0);
 	zonelist = pgdat->node_zonelists;
 
-	for_each_zone_zonelist(zone,zrf,zonelist,0) {
-		int i;
+	/* Check all buddy page for different zone */
+	for_each_zone_zonelist(zone,zrf,zonelist,1) {
+		mm_debug("%s\n",zone->name);
+		for(order = 0 ; order < MAX_ORDER ; order++) {
+			area = &zone->free_area[order];
 
-		for(i = 0 ; i < MAX_ORDER ; i++) {
-			area = &zone->free_area[i];
+			mm_debug("Order %d Free page %ld\n",order,area->nr_free);
 			for(migratetype = 0 ; migratetype < 3 ; migratetype++) {
-				mm_debug("%s order %d %s:\n",zone->name,i,MigrateName[i]);
 				if(list_empty(&area->free_list[migratetype]))
 					continue;
 
-				list_for_each_entry(page,&area->free_list[migratetype],lru)
-					PageFlage(page,"A");
+				list_for_each_entry(page,&area->free_list[migratetype],lru) {
+					mm_debug("%s",MigrateName[migratetype]);
+					PageFlage(page,"F");
+				}
 			}
 		}
 	}
+
+	/* Check a page that from determine zone,order and migrate */
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+
+	for(order = 4 ; order < MAX_ORDER ; order++) {
+		if(list_empty(&zone->free_area[order].free_list[0]))
+			continue;
+		else {
+			page = list_entry(
+					zone->free_area[order].free_list[0].next,
+					struct page,lru);
+			PageFlage(page,"D");
+			break;
+		}
+	}
+	mm_debug("%s\n",zone->name);
+
+	/* Allocate 16 page from Buddy system */
+	order = 4;
+	migratetype = MIGRATE_MOVABLE;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+
+	mm_debug("GetZone %s\n",zone->name);
+	for(current_order = order ; current_order < MAX_ORDER ; current_order++) {
+		int size;
+
+		area = &zone->free_area[current_order];
+		if(list_empty(&area->free_list[migratetype]))
+			continue;
+
+		page = list_entry(area->free_list[migratetype].next,struct page,lru);
+		list_del(&page->lru);
+		rmv_page_order(page);
+		area->nr_free--;
+		
+		size = 1 << current_order;
+
+		while(order < current_order) {
+			area--;
+			size >>= 1;
+			current_order--;
+			list_add(&page[size].lru,&area->free_list[migratetype]);
+			area->nr_free++;
+			set_page_order(&page[size],current_order);
+		}
+		break;
+	}
+	PageFlage(page,"Buddy");
+}
+
+/*
+ * TestCase_page_order - Test set_page_order() and rmv_page_order()
+ *
+ * When we get page from buddy,the value "_mapcount" of page will set as -1
+ * and the value "private" of page will set as 0.
+ * When we free a page to buddy,the value "_mapcount" of apge will set as -2
+ * and the value "private" of page will set ilog2(size).
+ *
+ * Create by Buddy.D.Zhang
+ */
+void TestCase_page_order(void)
+{
+	struct page *page;
+
+	page = alloc_page(GFP_KERNEL);
+
+	PageFlage(page,"GL");
+
+#ifdef BUDDY_DEBUG_PAGE_ORDER
+	mm_debug("Before set page order %p _mapcount %d\n",
+			(void *)(unsigned long)page->private,
+		atomic_read(&page->_mapcount));
+	set_page_order(page,0);
+
+	mm_debug("PageBuddy %d\n",PageBuddy(page));
+
+	mm_debug("After set page order %p _mapcount %d\n",
+			(void *)(unsigned long)page->private,
+			atomic_read(&page->_mapcount));
+
+	rmv_page_order(page);
+
+	mm_debug("PageBuddy0 %d\n",PageBuddy(page));
+	__SetPageBuddy(page);
+	mm_debug("PageBuddy1 %d\n",PageBuddy(page));
+	__ClearPageBuddy(page);
+	mm_debug("PageBuddy2 %d\n",PageBuddy(page));
+#endif
+
+	__free_page(page);
+}
+
+/*
+ * TestCase_Get_Buddy_Page - Get a lot of pages from the Buddy System.
+ */
+void TestCase_Get_Buddy_Page(void)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zone *zone;
+	struct free_area *area;
+	struct page *page;
+	int migratetype;
+	int order,current_order;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_RECLAIMABLE;
+	order = 5;
+	BuddyPageMigrate(migratetype,"Before");
+
+	for(current_order = order ; current_order < MAX_ORDER ; current_order++) {
+		unsigned long size = 1 << current_order;
+
+		area = &zone->free_area[current_order];
+
+		if(list_empty(&area->free_list[migratetype]))
+			continue;
+
+		page = list_entry(area->free_list[migratetype].next,
+				struct page,lru);
+		list_del(&page->lru);
+		rmv_page_order(page);
+		area->nr_free--;
+
+		while(order < current_order) {
+			area--;
+			current_order--;
+			size >>= 1;
+
+			list_add(&page[size].lru,&area->free_list[migratetype]);
+			set_page_order(&page[size],current_order);
+			area->nr_free++;
+		}
+
+		if(!PageBuddy(page))
+			goto out;
+	}
+	return;
+out:
+	BuddyPageMigrate(migratetype,"After");
+	PageFlage(page,"F");
 }

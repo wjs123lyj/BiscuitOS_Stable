@@ -1082,12 +1082,21 @@ static int bad_range(struct zone *zone,struct page *page)
 	return 0;
 }
 
+#ifdef BUDDY_DEBUG_PAGE_ORDER
+void set_page_order(struct page *page,int order)
+#else
 static inline void set_page_order(struct page *page,int order)
+#endif
 {
 	set_page_private(page,order);
 	__SetPageBuddy(page);
 }
+
+#ifdef BUDDY_DEBUG_PAGE_ORDER
+void rmv_page_order(struct page *page)
+#else
 static inline void rmv_page_order(struct page *page)
+#endif
 {
 	__ClearPageBuddy(page);
 	set_page_private(page,0);

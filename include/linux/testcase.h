@@ -21,4 +21,6 @@ extern TestCase_zonelist(void);
 extern TestCase_WMARK(void);
 extern TestCase_PCP(void);
 extern TestCase_rmqueu_smallest(void);
+extern TestCase_page_order(void);
+extern TestCase_Get_Buddy_Page(void);
 #endif

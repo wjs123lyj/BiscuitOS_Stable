@@ -11,6 +11,7 @@
 extern struct meminfo meminfo;
 extern unsigned int memory_array0[CONFIG_BANK0_SIZE / BYTE_MODIFY];
 extern unsigned int memory_array1[CONFIG_BANK1_SIZE / BYTE_MODIFY];
+extern char *MigrateName[];
 
 char *page_flags_names[] = {
 	"PG_locked",
@@ -518,5 +519,36 @@ void KmemCache(struct kmem_cache *k,char *s)
 			(void *)(unsigned long)k->min_partial,
 			k->cpu_slab->freelist ? (void *)(unsigned long)(
 			__va(mem_to_phys((k->cpu_slab->freelist)))) : NULL);
+}
+
+/*
+ * Get free buddy page with migrate type.
+ */
+void BuddyPageMigrate(int Migratetype,char *s)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zoneref *zrf;
+	struct zone *zone;
+	struct free_area *area;
+	struct page *page;
+	int order;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	
+	mm_debug("%s\n",s);
+	for_each_zone_zonelist(zone,zrf,zonelist,0) {
+		for(order = 0 ; order < MAX_ORDER ; order++) {
+			unsigned long total = 0;
+
+			area = &zone->free_area[order];
+
+			list_for_each_entry(page,&area->free_list[Migratetype],lru)
+				total += 1;
+			mm_debug("%s Order %d: %p\n",MigrateName[Migratetype],order,
+					(void *)(unsigned long)total);
+		}
+	}
 }
 
