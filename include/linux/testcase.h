@@ -26,4 +26,6 @@ extern TestCase_Get_Buddy_Page(void);
 extern TestCase_fallback(void);
 extern TestCase_MovePage(void);
 extern TestCase_rmqueue_fallback(void);
+extern TestCase_pageblock_flage_group(void);
+extern TestCase_PageBlock(void);
 #endif

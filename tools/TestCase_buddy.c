@@ -811,6 +811,9 @@ void TestCase_MovePage(void)
 
 /*
  * TestCase_rmqueue_fallback - Get free page from other migrate type.
+ *                             We can get different migrate via fallback[].
+ *
+ * Create by Buddy.D.Zhang
  */
 void TestCase_rmqueue_fallback(void)
 {
@@ -821,7 +824,6 @@ void TestCase_rmqueue_fallback(void)
 	struct free_area *area;
 	int migratetype;
 	int order,current_order;
-	int i;
 
 	pgdat = NODE_DATA(0);
 	zonelist = pgdat->node_zonelists;
@@ -831,17 +833,16 @@ void TestCase_rmqueue_fallback(void)
 
 	BuddyPageMigrate(MIGRATE_MOVABLE,"A");
 	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"A");
-	for(current_order = MAX_ORDER - 1 ; current_order >= order ;
+	for(current_order = MAX_ORDER - 1 ; current_order >= order ; 
 			current_order--) {
-		int migrate;
+		int  i;
 
 		area = &zone->free_area[current_order];
 
 		for(i = 0 ; i < 3 ; i++) {
 			struct page *start_page,*end_page;
 			unsigned long start_pfn,end_pfn;
-
-			migrate = fallback[migratetype][i];
+			int migrate = fallback[migratetype][i];
 
 			if(list_empty(&area->free_list[migrate]))
 				continue;
@@ -853,7 +854,7 @@ void TestCase_rmqueue_fallback(void)
 			start_pfn = start_pfn & ~(pageblock_nr_pages - 1);
 			start_page = pfn_to_page(start_pfn);
 			end_page = start_page + pageblock_nr_pages - 1;
-			end_pfn = start_pfn + pageblock_nr_pages - 1;
+			end_pfn  = start_pfn + pageblock_nr_pages - 1;
 
 			if(start_pfn < zone->zone_start_pfn)
 				start_page = page;
@@ -863,7 +864,7 @@ void TestCase_rmqueue_fallback(void)
 			BUG_ON(page_zone(start_page) != page_zone(end_page));
 
 			for(page = start_page ; page < end_page ; ) {
-				int small_order;
+				unsigned long small_order;
 
 				if(!pfn_valid_within(page_to_pfn(page))) {
 					page++;
@@ -882,19 +883,18 @@ void TestCase_rmqueue_fallback(void)
 				page += 1 << small_order;
 			}
 			if(!list_empty(&area->free_list[migratetype]))
-				goto find_page;
+				goto found_page;
 		}
 	}
-	mm_debug("Can't find free page\n");
+	mm_debug("Can't get free page\n");
 	return;
 
-find_page:
+found_page:
 	BuddyPageMigrate(MIGRATE_MOVABLE,"B");
 	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"B");
-
 	for(current_order = order ; current_order < MAX_ORDER ; current_order++) {
 		unsigned long size;
-		
+
 		area = &zone->free_area[current_order];
 
 		if(list_empty(&area->free_list[migratetype]))
@@ -902,10 +902,11 @@ find_page:
 
 		page = list_entry(area->free_list[migratetype].next,
 						struct page,lru);
+
 		list_del(&page->lru);
 		rmv_page_order(page);
 		area->nr_free--;
-
+		
 		size = 1 << current_order;
 		while(order < current_order) {
 			area--;
@@ -917,9 +918,288 @@ find_page:
 			area->nr_free++;
 		}
 		if(!PageBuddy(page))
-			break;
+			goto complete;
 	}
+	mm_debug("Can't get page from buddy\n");
+	return;
+
+complete:
 	BuddyPageMigrate(MIGRATE_MOVABLE,"C");
 	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"C");
-	PageFlage(page,"Find Page");
+	PageFlage(page);
+}
+
+/*
+ * TestCase_pageblock_flage_group -
+ */
+void TestCase_pageblock_flage_group(void)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zone *zone;
+	struct page *page;
+	struct free_area *area;
+	int migratetype;
+	int order,current_order;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_RECLAIMABLE;
+	order = 4;
+
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"A");
+	BuddyPageMigrate(MIGRATE_MOVABLE,"A");
+	for(current_order = MAX_ORDER - 1 ; current_order >= order ; 
+			current_order--) {
+		unsigned int *bitmap;
+		int i;
+
+		area = &zone->free_area[current_order];
+		for(i = 0 ; i < 3 ; i++) {
+			struct page *start_page,*end_page;
+			unsigned long start_pfn,end_pfn;
+			unsigned long start_idx,value = 1;
+			int migrate;
+
+			migrate = fallback[migratetype][i];
+
+			if(list_empty(&area->free_list[migrate]))
+				continue;
+
+			page = list_entry(area->free_list[migrate].next,
+							struct page,lru);
+	
+			start_pfn = page_to_pfn(page);
+			start_pfn = start_pfn & ~(pageblock_nr_pages - 1);
+			start_page = pfn_to_page(start_pfn);
+			end_page = start_page + pageblock_nr_pages - 1;
+			end_pfn  = start_pfn + pageblock_nr_pages - 1;
+
+			if(start_pfn < zone->zone_start_pfn)
+				start_page = page;
+			if(end_pfn > zone->zone_start_pfn + zone->spanned_pages)
+				return;
+
+			BUG_ON(page_zone(start_page) != page_zone(end_page));
+
+			for(page = start_page ; page < end_page ;) {
+				unsigned long small_order;
+
+				if(!pfn_valid_within(page_to_pfn(page))) {
+					page++;
+					continue;
+				}
+
+				if(!PageBuddy(page)) {
+					page++;
+					continue;
+				}
+
+				small_order = page->private;
+				list_del(&page->lru);
+				list_add(&page->lru,
+						&zone->free_area[small_order].free_list[migratetype]);
+				page += 1 << small_order;
+			}
+
+			bitmap = (unsigned int *)(unsigned long)zone->pageblock_flags;
+			start_pfn = page_to_pfn(start_page);
+			start_pfn -= zone->zone_start_pfn;
+			start_pfn = (start_pfn >> pageblock_order) * NR_PAGEBLOCK_BITS;
+
+			for(start_idx = 0 ; start_idx < NR_PAGEBLOCK_BITS ; 
+					start_idx++,value <<= 1) 
+				if(migratetype & value)
+					set_bit(start_pfn + start_idx,bitmap);
+				else
+					clear_bit(start_pfn + start_idx,bitmap);
+			
+			
+			if(!list_empty(&area->free_list[migratetype]))
+				goto found_page;
+		}
+	}
+	mm_debug("Can't get free page\n");
+	return;
+
+found_page:
+	BuddyPageMigrate(MIGRATE_MOVABLE,"B");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"B");
+	for(current_order = order ; current_order < MAX_ORDER ; current_order++) {
+		unsigned long size;
+
+		area = &zone->free_area[current_order];
+
+		if(list_empty(&area->free_list[migratetype]))
+			continue;
+
+		page = list_entry(area->free_list[migratetype].next,
+					struct page,lru);
+		list_del(&page->lru);
+		rmv_page_order(page);
+		area->nr_free--;
+
+		size = 1 << current_order;
+
+		while(order < current_order) {
+			area--;
+			current_order--;
+			size >>= 1;
+			list_add(&page[size].lru,
+					&area->free_list[migratetype]);
+			set_page_order(&page[size]);
+			area->nr_free++;
+		}
+		if(!PageBuddy(page))
+			goto out;
+	}
+	mm_debug("Can't find page\n");
+	return;
+
+out:
+	BuddyPageMigrate(MIGRATE_MOVABLE,"C");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"C");
+	PageFlage(page,"A");
+}
+
+/*
+ * TestCase_PageBlock()
+ */
+void TestCase_PageBlock(void)
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zone *zone;
+	struct free_area *area;
+	struct page *page;
+	int migratetype;
+	int order,current_order;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_RECLAIMABLE;
+	order = 0;
+
+	BuddyPageMigrate(MIGRATE_MOVABLE,"A");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"A");
+	for(current_order = MAX_ORDER - 1 ; current_order >= order ;
+			current_order++) {
+		int i;
+
+		area = &zone->free_area[current_order];
+		for(i = 0 ; i < 3 ; i++) {
+			int migrate;
+			int size;
+
+			migrate = fallback[migratetype][i];
+
+			if(list_empty(&area->free_list[migrate]))
+				continue;
+
+			page = list_entry(area->free_list[migrate].next,
+							struct page,lru);
+			area->nr_free--;
+
+			if(current_order > (pageblock_order >> 1)) {
+				struct page *start_page,*end_page;
+				unsigned long start_pfn,end_pfn;
+				unsigned long move_pages = 0;
+
+				start_pfn = page_to_pfn(page);
+				start_pfn = start_pfn & ~(pageblock_nr_pages - 1);
+				start_page = pfn_to_page(start_pfn);
+				end_page = start_page + pageblock_nr_pages - 1;
+				end_pfn  = start_pfn + pageblock_nr_pages - 1;
+
+				if(start_pfn < zone->zone_start_pfn)
+					start_page = page;
+				if(end_pfn > zone->zone_start_pfn + zone->spanned_pages)
+					return;
+
+				BUG_ON(page_zone(start_page) != page_zone(end_page));
+
+				for(page = start_page ; page < end_page ;) {
+					int small_order;
+
+					if(!pfn_valid_within(page_to_pfn(page))) {
+						page++;
+						continue;
+					}
+
+					if(!PageBuddy(page)) {
+						page++;
+						continue;
+					}
+
+					small_order = page->private;
+					list_del(&page->lru);
+					list_add(&page->lru,
+						&zone->free_area[small_order].free_list[migratetype]);
+					page += 1 << small_order;
+					move_pages += 1 << small_order;
+				}
+
+				if(move_pages > (pageblock_nr_pages >> 1)) {
+					unsigned long start_idx,value = 1;
+
+					start_pfn = page_to_pfn(start_page);
+					start_pfn -= zone->zone_start_pfn;
+					start_pfn = (start_pfn >> pageblock_order) *
+						NR_PAGEBLOCK_BITS;
+
+					for(start_idx = 0 ; start_idx < NR_PAGEBLOCK_BITS ; 
+							start_idx++,value <<= 1) 
+						if(migratetype & value)
+							set_bit(start_idx + start_pfn,
+									zone->pageblock_flags);
+						else
+							clear_bit(start_idx + start_pfn,
+									zone->pageblock_flags);
+				}
+				page = start_page;
+			}
+			list_del(&page->lru);
+			rmv_page_order(page);
+
+			if(current_order >= pageblock_order) {
+				unsigned long start_idx,value = 1;
+				unsigned long idx;
+
+				idx = page_to_pfn(page);
+				idx -= zone->zone_start_pfn;
+				idx = (idx >> pageblock_order) * NR_PAGEBLOCK_BITS;
+
+				for(start_idx = 0 ; start_idx < NR_PAGEBLOCK_BITS ; 
+						start_idx++,value <<= 1) 
+					if(migratetype & value)
+						set_bit(idx + start_idx,
+								zone->pageblock_flags);
+					else
+						clear_bit(idx + start_idx,
+								zone->pageblock_flags);
+				
+			}
+			size = 1 << current_order;
+			while(order < current_order) {
+				area--;
+				current_order--;
+				size >>= 1;
+				list_add(&page[size].lru,
+						&area->free_list[migratetype]);
+				set_page_order(&page[size],current_order);
+				area->nr_free++;
+			}
+			if(!PageBuddy(page))
+				goto found_page;
+		}
+	}
+	mm_debug("Can't find page\n");
+	return;
+
+found_page:
+	BuddyPageMigrate(MIGRATE_MOVABLE,"B");
+	BuddyPageMigrate(MIGRATE_RECLAIMABLE,"B");
+	PageFlage(page,"Find");
 }

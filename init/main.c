@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_rmqueue_fallback();
+	TestCase_PageBlock();
 	
 	return 0;
 }

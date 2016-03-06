@@ -387,9 +387,9 @@ void __meminit memmap_init_zone(unsigned long size,int nid,unsigned long zone,
 		 */
 		if((z->zone_start_pfn <= pfn)
 				&& (pfn < z->zone_start_pfn + z->spanned_pages)
-				&& !(pfn & (pageblock_nr_pages - 1))) {
+				&& !(pfn & (pageblock_nr_pages - 1))) 
 			set_pageblock_migratetype(page,MIGRATE_MOVABLE);
-		}
+		
 		INIT_LIST_HEAD(&page->lru);
 #ifdef WANT_PAGE_VIRTUAL
 		/* The shift won't overflow because ZONE_NORMAL is below 4G */
@@ -551,7 +551,7 @@ static unsigned long __init usemap_size(unsigned long zonesize)
 	usemapsize = roundup(zonesize,pageblock_nr_pages);
 	usemapsize = usemapsize >> pageblock_order;
 	usemapsize *= NR_PAGEBLOCK_BITS;
-	usemapsize = roundup(usemapsize,8 * sizeof(unsigned long));
+	usemapsize = roundup(usemapsize,8 * sizeof(unsigned int));
 
 	return usemapsize / 8;
 }
@@ -571,6 +571,7 @@ static void __init setup_usemap(struct pglist_data *pgdat,
 		zone->pageblock_flags = 
 			(unsigned long *)(unsigned long)phys_to_mem(
 					__pa(alloc_bootmem_node(pgdat,usemapsize)));
+
 }
 extern void __meminit pgdat_page_cgroup_init(struct pglist_data *pgdat);
 /*
@@ -1652,7 +1653,7 @@ static inline struct page *__rmqueue_fallback(struct zone *zone,
 				if(pages >= (1 << (pageblock_order -1)) ||
 						page_group_by_mobility_disabled) 
 					set_pageblock_migratetype(page,start_migratetype);
-				
+
 				migratetype = start_migratetype;
 			}
 
