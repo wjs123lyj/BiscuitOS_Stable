@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_PageBlock();
+	TestCase_get_migratetype();
 	
 	return 0;
 }

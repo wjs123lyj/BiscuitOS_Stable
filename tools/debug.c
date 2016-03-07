@@ -552,3 +552,14 @@ void BuddyPageMigrate(int Migratetype,char *s)
 	}
 }
 
+/*
+ * Get PCP information.
+ */
+void PCP(struct zone *zone,char *s) 
+{
+	mm_debug("========%s PCP========\n",s);
+	mm_debug(" count %3d high %3d\n"
+			 " batch %3d\n",zone->pageset->pcp.count,
+			 zone->pageset->pcp.high,
+			 zone->pageset->pcp.batch);
+}

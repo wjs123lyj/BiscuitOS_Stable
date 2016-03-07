@@ -26,6 +26,7 @@
 #include "linux/bit_spinlock.h"
 #include "linux/rcutiny.h"
 #include "linux/lock.h"
+#include "linux/module.h"
 
 
 /*
@@ -484,10 +485,12 @@ static inline int oo_order(struct kmem_cache_order_objects x)
 {
 	return x.x >> OO_SHIFT;
 }
+
 static inline int oo_objects(struct kmem_cache_order_objects x)
 {
 	return x.x & OO_MASK;
 }
+
 static inline struct kmem_cache_node *get_node(struct kmem_cache *s,int node)
 {
 	return s->node[node];

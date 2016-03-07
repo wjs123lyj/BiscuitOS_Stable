@@ -5,7 +5,7 @@ struct kernel_symbol
 {
 	unsigned long value;
 	const char *name;
-}
+};
 
 #ifdef CONFIG_MODVERSIONS
 /* Mark the CRC weak since genksyms apparently decides not to
@@ -26,7 +26,6 @@ struct kernel_symbol
 /* For every exported symbol,please a strcut in the __ksymtab section */
 #define __EXPORT_SYMBOL(sym,sec)                         \
 	extern typeof(sym) sym;                              \
-	__CRC_SYMBOL(sym,sec)                                \
 	static const char __kstrtab_##sym[]                 \
 	__attribute__((section("__ksymtab_strings"),aligned(1)))  \
 	= MODULE_SYMBOL_PREFIX #sym;                          \

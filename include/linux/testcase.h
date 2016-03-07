@@ -28,4 +28,9 @@ extern TestCase_MovePage(void);
 extern TestCase_rmqueue_fallback(void);
 extern TestCase_pageblock_flage_group(void);
 extern TestCase_PageBlock(void);
+
+/* Per_Cpu_Page Allocator */
+extern TestCase_PCP_normal(void);
+extern TestCase_free_pcp(void);
+extern TestCase_get_migratetype(void);
 #endif
