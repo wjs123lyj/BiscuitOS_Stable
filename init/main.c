@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_get_migratetype();
+	TestCase_free_pcp();
 	
 	return 0;
 }

@@ -10,6 +10,7 @@
 #include "linux/list.h"
 #include "linux/mm_types.h"
 #include "linux/atomic.h"
+#include "linux/internal.h"
 
 #define TEST_GFP_NUM 12
 static gfp_t GFP_ARRAY[] = {
@@ -70,6 +71,29 @@ char *MigrateName[] = {
 	"MIGRATE_MOVABLE",
 	"MIGRATE_PCPTYPES",
 };
+
+static inline unsigned long __find_buddy_index(unsigned long page_idx,
+		unsigned int order) 
+{
+	return page_idx ^ (1 << order);
+}
+
+static inline int page_is_buddy(struct page *page,struct page *buddy,
+		int order)
+{
+	if(!pfn_valid_within(page_to_pfn(buddy)))
+		return 0;
+
+	if(page_zone_id(page) != page_zone_id(buddy))
+		return 0;
+
+	if(PageBuddy(buddy) && page_order(buddy) == order) {
+		VM_BUG_ON(page_count(page) != 0);
+		return 1;
+	}
+	return 0;
+}
+
 /*
  * TestCase_Buddy_normal - debug how to use buddy system.
  */
@@ -1204,4 +1228,195 @@ found_page:
 	PageFlage(page,"Find");
 }
 
+/*
+ * TestCase_free_one_page - free a page to buddy system.
+ *
+ * When we free a page to buddy,kernel will check if page has buddy and 
+ * buddy page is in buddy system.If all correct,they will combine more big
+ * buddy page,and loop.Finally,page will add into one free list.
+ *
+ * Create By Buddy.D.Zhang
+ */
+void TestCase_free_one_page(void) 
+{
+	struct page *page;
+	struct page *buddy;
+	struct zone *zone;
+	int migratetype;
+	unsigned long page_idx,buddy_idx;
+	unsigned long combine_idx;
+	int order = 0;
 
+	page = alloc_page(GFP_KERNEL);
+	zone = page_zone(page);
+	migratetype = get_pageblock_migratetype(page);
+	page_idx = page_to_pfn(page);
+
+	BuddyPageMigrate(migratetype,"A");
+	while(order < MAX_ORDER - 1) {
+		buddy_idx = __find_buddy_index(page_idx,order);
+		buddy = page + (buddy_idx - page_idx);
+		if(!page_is_buddy(page,buddy,order))
+			break;
+
+		list_del(&buddy->lru);
+		rmv_page_order(buddy);
+		zone->free_area[order].nr_free--;
+		combine_idx = buddy_idx & page_idx;
+		page = page + (combine_idx - page_idx);
+		page_idx = combine_idx;
+		order++;
+	}
+	set_page_order(page,order);
+
+	if((order < MAX_ORDER - 2) && pfn_valid_within(page_to_pfn(buddy))) {
+		struct page *higher_page,*higher_buddy;
+
+		combine_idx = buddy_idx & page_idx;
+		higher_page = page + (combine_idx - page_idx);
+		buddy_idx = __find_buddy_index(combine_idx,order + 1);
+		higher_buddy = higher_page + (buddy_idx - combine_idx);
+		if(page_is_buddy(higher_page,higher_buddy,order + 1)) {
+			list_add_tail(&page->lru,
+					&zone->free_area[order].free_list[migratetype]);
+			goto out;
+		}
+	}
+	list_add(&page->lru,
+			&zone->free_area[order].free_list[migratetype]);
+out:
+	zone->free_area[order].nr_free++;
+	BuddyPageMigrate(migratetype,"D");
+}
+
+/*
+ * TestCase_Find_Buddy.
+ */
+void TestCase_Find_Buddy(void) 
+{
+	int order;
+	unsigned long pfn;
+
+	order = 2;
+	for(pfn = 0 ; pfn < 100 ; pfn++) 
+		mm_debug("%ld buddy is %ld\n",pfn,pfn ^ (1 << order));
+}
+
+/*
+ * TestCase_page_is_buddy.
+ */
+void TestCase_page_is_buddy(void)
+{
+	struct page *page;
+	struct page *buddy;
+	unsigned long page_idx,buddy_idx;
+
+	page = alloc_page(GFP_KERNEL);
+
+	page_idx = page_to_pfn(page);
+	buddy_idx = __find_buddy_index(page_idx,0);
+	buddy = page + (buddy_idx - page_idx);
+	if(page_is_buddy(page,buddy,0))
+		mm_debug("PageIsbuddy\n");
+	else
+		mm_debug("PageIsnnoot\n");
+}
+
+/*
+ * TestCase_full_buddy - Get a page from buddy system and free this page to
+ *                       buddy system.
+ *
+ * Create By Buddy.D.Zhang
+ */
+void TestCase_full_buddy(void) 
+{
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zone *zone;
+	struct free_area *area;
+	struct page *page;
+	struct page *buddy;
+	unsigned long page_idx,buddy_idx;
+	unsigned long combine_idx;
+	int migratetype;
+	int order,current_order;
+
+	pgdat = NODE_DATA(0);
+	zonelist = pgdat->node_zonelists;
+	first_zones_zonelist(zonelist,0,NULL,&zone);
+	migratetype = MIGRATE_MOVABLE;
+	order = 4;
+
+	BuddyPageMigrate(migratetype,"A");
+	for(current_order = order ; current_order < MAX_ORDER ; current_order++) {
+		unsigned long size;
+
+		area = &zone->free_area[current_order];
+		if(list_empty(&area->free_list[migratetype]))
+			continue;
+
+		page = list_entry(area->free_list[migratetype].next,
+					struct page,lru);
+		list_del(&page->lru);
+		rmv_page_order(page);
+		area->nr_free--;
+
+		size = 1 << current_order;
+		while(order < current_order) {
+			area--;
+			current_order--;
+			size >>= 1;
+			list_add(&page[size].lru,
+					&area->free_list[migratetype]);
+			set_page_order(&page[size],current_order);
+			area->nr_free++;
+		}
+		if(!PageBuddy(page))
+			goto found_page;
+	}
+	mm_debug("Can't get free page\n");
+	return;
+
+found_page:
+	BuddyPageMigrate(migratetype,"B");
+	PageFlage(page,"A");
+
+	migratetype = get_pageblock_migratetype(page);
+	page_idx = page_to_pfn(page);
+	zone = page_zone(page);
+
+	while(order < MAX_ORDER - 1) {
+		buddy_idx = __find_buddy_index(page_idx,order);
+		buddy = page + (buddy_idx - page_idx);
+		if(!page_is_buddy(page,buddy,order))
+			break;
+
+		list_del(&buddy->lru);
+		rmv_page_order(page);
+		zone->free_area[migratetype].nr_free--;
+		combine_idx = buddy_idx & page_idx;
+		page = page + (combine_idx - page_idx);
+		page_idx = combine_idx;
+		order++;
+	}
+	set_page_order(page,order);
+
+	if((order < MAX_ORDER - 2) && pfn_valid_within(page_to_pfn(buddy))) {
+		struct page *higher_page,*higher_buddy;
+
+		combine_idx = buddy_idx & page_idx;
+		higher_page = page + (combine_idx - page_idx);
+		buddy_idx = __find_buddy_index(combine_idx,order + 1);
+		higher_buddy = higher_page + (buddy_idx - combine_idx);
+		if(page_is_buddy(higher_page,higher_buddy,order + 1)) {
+			list_add_tail(&page->lru,
+					&zone->free_area[order].free_list[migratetype]);
+			goto out;
+		}
+	}
+	list_add(&page->lru,&zone->free_area[order].free_list[migratetype]);
+
+out:
+	zone->free_area[order].nr_free++;
+	BuddyPageMigrate(migratetype,"C");
+}

@@ -28,9 +28,14 @@ extern TestCase_MovePage(void);
 extern TestCase_rmqueue_fallback(void);
 extern TestCase_pageblock_flage_group(void);
 extern TestCase_PageBlock(void);
+extern TestCase_free_one_page(void);
+extern TestCase_Find_Buddy(void);
+extern TestCase_page_is_buddy(void);
+extern TestCase_full_buddy(void);
 
 /* Per_Cpu_Page Allocator */
 extern TestCase_PCP_normal(void);
 extern TestCase_free_pcp(void);
 extern TestCase_get_migratetype(void);
+extern TestCase_free_pcppages_bulk(void);
 #endif

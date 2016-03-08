@@ -99,6 +99,60 @@ void TestCase_PCP_normal(void)
  */
 void TestCase_free_pcp(void) 
 {
+	struct page *page;
+	struct zone *zone;
+	struct page *test_page;
+	int migratetype;
+	int cold = 0;
+	struct per_cpu_pages *pcp;
+	int i;
+
+	page = alloc_page(GFP_KERNEL);
+	migratetype = get_pageblock_migratetype(page);
+	set_page_private(page,migratetype);
+	zone = page_zone(page);
+	pcp = &zone->pageset->pcp;
+
+	for(i = 0 ; i < MIGRATE_PCPTYPES ; i++)
+		list_for_each_entry(test_page,&pcp->lists[i],lru)
+			PageFlage(test_page,"A");
+
+	if(cold)
+		list_add_tail(&page->lru,&pcp->lists[migratetype]);
+	else
+		list_add(&page->lru,&pcp->lists[migratetype]);
+	pcp->count++;
+
+	pcp->high = pcp->count;
+	if(pcp->count >= pcp->high) {
+		int to_free = pcp->batch - 1;
+		int batch_free = 0;
+		int migrate = 0;
+
+		zone->all_unreclaimable = 0;
+		zone->pages_scanned = 0;
+
+		while(to_free) {
+			struct list_head *list;
+
+			do {
+				batch_free++;
+				if(++migrate == MIGRATE_PCPTYPES)
+					migrate = 0;
+				list = &pcp->lists[migrate];
+			} while(list_empty(list));
+
+			do {
+				page = list_entry(list->prev,struct page,lru);
+
+				list_del(&page->lru);
+			} while(--to_free && --batch_free && !list_empty(list));
+		}
+		pcp->count -= pcp->batch;
+	}
+	for(i = 0 ; i < MIGRATE_PCPTYPES ; i++) 
+		list_for_each_entry(page,&pcp->lists[i],lru)
+			PageFlage(page,"B");
 }
 
 /*
@@ -124,4 +178,53 @@ void TestCase_get_migratetype(void)
 			migratetype |= value;
 	
 	mm_debug("migratetype %ld\n",migratetype);
+}
+
+/*
+ * TestCase_free_pcppages_bulk.
+ */
+void TestCase_free_pcppages_bulk(void)
+{
+	struct page *page;
+	struct zone *zone;
+	struct per_cpu_pages *pcp;
+	int i;
+
+	page = alloc_page(GFP_KERNEL);
+	zone = page_zone(page);
+	pcp = &zone->pageset->pcp;
+	
+	for(i = 0 ; i < 3 ; i++)
+		list_for_each_entry(page,&pcp->lists[i],lru)
+			PageFlage(page,"A");
+
+	if(pcp->count) {
+		int batch_free;
+		int to_free = pcp->count;
+		int migratetype = 0;
+
+		zone->all_unreclaimable = 0;
+		zone->pages_scanned = 0;
+
+		while(to_free) {
+			struct list_head *list;
+
+			do {
+				++batch_free;
+				if(++migratetype == MIGRATE_PCPTYPES)
+					migratetype = 0;
+				list = &pcp->lists[migratetype];
+			} while(list_empty(list));
+
+			do {
+				page = list_entry(list->prev,struct page,lru);
+
+				list_del(&page->lru);
+			} while(--batch_free && --to_free && !list_empty(list));
+		}
+	}
+
+	for(i = 0 ; i < 3 ; i++) 
+		list_for_each_entry(page,&pcp->lists[i],lru)
+			PageFlage(page,"B");
 }
