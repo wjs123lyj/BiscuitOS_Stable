@@ -1350,6 +1350,7 @@ static inline int calculate_order(int size)
 
 	return -ENOSYS;
 }
+
 static void *kmalloc_large_node(size_t size,gfp_t flags,int node)
 {
 	struct page *page;
@@ -1378,20 +1379,15 @@ static struct kmem_cache *get_slab(size_t size,gfp_t flags)
 
 	return kmalloc_caches[index];
 }
+
 void *__kmalloc_node(size_t size,gfp_t flags,int node)
 {
 	struct kmem_cache *s;
 	void *ret;
 
-	if(unlikely(size > SLUB_MAX_SIZE))
-	{
+	if(unlikely(size > SLUB_MAX_SIZE)) {
 		ret = kmalloc_large_node(size,flags,node);
 
-#if 0
-		trace_kmalloc_node(_RET_IP_,ret,
-				size,PAGE_SIZE << get_order(size),
-				flags,node);
-#endif	
 		return ret;
 	}
 
@@ -1401,9 +1397,6 @@ void *__kmalloc_node(size_t size,gfp_t flags,int node)
 		return s;
 
 	ret = slab_alloc(s,flags,node,_RET_IP_);
-
-	/* Need debug */
-	//trace_kmalloc_node(_RET_IP_,ret,size,s->size,flags,node);
 
 	return ret;
 }

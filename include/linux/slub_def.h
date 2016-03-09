@@ -193,6 +193,7 @@ static inline int kmalloc_index(size_t size)
 	 *			return i;
 	 */
 }
+
 extern struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];
 /*
  * Find the slab cache for a given combination of allocation flags and size.
@@ -238,12 +239,12 @@ static inline void *kmem_cache_alloc_node_trace(
 {
 	return kmem_cache_alloc_node(s,gfpflags,node);
 }
+
 extern void *__kmalloc_node(size_t size,gfp_t flags,int node);
 static inline void *kmalloc_node(size_t size,gfp_t flags,int node)
 {
 	if(__builtin_constant_p(size) &&
-			size <= SLUB_MAX_SIZE && !(flags & SLUB_DMA))
-	{
+			size <= SLUB_MAX_SIZE && !(flags & SLUB_DMA)) {
 		struct kmem_cache *s = kmalloc_slab(size);
 
 		if(!s)

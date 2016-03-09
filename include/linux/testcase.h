@@ -32,10 +32,20 @@ extern TestCase_free_one_page(void);
 extern TestCase_Find_Buddy(void);
 extern TestCase_page_is_buddy(void);
 extern TestCase_full_buddy(void);
+extern TestCase_SlowPath(void);
+extern TestCase_diff_alloc_page(void);
 
 /* Per_Cpu_Page Allocator */
 extern TestCase_PCP_normal(void);
 extern TestCase_free_pcp(void);
 extern TestCase_get_migratetype(void);
 extern TestCase_free_pcppages_bulk(void);
+extern TestCase_full_pcp_buddy(void);
+
+/* Vmalloc Allocator */
+extern TestCase_vmalloc(void);
+
+/****** Kernel Lib ******/
+/* RB tree */
+extern TestCase_RB_user(void);
 #endif

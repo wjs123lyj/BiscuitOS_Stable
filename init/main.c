@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_free_pcp();
+	TestCase_RB_user();
 	
 	return 0;
 }

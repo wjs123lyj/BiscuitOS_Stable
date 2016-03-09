@@ -1420,3 +1420,26 @@ out:
 	zone->free_area[order].nr_free++;
 	BuddyPageMigrate(migratetype,"C");
 }
+
+/*
+ * TestCase_SlowPath()
+ */
+void TestCase_SlowPath(void)
+{
+	struct page *page;
+
+	page = alloc_page(GFP_KERNEL);
+	if(page)
+		PageFlage(page,"B");
+}
+
+/*
+ * TestCase_diff_alloc_page.
+ */
+void TestCase_diff_alloc_page(void)
+{
+	unsigned int addr;
+
+	addr = __get_free_page(GFP_KERNEL);
+
+}

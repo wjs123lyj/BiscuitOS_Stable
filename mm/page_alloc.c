@@ -2158,13 +2158,13 @@ restart:
 	page = get_page_from_freelist(gfp_mask,nodemask,order,zonelist,
 			high_zoneidx,alloc_flags & ~ALLOC_NO_WATERMARKS,
 			preferred_zone,migratetype);
+
 	if(page)
 		goto got_pg;
 	
 rebalance:
 	/* Allocate without watermarks if the context allows */
-	if(alloc_flags & ALLOC_NO_WATERMARKS)
-	{
+	if(alloc_flags & ALLOC_NO_WATERMARKS) {
 		page = __alloc_pages_high_priority(gfp_mask,order,
 				zonelist,high_zoneidx,nodemask,
 				preferred_zone,migratetype);
@@ -2274,8 +2274,7 @@ rebalance:
 			goto got_pg;
 	}
 nopage:
-	if(!(gfp_mask & __GFP_NOWARN) && printk_ratelimit())
-	{
+	if(!(gfp_mask & __GFP_NOWARN) && printk_ratelimit()) {
 		mm_debug("%s:page allocation failure."
 				" order:%d,mode:0x%x\n",
 				current->comm,order,gfp_mask);
@@ -2344,6 +2343,7 @@ struct page *__alloc_pages_nodemask(gfp_t gfp_mask,unsigned int order,
 
 	return page;
 }
+
 /*
  * Common helper functions.
  */
@@ -2380,13 +2380,11 @@ void show_free_areas(void)
 	int cpu;
 	struct zone *zone;
 
-	for_each_populated_zone(zone)
-	{
+	for_each_populated_zone(zone) {
 		show_node(zone);
 		mm_debug("%s per-cpu\n",zone->name);
 
-		for_each_online_cpu(cpu) 
-		{
+		for_each_online_cpu(cpu) {
 			struct per_cpu_pageset *pageset;
 
 			pageset = per_cpu_ptr(zone->pageset,cpu);
@@ -2433,8 +2431,7 @@ void show_free_areas(void)
 			 (void *)(unsigned long)global_page_state(NR_PAGETABLE),
 			 (void *)(unsigned long)global_page_state(NR_BOUNCE));
 
-	for_each_populated_zone(zone)
-	{
+	for_each_populated_zone(zone) {
 		int i;
 
 		show_node(zone);
@@ -2500,8 +2497,7 @@ void show_free_areas(void)
 		mm_debug("\n");
 	}
 	
-	for_each_populated_zone(zone)
-	{
+	for_each_populated_zone(zone) {
 		unsigned long nr[MAX_ORDER],flags,order,total = 0;
 
 		show_node(zone);

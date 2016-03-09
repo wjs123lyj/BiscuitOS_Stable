@@ -312,14 +312,14 @@ static void purge_vmap_aera_lazy(void)
 
 	__purge_vmap_area_lazy(&start,&end,1,0);
 }
+
 void __insert_vmap_area(struct vmap_area *va)
 {
 	struct rb_node **p = &vmap_area_root.rb_node;
 	struct rb_node *parent = NULL;
 	struct rb_node *tmp;
 
-	while(*p)
-	{
+	while(*p) {
 		struct vmap_area *tmp_va;
 
 		parent = *p;
@@ -336,8 +336,7 @@ void __insert_vmap_area(struct vmap_area *va)
 
 	/* address-sort this list so it is usable like the vmlist */
 	tmp = rb_prev(&va->rb_node);
-	if(tmp)
-	{
+	if(tmp) {
 		struct vmap_area *prev;
 		
 		prev = rb_entry(tmp,struct vmap_area,rb_node);
@@ -354,6 +353,7 @@ void purge_vmap_area_lazy(void)
 
 	__purge_vmap_area_lazy(&start,&end,1,0);
 }
+
 /*
  * Allocate a region of KVA of the specified size and alignment,within the
  * vstart and vend.
@@ -386,30 +386,26 @@ retry:
 
 	/* XXX:could have a last_hole cache */
 	n = vmap_area_root.rb_node;
-	if(n)
-	{
+	if(n) {
 		struct vmap_area *first = NULL;
 
 		do {
 			struct vmap_area *tmp;
 			tmp = rb_entry(n,struct vmap_area,rb_node);
-			if(tmp->va_end >= addr)
-			{
+			if(tmp->va_end >= addr) {
 				if(!first && tmp->va_start < addr + size)
 					first = tmp;
 				n = n->rb_left;
-			} else
-			{
+			} else {
 				first = tmp;
 				n = n->rb_right;
 			}
 		} while(n);
-
+		
 		if(!first)
 			goto found;
 
-		if(first->va_end < addr)
-		{
+		if(first->va_end < addr) {
 			n = rb_next(&first->rb_node);
 			if(n)
 				first = rb_entry(n,struct vmap_area,rb_node);
@@ -417,8 +413,7 @@ retry:
 				goto found;
 		}
 		
-		while(addr + size > first->va_start && addr + size <= vend)
-		{
+		while(addr + size > first->va_start && addr + size <= vend) {
 			addr = ALIGN(first->va_end + PAGE_SIZE,align);
 			if(addr + size - 1 < addr)
 				goto overflow;
@@ -431,12 +426,10 @@ retry:
 		}
 	}
 found:
-	if(addr + size > vend)
-	{
+	if(addr + size > vend) {
 overflow:
 		spin_unlock(&vmap_area_lock);
-		if(!purged)
-		{
+		if(!purged) {
 			purge_vmap_area_lazy();
 			purged = 1;
 			goto retry;
@@ -475,8 +468,7 @@ void insert_vmalloc_vm(struct vm_struct *vm,struct vmap_area *va,
 	va->flags  |= VM_VM_AREA;
 
 	write_lock(&vmlist_lock);
-	for(p = &vmlist ; (tmp = *p) != NULL ; p = &tmp->next)
-	{
+	for(p = &vmlist ; (tmp = *p) != NULL ; p = &tmp->next) {
 		if(tmp->addr >= vm->addr)
 			break;
 	}
@@ -484,6 +476,7 @@ void insert_vmalloc_vm(struct vm_struct *vm,struct vmap_area *va,
 	*p = vm;
 	write_unlock(&vmlist_lock);
 }
+
 static struct vm_struct *__get_vm_area_node(unsigned long size,
 		unsigned long align,unsigned long flags,unsigned long start,
 		unsigned long end,int node,gfp_t gfp_mask,
@@ -493,8 +486,7 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	struct vm_struct *area;
 
 	BUG_ON(in_interrupt());
-	if(flags & VM_IOREMAP)
-	{
+	if(flags & VM_IOREMAP) {
 		int bit = fls(size);
 
 		if(bit > IOREMAP_MAX_ORDER)
@@ -520,8 +512,7 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	size += PAGE_SIZE;
 
 	va = alloc_vmap_area(size,align,start,end,node,gfp_mask);
-	if(IS_ERR(va))
-	{
+	if(IS_ERR(va)) {
 		kfree(area);
 		return NULL;
 	}
@@ -677,6 +668,7 @@ static int vmap_pmd_range(pud_t *pud,unsigned long addr,
 	} while(pmd++,addr = next,addr != end);
 	return 0;
 }
+
 static int vmap_pud_range(pgd_t *pgd,unsigned long addr,
 		unsigned long end,pgprot_t prot,struct page **pages,int *nr)
 {
@@ -694,9 +686,12 @@ static int vmap_pud_range(pgd_t *pgd,unsigned long addr,
 
 	return 0;
 }
+
 /*
- * Set up page table in kva.The ptes shall have prot "prot",and
+ * Set up page tables in kva(addr,end).The ptes shall have prot "prot",and
  * will have pfns corresponding to the "pages" array.
+ *
+ * le.pte at addr+N*PAGE_SIZE shall point to pfn corresponding to pages[N].
  */
 static int vmap_page_range_noflush(unsigned long start,unsigned long end,
 		pgprot_t prot,struct page **pages)
@@ -774,6 +769,7 @@ struct vm_struct *remove_vm_area(const void *addr)
 	}
 	return NULL;
 }
+
 static int vmap_page_range(unsigned long start,unsigned long end,
 		pgprot_t prot,struct page **pages)
 {
@@ -784,6 +780,7 @@ static int vmap_page_range(unsigned long start,unsigned long end,
 	
 	return ret;
 }
+
 int map_vm_area(struct vm_struct *area,pgprot_t prot,struct page ***pages)
 {
 	unsigned long addr = (unsigned long)area->addr;
@@ -791,14 +788,14 @@ int map_vm_area(struct vm_struct *area,pgprot_t prot,struct page ***pages)
 	int err;
 
 	err = vmap_page_range(addr,end,prot,*pages);
-	if(err > 0)
-	{
+	if(err > 0) {
 		*pages += err;
 		err = 0;
 	}
 
 	return err;
 }
+
 static void *__vmalloc_node(unsigned long size,unsigned long align,
 				gfp_t gfp_mask,pgprot_t prot,
 						int node,void *caller);
@@ -816,39 +813,30 @@ static void *__vmalloc_area_node(struct vm_struct *area,gfp_t gfp_mask,
 	/* Pls not that the recursion is strictly bounded. */
 	if(array_size > PAGE_SIZE)
 	{
-#if WAIT_FOR_DEBUG
 		pages = __vmalloc_node(array_size,1,nested_gfp | __GFP_HIGHMEM,
 				PAGE_KERNEL,node,caller);
-#else
-		pgprot_t index;
-		pages = __vmalloc_node(array_size,1,nested_gfp | __GFP_HIGHMEM,
-				                index,node,caller);
-#endif
+	
 		area->flags |= VM_VPAGES;
-	} else
-	{
+	} else {
 		pages = (struct page **)(unsigned long)kmalloc_node(array_size,
 				nested_gfp,node);
 	}
 	area->pages = pages;
 	area->caller = caller;
-	if(!area->pages)
-	{
+	if(!area->pages) {
 		remove_vm_area(area->addr);
 		kfree(area);
 		return NULL;
 	}
 
-	for(i = 0 ; i < area->nr_pages ; i++)
-	{
+	for(i = 0 ; i < area->nr_pages ; i++) {
 		struct page *page;
 
 		if(node < 0)
 			page = alloc_page(gfp_mask);
 		else
 			page = alloc_pages_node(node,gfp_mask,0);
-		if(unlikely(!page))
-		{
+		if(unlikely(!page)) {
 			/* Successfuly allocated i pages,free them in __vunmap() */
 			area->nr_pages = i;
 			goto fail;
@@ -864,8 +852,21 @@ fail:
 	vfree(area->addr);
 	return NULL;
 }
-/*
- * Allocate virtuall contiguous memory
+
+/**
+ * __vmalloc_node_range - allocate virtually contiguous memory
+ * @size:              allocation size
+ * @align:             desired alignment
+ * @start:             vm area range start
+ * @end:               vm area range end
+ * @gfp_mask:          flags for the page level allocator
+ * @prot:              protection mask for the allocated pages.
+ * @node:              node to use for allocation or -1
+ * @caller:            caller's return address.
+ *
+ * Allocate enough pages to cover @size from the page level
+ * allocator with @gfp_mask flags.Map them into contiguous
+ * kernel virtual space,using a pagetable protect of @prot.
  */
 void *__vmalloc_node_range(unsigned long size,unsigned long align,
 		unsigned long start,unsigned long end,gfp_t gfp_mask,
@@ -896,8 +897,19 @@ void *__vmalloc_node_range(unsigned long size,unsigned long align,
 
 	return addr;
 }
-/*
- * Allocate virtually contiguous memory.
+
+/**
+ * __vmalloc_node - allocate virtually contiguous memory
+ * @size:            allocation size
+ * @align:           desired alignment
+ * @gfp_mask:        flags for the page level allocator
+ * @prot:            protection mask for the allocated pages
+ * @node:            node to use for allocation or -1
+ * @caller:          caller's return address.
+ *
+ * Allocate enough pages to cover @size from the page level
+ * allocator with @gfp_mask flags.Map them into contigous
+ * kernel virtual space,using a pagetable protection of @prot.
  */
 static void *__vmalloc_node(unsigned long size,unsigned long align,
 		gfp_t gfp_mask,pgprot_t prot,
@@ -906,16 +918,14 @@ static void *__vmalloc_node(unsigned long size,unsigned long align,
 	return __vmalloc_node_range(size,align,VMALLOC_START,VMALLOC_END,
 			gfp_mask,prot,node,caller);
 }
+
 static inline void *__vmalloc_node_flags(unsigned long size,
 		int node,gfp_t flags)
 {
-#if WAIT_FOR_DEBUG
 	return __vmalloc_node(size,1,flags,PAGE_KERNEL,
 			node,__builtin_return_address(0));
-#else
-	return NULL;
-#endif
 }
+
 /*
  * vmalloc - allocate virtually contiguous memory
  * @size: allocation size
