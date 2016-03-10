@@ -1,8 +1,10 @@
 /*
- * This file is used to debug rbtree,we give a simple demo code for rbtree.
+ * This file is used to debug rbtree.
+ * We give a simple demo code for unsing rbtree API.
  * The code from http://blog.csdn.net/npy_lp/article/details/7420689.
  *
  * Thanks tanglinux.
+ * Create By Buddy.D.Zhang
  */
 #include "linux/kernel.h"
 #include "linux/rbtree.h"
@@ -11,46 +13,46 @@
 #include "linux/gfp.h"
 #include "linux/slab.h"
 
+
 struct node {
 	struct rb_node node;
 	int num;
 };
 
 /*
- * Insert a member info rbtree.
+ * Insert the node into RBtree.
  */
-int insert(struct rb_root *root,struct node *data)
+int insert(struct node *data,struct rb_root *root)
 {
-	struct rb_node **node = &(root->rb_node);
+	struct rb_node **link = &(root->rb_node);
 	struct rb_node *parent = NULL;
 
-	while(*node) {
-		struct node *this_node = container_of(*node,struct node,node);
+	while(*link) {
+		struct node *node = container_of(*link,struct node,node);
 
-		parent = *node;
-		if(data->num < this_node->num)
-			node = &((*node)->rb_left);
-		else if(data->num > this_node->num)
-			node = &((*node)->rb_right);
+		parent = *link;
+		if(data->num < node->num)
+			link = &((*link)->rb_left);
+		else if(data->num > node->num)
+			link = &((*link)->rb_right);
 		else
 			return -1;
 	}
-
-	/* Add new node and rebalance tree */
-	rb_link_node(&data->node,parent,node);
+	rb_link_node(&data->node,parent,link);
 	rb_insert_color(&data->node,root);
+	return 0;
 }
 
 /*
- * Search a node from RBtree.
+ * Search the node from RBtree.
  */
-struct node *search(struct rb_root *root,int num)
+struct node *search(int num,struct rb_root *root)
 {
 	struct rb_node *node = root->rb_node;
-	
+
 	while(node) {
 		struct node *data = container_of(node,struct node,node);
-		
+
 		if(num < data->num)
 			node = node->rb_left;
 		else if(num > data->num)
@@ -58,28 +60,26 @@ struct node *search(struct rb_root *root,int num)
 		else
 			return data;
 	}
-	
 	return NULL;
 }
 
 /*
- * Delete a node from rbtree.
+ * Delete the node from RBtree.
  */
-void delete(struct rb_root *root,int num)
+void delete(int num,struct rb_root *root)
 {
-	struct node *data = search(root,num);
+	struct node *node = search(num,root);
 	
-	if(!data) {
-		mm_err("Not found %d\n",num);
+	if(!node) {
+		mm_err("%d doesn't exist\n",num);
 		return;
 	}
-
-	rb_erase(&data->node,root);
-	kfree(data);
+	rb_erase(&node->node,root);
+	kfree(node);
 }
 
 /*
- * Print all node of rbtree.
+ * Print all node of RBtree.
  */
 void print_rbtree(struct rb_root *root)
 {
@@ -97,27 +97,33 @@ void print_rbtree(struct rb_root *root)
 void TestCase_RB_user(void)
 {
 	struct rb_root root = RB_ROOT;
-	int i,ret,num;
 	struct node *node;
-	int value[10] = {2,4,67,4,8,9,11,35,1,9};
+	int num,i,ret;
+	int value[10] = { 2 , 4, 123 , 43 , 56 , 78 , 32 , 17 , 51 , 1 };
 
 	num = 10;
+
 	for(i = 0 ; i < num ; i++) {
 		node = (struct node *)kmalloc(sizeof(struct node),GFP_KERNEL);
+		if(!node) {
+			mm_err("No Memory\n");
+
+			/* Don't waste any memory */
+			for(i-- ; i >= 0 ; i--) 
+				delete(value[i],&root);
+			return;
+		}
+
 		node->num = value[i];
 
-		ret = insert(&root,node);
+		/* Insert node into rbtree */
+		ret = insert(node,&root);
 		if(ret < 0) {
-			mm_err("The %d already exists.\n",node->num);
+			mm_debug("%2d has existed\n",node->num);
 			kfree(node);
 		}
 	}
 
-	mm_debug("The first test\n");
-	print_rbtree(&root);
-
-	delete(&root,4);
-
-	mm_debug("The second test\n");
+	mm_debug("First Check\n");
 	print_rbtree(&root);
 }
