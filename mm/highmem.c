@@ -187,3 +187,44 @@ void *kmap_high_get(struct page *page)
 //	unlock_kmap_any(flags);
 	return (void *)vaddr;
 }
+
+void *__kmap_atomic(struct page *page)
+{
+	unsigned int idx;
+	unsigned long vaddr;
+	void *kmap;
+	int type;
+
+	pagefault_disable();
+	if(!PageHighMem(page))
+		return page_address(page);
+
+#ifdef CONFIG_DEBUG_HIGHMEM
+	if(!cache_is_vivt())
+		kmap = NULL;
+	else
+#endif
+		kmap = kmap_high_get(page);
+	if(kmap)
+		return kmap;
+
+	type = kmap_atomic_idx_push();
+
+	idx = type + KM_TYPE_NR * 1;
+	vaddr = __fix_to_virt(FIX_KMAP_BEGIN + idx);
+#ifdef CONFIG_DEBUG_HIGHMEM
+	/*
+	 * With debugging enabled,kunmap_atomic forces that entry to 0.
+	 * Make sure it was indeed properly unmapped.
+	 */
+	BUG_ON(!pte_none(*(TOP_PTE(vaddr))));
+#endif
+	set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
+	/*
+	 * When debugging is off,kunmap_atomic leaves the previous mapping
+	 * in place,so this TLB flush ensure the TLB is update with the
+	 * new mapping.
+	 */
+	
+	return (void *)vaddr;
+}

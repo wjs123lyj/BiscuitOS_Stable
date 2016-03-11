@@ -341,9 +341,10 @@ void __insert_vmap_area(struct vmap_area *va)
 		
 		prev = rb_entry(tmp,struct vmap_area,rb_node);
 		list_add_rcu(&va->list,&prev->list);
-	} else
+	} else 
 		list_add_rcu(&va->list,&vmap_area_list);
 }
+
 /*
  * Kick off a purge of the outstanding lazy areas.
  */
@@ -371,11 +372,10 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	BUG_ON(!size);
 	BUG_ON(size & ~PAGE_MASK);
 
-	va = (struct vmap_area *)(unsigned long)kmalloc_node(
-				sizeof(struct vmap_area),
+	va = (struct vmap_area *)kmalloc_node(sizeof(struct vmap_area),
 			gfp_mask & GFP_RECLAIM_MASK,node);
 	if(unlikely(!va))
-		return (struct vmap_area *)(unsigned long)ERR_PTR(-ENOMEM);
+		return ERR_PTR(-ENOMEM);
 
 retry:
 	addr = ALIGN(vstart,align);
@@ -501,8 +501,8 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	if(unlikely(!size))
 		return NULL;
 
-	area = (struct vm_struct *)(unsigned long)kzalloc_node(
-					sizeof(*area),gfp_mask & GFP_RECLAIM_MASK,node);
+	area = (struct vm_struct *)kzalloc_node(sizeof(*area),
+				gfp_mask & GFP_RECLAIM_MASK,node);
 	if(unlikely(!area))
 		return NULL;
 
@@ -636,8 +636,7 @@ static int vmap_pte_range(pmd_t *pmd,unsigned long addr,
 	 * callers keep track of where we're up to.
 	 */
     
-	/* Need to debug */
-	//pte = pte_alloc_kernel(pmd,addr);
+	pte = pte_alloc_kernel(pmd,addr);
 	if(!pte)
 		return -ENOMEM;
 	do {
@@ -811,8 +810,7 @@ static void *__vmalloc_area_node(struct vm_struct *area,gfp_t gfp_mask,
 
 	area->nr_pages = nr_pages;
 	/* Pls not that the recursion is strictly bounded. */
-	if(array_size > PAGE_SIZE)
-	{
+	if(array_size > PAGE_SIZE) {
 		pages = __vmalloc_node(array_size,1,nested_gfp | __GFP_HIGHMEM,
 				PAGE_KERNEL,node,caller);
 	
@@ -836,6 +834,7 @@ static void *__vmalloc_area_node(struct vm_struct *area,gfp_t gfp_mask,
 			page = alloc_page(gfp_mask);
 		else
 			page = alloc_pages_node(node,gfp_mask,0);
+
 		if(unlikely(!page)) {
 			/* Successfuly allocated i pages,free them in __vunmap() */
 			area->nr_pages = i;

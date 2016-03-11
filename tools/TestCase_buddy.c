@@ -11,6 +11,7 @@
 #include "linux/mm_types.h"
 #include "linux/atomic.h"
 #include "linux/internal.h"
+#include "linux/pgalloc.h"
 
 #define TEST_GFP_NUM 12
 static gfp_t GFP_ARRAY[] = {
@@ -1440,6 +1441,6 @@ void TestCase_diff_alloc_page(void)
 {
 	unsigned int addr;
 
-	addr = __get_free_page(GFP_KERNEL);
+	addr = __get_free_page(PGALLOC_GFP);
 
 }

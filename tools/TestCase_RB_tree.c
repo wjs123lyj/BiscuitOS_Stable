@@ -13,14 +13,14 @@
 #include "linux/gfp.h"
 #include "linux/slab.h"
 
-
 struct node {
 	struct rb_node node;
 	int num;
 };
 
+
 /*
- * Insert the node into RBtree.
+ * Insert a node into RBtree.
  */
 int insert(struct node *data,struct rb_root *root)
 {
@@ -44,7 +44,7 @@ int insert(struct node *data,struct rb_root *root)
 }
 
 /*
- * Search the node from RBtree.
+ * Search a node from RBtree.
  */
 struct node *search(int num,struct rb_root *root)
 {
@@ -64,29 +64,28 @@ struct node *search(int num,struct rb_root *root)
 }
 
 /*
- * Delete the node from RBtree.
+ * Delete a node from RBtree.
  */
 void delete(int num,struct rb_root *root)
 {
 	struct node *node = search(num,root);
-	
-	if(!node) {
-		mm_err("%d doesn't exist\n",num);
-		return;
-	}
-	rb_erase(&node->node,root);
-	kfree(node);
+
+	if(node) {
+		rb_erase(&node->node,root);
+		kfree(node);
+	} else
+		mm_err("%2d doesn't exits\n",num);
 }
 
 /*
- * Print all node of RBtree.
+ * Print all node 
  */
-void print_rbtree(struct rb_root *root)
+void print_all(struct rb_root *root)
 {
 	struct rb_node *node;
 
 	for(node = rb_first(root) ; node ; node = rb_next(node))
-		mm_debug("%2d ",rb_entry(node,struct node,node)->num);
+		mm_debug("%2d  ",rb_entry(node,struct node,node)->num);
 
 	mm_debug("\n");
 }
@@ -99,31 +98,63 @@ void TestCase_RB_user(void)
 	struct rb_root root = RB_ROOT;
 	struct node *node;
 	int num,i,ret;
-	int value[10] = { 2 , 4, 123 , 43 , 56 , 78 , 32 , 17 , 51 , 1 };
+	int value[30] = { 2  , 84 , 43 , 11 , 7  , 54 , 21 , 1  , 2  , 10 ,
+	                  34 , 5  , 6  , 45 , 76 , 0  , 12 , 25 , 44 , 11 ,
+	                  99 , 65 , 38 , 91 , 35 , 16 ,93  , 74 , 33 , 67 };
 
-	num = 10;
+	num = 30;
 
 	for(i = 0 ; i < num ; i++) {
 		node = (struct node *)kmalloc(sizeof(struct node),GFP_KERNEL);
 		if(!node) {
 			mm_err("No Memory\n");
 
-			/* Don't waste any memory */
-			for(i-- ; i >= 0 ; i--) 
+			/* Never Waste memory */
+			for(i-- ; i >= 0 ; i--)
 				delete(value[i],&root);
+
 			return;
 		}
 
 		node->num = value[i];
 
-		/* Insert node into rbtree */
+		/* Insert node into RBtree */
 		ret = insert(node,&root);
 		if(ret < 0) {
-			mm_debug("%2d has existed\n",node->num);
+			mm_err("%2d has existed\n",node->num);
 			kfree(node);
 		}
 	}
 
 	mm_debug("First Check\n");
-	print_rbtree(&root);
+	print_all(&root);
+
+	/* Delete a node */
+	delete(value[4],&root);
+	mm_debug("Second Check [%d]\n",value[4]);
+	print_all(&root);
+
+	/* Search a node */
+	node = search(value[2],&root);
+	mm_debug("Find %d\n",node->num);
+
+    /* Get prev node */
+	mm_debug("Prev num is %d\n",
+			rb_entry(rb_prev(&node->node),struct node,node)->num);
+	/* Get next node */
+	mm_debug("Next num is %d\n",
+			rb_entry(rb_next(&node->node),struct node,node)->num);
+	/* The first node */
+	mm_debug("Min num is %d\n",
+			rb_entry(rb_first(&root),struct node,node)->num);
+	/* The last node */
+	mm_debug("Max num is %d\n",
+			rb_entry(rb_last(&root),struct node,node)->num);
+
+	/* Free All node */
+	for(i = 0 ; i < num ; i++)
+		delete(value[i],&root);
+
+	mm_debug("Last Check\n");
+	print_all(&root);
 }

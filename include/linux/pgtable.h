@@ -283,6 +283,11 @@ static inline void set_pte_at(struct mm_struct *mm,unsigned long addr,
 #endif
 }
 
+static inline int pmd_trans_splitting(pmd_t *pmd)
+{
+	return 0;
+}
+
 #define pgtable_cache_init() do {} while(0)
 
 #define pgd_none_or_clear_bad(pgd) do {} while(0)

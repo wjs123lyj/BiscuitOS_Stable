@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_RB_user();
+	TestCase_diff_alloc_page();
 	
 	return 0;
 }

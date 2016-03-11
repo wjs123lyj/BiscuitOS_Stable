@@ -27,54 +27,6 @@ DECLARE_PER_CPU(int,__kmap_atomic_idx);
 extern void *kmap_high_get(struct page *page);
 extern void *page_address(struct page *page);
 static inline int kmap_atomic_idx_push(void);
-static inline void *__kmap_atomic(struct page *page)
-{
-	unsigned int idx;
-	unsigned long vaddr;
-	void *kmap;
-	int type;
-
-	pagefault_disable();
-	/* Need debug */
-	//if(!PageHighMem(page))
-	if(0)
-		return page_address(page);
-#ifdef CONFIG_DEBUG_HIGHMEM
-	/*
-	 * There is no cache coherency issue when ono VIVT,so force the
-	 * dedicated kmap usage for better debugging purposes in that case.
-	 */
-	if(!cache_is_vivt())
-		kmap = NULL;
-	else
-#endif
-		kmap = kmap_high_get(page);
-	if(kmap)
-		return kmap;
-
-	type = kmap_atomic_idx_push();
-
-	idx = type + KM_TYPE_NR * smp_processor_id();
-	vaddr = __fix_to_virt(FIX_KMAP_BEGIN + idx);
-#ifdef CONFIG_DEUBG_HIGHMEM
-	/*
-	 * With debugging enabled,kunmap_atomic forces that entry to 0.
-	 * Make sure it was indeed properly unmapped.
-	 */
-	BUG_ON(!pte_none(!(TOP_PTE(vaddr))));
-#endif
-	/* Need debug */
-	//set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
-	/*
-	 * When debugging is off,kunmap_atomic leaves the previous mapping
-	 * in place,so this TLB flush ensures the TLB is updated with the 
-	 * new mapping.
-	 */
-	/* Need debug */
-//	local_flush_tlb_kernel_page(vaddr);
-
-	return (void *)vaddr;
-}
 void __kunmap_atomic(void *kvaddr);
 /*
  * Prevent people trying to call kunmap_atomic() as if it were kunmap()
