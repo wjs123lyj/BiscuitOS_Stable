@@ -7,6 +7,8 @@
 #include "linux/mm.h"
 #include "linux/hash.h"
 #include "linux/spinlock.h"
+#include "linux/cachetype.h"
+#include "linux/uaccess.h"
 
 pte_t *pkmap_page_table;
 
@@ -52,6 +54,7 @@ void *page_address(struct page *page)
 	unsigned long flags;
 	void *ret;
 	struct page_address_slot *pos;
+
 
 	if(!PageHighMem(page)) 
 		return lowmem_page_address(page);
@@ -121,33 +124,31 @@ void kunmap_high(struct page *page)
 //		wake_up(&pkmap_map_wait);
 		;
 }
+
 void __kunmap_atomic(void *kvaddr)
 {
 	unsigned long vaddr = (unsigned long)kvaddr & PAGE_MASK;
 	int idx,type;
 
-	if(kvaddr >= (void *)FIXADDR_START)
-	{
+	if(kvaddr >= (void *)FIXADDR_START) {
 		type = kmap_atomic_idx();
 		idx  = type + KM_TYPE_NR * smp_processor_id();
 
-		//if(cache_id_vivt())
-		if(0)
-//			__cpuc_flush_dcache_area((void *)vaddr,PAGE_SIZE);
+		if(cache_is_vivt())
+			; //__cpuc_flush_dcache_area((void *)vaddr,PAGE_SIZE);
 #ifdef CONFIG_DEBUG_HIGHMEM
 		BUG_ON(vaddr != __fix_to_virt(FIX_KMAP_DEGIN + idx));
 		set_pte_ext(TOP_PTE(vaddr),__pte(0),0);
-//		local_flush_tlb_kernel_page(vaddr);
+		//local_flush_tlb_kernel_page(vaddr);
 #else
 		(void)idx;  /* to kill a warning */
 #endif
 		kmap_atomic_idx_pop();
-	} else if(vaddr >= PKMAP_ADDR(0) && vaddr < PKMAP_ADDR(LAST_PKMAP))
-	{
+	} else if(vaddr >= PKMAP_ADDR(0) && vaddr < PKMAP_ADDR(LAST_PKMAP)) {
 		/* This address was obtained through kmap_high_get() */
 		kunmap_high(pte_page(pkmap_page_table[PKMAP_NR(vaddr)]));
 	}
-	//pagefault_enable();
+	pagefault_enable();
 }
 static struct page_address_map page_address_maps[LAST_PKMAP];
 
@@ -219,7 +220,7 @@ void *__kmap_atomic(struct page *page)
 	 */
 	BUG_ON(!pte_none(*(TOP_PTE(vaddr))));
 #endif
-	set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
+	//set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
 	/*
 	 * When debugging is off,kunmap_atomic leaves the previous mapping
 	 * in place,so this TLB flush ensure the TLB is update with the

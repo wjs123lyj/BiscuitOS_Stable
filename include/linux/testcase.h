@@ -34,6 +34,7 @@ extern TestCase_page_is_buddy(void);
 extern TestCase_full_buddy(void);
 extern TestCase_SlowPath(void);
 extern TestCase_diff_alloc_page(void);
+extern TestCase_PageHighMem(void);
 
 /* Per_Cpu_Page Allocator */
 extern TestCase_PCP_normal(void);

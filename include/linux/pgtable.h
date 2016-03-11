@@ -1,10 +1,10 @@
 #ifndef _PGTABLE_H_
 #define _PGTABLE_H_
-#include "pgtable_types.h"
-#include "mm_types.h"
-#include "pgtable-nopud.h"
-#include "page.h"
-#include "../asm/head.h"
+#include "linux/pgtable_types.h"
+#include "linux/mm_types.h"
+#include "linux/pgtable-nopud.h"
+#include "linux/page.h"
+#include "asm/head.h"
 
 #define PGDIR_SHIFT 21
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)
@@ -142,7 +142,7 @@ extern struct mm_struct init_mm;
 	} while(0)
 
 
-#define pte_val(x)	  (unsigned long)(((pte_t *)(phys_to_mem(__pa(x))))->pte)
+#define pte_val(x)	  (((pte_t *)(unsigned long)phys_to_mem((__pa(x))))->pte)
 
 #define pgd_addr_end(addr,end) \
 ({     unsigned long __boundary = ((addr) + PGDIR_SIZE) & PGDIR_MASK; \
@@ -230,7 +230,7 @@ static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 	return pte;
 }
 
-#define pte_none(pte)         0 //(!pte_val(pte))
+#define pte_none(pte)         (!pte_val(pte))
 #define pte_present(pte)      0 //(pte_val(pte) & L_PTE_PRESENT)
 #define pte_write(pte)        0 //(!(pte_val(pte) & L_PTE_RDONLY))
 #define pte_dirty(pte)        0 //(pte_val(pte) & L_PTE_DIRTY)

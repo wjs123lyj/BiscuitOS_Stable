@@ -1444,3 +1444,19 @@ void TestCase_diff_alloc_page(void)
 	addr = __get_free_page(PGALLOC_GFP);
 
 }
+
+/*
+ * TestCase_PageHighMem.
+ */
+void TestCase_PageHighMem(void)
+{
+	struct page *page = alloc_page(GFP_HIGHUSER);
+	struct zone *zone = page_zone(page);
+
+	mm_debug("Zone %s\n",zone->name);
+	if(PageHighMem(page))
+		mm_debug("Page is in Highmem\n");
+
+	PageFlage(page,"AAA");
+	__free_page(page);	
+}

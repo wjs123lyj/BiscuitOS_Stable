@@ -165,7 +165,7 @@ __attribute__((destructor)) __exit Pown_down(void)
 int main()
 {
 
-	TestCase_diff_alloc_page();
+	TestCase_vmalloc();
 	
 	return 0;
 }

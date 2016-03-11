@@ -1809,6 +1809,7 @@ static int prep_new_page(struct page *page,int order,gfp_t gfp_flags)
 	if(gfp_flags & __GFP_ZERO)
 		prep_zero_page(page,order,gfp_flags);
 
+	/* Need more debug */
 	if(order && (gfp_flags & __GFP_COMP))
 		prep_compound_page(page,order);
 

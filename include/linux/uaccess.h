@@ -5,4 +5,8 @@ static inline void pagefault_disable(void)
 {
 }
 
+static inline void pagefault_enable(void)
+{
+}
+
 #endif

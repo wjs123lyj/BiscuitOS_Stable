@@ -635,17 +635,18 @@ static int vmap_pte_range(pmd_t *pmd,unsigned long addr,
 	 * nr is running index into the array which helps higher level
 	 * callers keep track of where we're up to.
 	 */
-    
+   
 	pte = pte_alloc_kernel(pmd,addr);
 	if(!pte)
 		return -ENOMEM;
 	do {
 		struct page *page = pages[*nr];
-
-		if(WARN_ON(!pte_none(*pte)))
+		
+		if(WARN_ON(!pte_none(pte)))
 			return -EBUSY;
 		if(WARN_ON(!page))
 			return -ENOMEM;
+		mm_debug("MK_PTE %p\n",(pte_t *)(page_to_pfn(page) << PAGE_SHIFT));
 		//set_pte_at(&init_mm,addr,pte,mk_pte(page,prot));
 		(*nr)++;
 		
@@ -842,7 +843,7 @@ static void *__vmalloc_area_node(struct vm_struct *area,gfp_t gfp_mask,
 		}
 		area->pages[i] = page;
 	}
-
+	
 	if(map_vm_area(area,prot,&pages))
 		goto fail;
 	return area->addr;

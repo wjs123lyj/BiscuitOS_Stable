@@ -40,7 +40,8 @@ static inline void pmd_populate_kernel(struct mm_struct *mm,pmd_t *pmdp,
 }
 static inline void clean_pte_table(pte_t *pte)
 {
-	clean_dcache_area(pte + PTE_HWTABLE_PTRS,PTE_HWTABLE_SIZE);
+	clean_dcache_area(phys_to_mem(__pa((pte + PTE_HWTABLE_PTRS))),
+			PTE_HWTABLE_SIZE);
 }
 /*
  * Allocate one PTE table.

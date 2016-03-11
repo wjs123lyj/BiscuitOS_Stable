@@ -599,9 +599,8 @@ void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,
 		const struct mem_type *type)
 {
 	pte_t *pte = early_pte_alloc(pmd,addr,type->prot_l1);
-	pte_t a = __pte(0);
 	do {
-		set_pte_ext(pte,pfn_pte(pfn,__pgprot(type->prot_pte)),0);
+	//	set_pte_ext(pte,pfn_pte(pfn,__pgprot(type->prot_pte)),0);
 		pfn++;
 	} while(pte++,addr += PAGE_SIZE,addr != end);
 }

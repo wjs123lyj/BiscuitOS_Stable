@@ -14,7 +14,7 @@ typedef struct { unsigned int pgprot;} pgprot_t;
 
 #define pgprot_val(x)  ((x).pgprot)
 
-#define __pte(x)      ((pte_t) {(x)})
+#define __pte(x)      ((pte_t *) {(x)})
 #define __pgprot(x)   ((pgprot_t) {(x)})
 #define __pmd(x)      ((pmd_t) { (x) } )
 
@@ -65,5 +65,6 @@ extern void *phys_to_mem(phys_addr_t addr);
 
 #define virt_to_valid(x)  do {} while(0)
 
-#define clear_page(page)   memset((void *)(page),0,PAGE_SIZE)
+#define clear_page(addr) memset(phys_to_mem(__pa(addr)),0,PAGE_SIZE);
+
 #endif
