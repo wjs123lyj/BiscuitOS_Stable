@@ -14,10 +14,9 @@
  */
 void TestCase_vmalloc(void)
 {
-	unsigned long addr;
+	unsigned int addr;
 
 	addr = vmalloc(PAGE_SIZE);
 
-	mm_debug("ADDR %p\n",(void *)addr);
+	mm_debug("ADDR %p\n",(void *)(unsigned long)addr);
 }
-

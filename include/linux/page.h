@@ -12,9 +12,9 @@ typedef struct { unsigned int pmd;} pmd_t;
 typedef struct { unsigned int pgd[2];} pgd_t;
 typedef struct { unsigned int pgprot;} pgprot_t;
 
-#define pgprot_val(x)  ((x).pgprot)
+#define pgprot_val(x)  (((pgprot_t)(x)).pgprot)
 
-#define __pte(x)      ((pte_t *) {(x)})
+#define __pte(x)      ((pte_t) {(x)})
 #define __pgprot(x)   ((pgprot_t) {(x)})
 #define __pmd(x)      ((pmd_t) { (x) } )
 

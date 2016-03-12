@@ -5,6 +5,8 @@
 #include "linux/pgtable-nopud.h"
 #include "linux/page.h"
 #include "asm/head.h"
+#include "linux/memory.h"
+#include "linux/pgtable-hwdef.h"
 
 #define PGDIR_SHIFT 21
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)
@@ -215,12 +217,8 @@ static inline int pte_hidden(pte_t pte)
 #define pte_offset_map(pmd,addr) (__pte_map(pmd) + pte_index(addr))
 
 #define pte_page(pte) 0 //pfn_to_page(pte_pfn(pte))
-#if WAIT_FOR_DEBUG
-#define mk_pte(page,prot)  (pte_t)(unsigned long)pfn_pte(page_to_pfn(page),prot)
-#else
-#define mk_pte(page,prot) ((pte_t)0)
-#endif
 
+#define mk_pte(page,prot)  pfn_pte(page_to_pfn(page),prot)
 
 static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 		unsigned long address,pte_t *ptep)
@@ -273,14 +271,12 @@ static inline void __sync_icache_dcache(pte_t pteval)
 static inline void set_pte_at(struct mm_struct *mm,unsigned long addr,
 		pte_t *ptep,pte_t pteval)
 {
-#if WAIT_FOR_DEBUG
 	if(addr >= TASK_SIZE)
 		set_pte_ext(ptep,pteval,0);
 	else {
 		__sync_icache_dcache(pteval);
 		set_pte_ext(ptep,pteval,PTE_EXT_NG);
 	}
-#endif
 }
 
 static inline int pmd_trans_splitting(pmd_t *pmd)

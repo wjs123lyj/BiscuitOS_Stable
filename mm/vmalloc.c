@@ -641,16 +641,17 @@ static int vmap_pte_range(pmd_t *pmd,unsigned long addr,
 		return -ENOMEM;
 	do {
 		struct page *page = pages[*nr];
-		
+		pte_t tmp;
+
 		if(WARN_ON(!pte_none(pte)))
 			return -EBUSY;
 		if(WARN_ON(!page))
 			return -ENOMEM;
-		mm_debug("MK_PTE %p\n",(pte_t *)(page_to_pfn(page) << PAGE_SHIFT));
-		//set_pte_at(&init_mm,addr,pte,mk_pte(page,prot));
+
+		set_pte_at(&init_mm,addr,pte,mk_pte(page,prot));
 		(*nr)++;
-		
 	} while(pte++,addr += PAGE_SIZE,addr != end);
+	return 0;
 }
 static int vmap_pmd_range(pud_t *pud,unsigned long addr,
 		unsigned long end,pgprot_t prot,struct page **pages,int *nr)
