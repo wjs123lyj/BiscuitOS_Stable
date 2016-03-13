@@ -104,8 +104,10 @@ void TestCase_Hash(void)
 bad:
 	for(i-- ; i >= 0 ; i--) {
 		head = &phash[hash_32(value[i],HEAD_NUM)];
-		hlist_for_each_entry(node,hnode,head,node) 
+		hlist_for_each_entry(node,hnode,head,node) {
+			hlist_del(hnode);
 			kfree(node);
+		}
 	}
 	kfree(phash);
 	kfree(value);
