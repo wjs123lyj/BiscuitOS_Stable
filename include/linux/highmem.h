@@ -72,4 +72,10 @@ static inline int kmap_atomic_idx(void)
 {
 	return __this_cpu_read(__kmap_atomic_idx) - 1;
 }
+
+#define flush_cache_kmaps() \
+	do { \
+		if(cache_is_vivt()) \
+			flush_cache_all();  \
+	} while(0)
 #endif

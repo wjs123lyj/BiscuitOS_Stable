@@ -16,6 +16,9 @@ void TestCase_vmalloc(void)
 {
 	unsigned int addr;
 	struct rb_node *node;
+	pgd_t *pgd;
+	pmd_t *pmd;
+	pte_t *pte;
 
 	addr = vmalloc(PAGE_SIZE);
 
@@ -37,5 +40,11 @@ void TestCase_vmalloc(void)
 		mm_debug("VA %p\n",(void *)(unsigned long)va->va_start);
 		mm_debug("PA %p\n",(void *)(unsigned long)area->phys_addr);
 	}
+	pgd = pgd_offset(&init_mm,addr);
+	pmd = pmd_offset(pgd,addr);
+	pte = pte_offset_kernel(pmd,addr);
+	mm_debug("PGD %p PMD %p PTE %p\n",pgd,pmd,pte);
+	M_show(__pa(pte),__pa(pte) + 20);
 	vfree(addr);
+	M_show(__pa(pte),__pa(pte) + 20);
 }

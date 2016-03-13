@@ -164,8 +164,6 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-
-	TestCase_vmalloc();
-	
+	TestCase_Hash();	
 	return 0;
 }

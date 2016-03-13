@@ -9,11 +9,13 @@
 #include "linux/spinlock.h"
 #include "linux/cachetype.h"
 #include "linux/uaccess.h"
+#include "linux/tlbflush.h"
 
 pte_t *pkmap_page_table;
 
 static int pkmap_count[LAST_PKMAP];
 int __kmp_atomic_idx;
+static unsigned int last_pkmap_nr;
 
 #define PA_HASH_ORDER   7
 /*
@@ -37,7 +39,12 @@ static struct page_address_slot {
     spinlock_t lock;         /* Protect this bucket's list */
 } page_address_htable[1 << PA_HASH_ORDER];
 
+static DEFINE_SPINLOCK(kmap_lock);
+
+#define lock_kmap()    spin_lock(&kmap_lock)
+#define unlock_kmap()  spin_unlock(&kmap_lock)
 #define unlock_kmao_any(flags) do {} while(0)
+
 static struct page_address_slot *page_slot(struct page *page)
 {
 	return &page_address_htable[hash_ptr(page,PA_HASH_ORDER)];
@@ -228,4 +235,157 @@ void *__kmap_atomic(struct page *page)
 	 */
 	
 	return (void *)vaddr;
+}
+
+/**
+ * set_page_address - set a page's virtual address
+ * @page: &struct page to set
+ * @virtual:virtual address to use
+ */
+void set_page_address(struct page *page,void *virtual)
+{
+	unsigned long flags;
+	struct page_address_slot *pas;
+	struct page_address_map *pam;
+
+	BUG_ON(!PageHighMem(page));
+
+	pas = page_slot(page);
+	if(virtual) {  /* Add */
+		BUG_ON(list_empty(&page_address_pool));
+
+		spin_lock_irqsave(&pool_lock,flags);
+		pam = list_entry(page_address_pool.next,
+				struct page_address_map,list);
+		list_del(&pam->list);
+		spin_unlock_irqrestore(&pool_lock,flags);
+
+		pam->page = page;
+		pam->virtual = virtual;
+
+		spin_lock_irqsave(&pas->lock,flags);
+		list_add_tail(&pam->list,&pas->lh);
+		spin_unlock_irqrestore(&pas->lock,flags);
+	} else {
+		spin_lock_irqsave(&pas->lock,flags);
+		list_for_each_entry(pam,&pas->lh,list) {
+			if(pam->page = page) {
+				list_del(&pam->list);
+				spin_unlock_irqrestore(&pas->lock,flags);
+				spin_lock_irqsave(&pool_lock,flags);
+				list_add_tail(&pam->list,&page_address_pool);
+				spin_unlock_irqrestore(&pool_lock,flags);
+				goto done;
+			}
+		}
+		spin_unlock_irqrestore(&pas->lock,flags);
+	}
+done:
+	return;
+}
+
+static void flush_all_zero_pkmaps(void)
+{
+	int i;
+	int need_flush = 0;
+
+	flush_cache_kmaps();
+
+	for(i = 0 ; i < LAST_PKMAP ; i++) {
+		struct page *page;
+
+		/*
+		 * zero means we don't have anything to do,
+		 * >1 means that it is still in use.Only
+		 * a count of 1 means that it is free but
+		 * needs to be unmapped
+		 */
+		if(pkmap_count[i] != 1)
+			continue;
+		pkmap_count[i] = 0;
+
+		/* sanity check */
+		//BUG_ON(pte_none(pkmap_page_table[i]));
+
+		/*
+		 * Don't need an atomic fetch-and-clear op here;
+		 * no-one has the page mapped,and cannot get at
+		 * its virtual address(and hence PTE) without first
+		 * getting the kmap_lock(which is held here).
+		 * So no dangers,event with speculative execution.
+		 */
+		page = pte_page(pkmap_page_table[i]);
+//		pte_clear(&init_mm,(unsigned long)page_address(page),
+//				&pkmap_page_table[i]);
+
+		set_page_address(page,NULL);
+		need_flush = 1;
+	}
+	if(need_flush)
+		flush_tlb_kernel_range(PKMAP_ADDR(0),PKMAP_ADDR(LAST_PKMAP));
+}
+
+static inline unsigned long map_new_virtual(struct page *page)
+{
+	unsigned long vaddr;
+	int count;
+
+start:
+	count = LAST_PKMAP;
+	/* Find any empty entry */
+	for(;;) {
+		last_pkmap_nr = (last_pkmap_nr + 1) & LAST_PKMAP_MASK;
+		if(!last_pkmap_nr) {
+			flush_all_zero_pkmaps();
+			count = LAST_PKMAP;
+		}
+		if(!pkmap_count[last_pkmap_nr])
+			break;   /* Found a usable entry */
+		if(--count)
+			continue;
+		
+		/* Can't sleep !*/
+	}
+	vaddr = PKMAP_ADDR(last_pkmap_nr);
+//	set_pte_at(&init_mm,vaddr,
+//			&(pmkap_page_table[last_pkmap_nr]),mk_pte(page,kmap_prot));
+
+	pkmap_count[last_pkmap_nr] = 1;
+	set_page_address(page,(void *)vaddr);
+
+	return vaddr;
+}
+
+/**
+ * kmap_high - map a highmem page into memory
+ * @page:&struct page to map
+ *
+ * Return the page's virtual memory address.
+ *
+ * We cannot call this from interrupts,as it may block.
+ */
+void *kmap_high(struct page *page)
+{
+	unsigned int vaddr;
+
+	/* 
+	 * For highmem pages,we can't trust "virtual" until
+	 * after we have the lock.
+	 */
+	lock_kmap();
+	vaddr = (unsigned int)(unsigned long)page_address(page);
+	if(!vaddr)
+		vaddr = map_new_virtual(page);
+	pkmap_count[PKMAP_NR(vaddr)]++;
+	BUG_ON(pkmap_count[PKMAP_NR(vaddr)] < 2);
+	unlock_kmap();
+	return (void *)(unsigned long)vaddr;
+}
+
+void *kmap(struct page *page)
+{
+	might_sleep();
+	if(!PageHighMem(page))
+		return page_address(page);
+	return kmap_high(page);
 }

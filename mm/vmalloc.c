@@ -27,6 +27,7 @@
 #include "linux/tlbflush.h"
 #include "linux/mutex.h"
 #include "linux/threads.h"
+#include "linux/debug_locks.h"
 
 /**** Global kva allocator ****/
 
@@ -567,8 +568,11 @@ static void free_vmap_area_noflush(struct vmap_area *va)
 {
 	va->flags |= VM_LAZY_FREE;
 	atomic_add((va->va_end - va->va_start) >> PAGE_SHIFT, &vmap_lazy_nr);
-	if(unlikely(atomic_read(&vmap_lazy_nr) > lazy_max_pages()))
+	if(unlikely(atomic_read(&vmap_lazy_nr) > lazy_max_pages())) {
+		mm_debug("%s : %d Need more debug\n",__func__,__LINE__);
+		stop();
 		try_purge_vmap_area_lazy();
+	}
 }
 /*** Page table mainpulation functions ***/
 
@@ -577,7 +581,7 @@ static void vunmap_pte_range(pmd_t *pmd,unsigned long addr,unsigned long end)
 	pte_t *pte;
 	pte = pte_offset_kernel(pmd,addr);
 	do {
-		pte_t ptent;
+		pte_t *ptent;
 		ptent = ptep_get_and_clear(&init_mm,addr,pte);
 		WARN_ON(!pte_none(ptent) && !pte_present(ptent));
 	} while(pte++,addr += PAGE_SIZE , addr != end);
@@ -962,6 +966,7 @@ static void rcu_free_vb(struct rcu_head *head)
 
 	kfree(vb);
 }
+
 static void __vunmap(const void *addr,int deallocate_pages)
 {
 	struct vm_struct *area;
@@ -975,14 +980,13 @@ static void __vunmap(const void *addr,int deallocate_pages)
 	}
 
 	area = remove_vm_area(addr);
-	if(unlikely(!area))
-	{
+	if(unlikely(!area)) {
 		mm_warn("Trying to vfree() nonexistent vm area\n");
 		return;
 	}
-	/* Need debug */	
-//	debug_check_no_locks_freed(addr,area->size);
-//	debug_check_no_obj_freed(addr,area->size);
+
+	debug_check_no_locks_freed(addr,area->size);
+	debug_check_no_obj_freed(addr,area->size);
 
 	if(deallocate_pages) {
 		int i;
@@ -1114,7 +1118,8 @@ struct page *vmalloc_to_page(const void *vmalloc_addr)
 				/* Need rebuilt */
 				//ptep = pte_offset_map(pmd,addr);
 				pte = *ptep;
-				if(pte_present(pte))
+				//if(pte_present(pte))
+				if(0)
 					page = (struct page *)(unsigned long)pte_page(pte);
 				pte_unmap(ptep);
 			}
@@ -1150,6 +1155,3 @@ void __init vmalloc_init(void)
 
 	vmap_initialized = true;
 }
-
-
-

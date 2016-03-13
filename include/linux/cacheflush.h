@@ -9,4 +9,6 @@
  */
 #define clean_dcache_area(start,size) memset(start,0,size)
 #define __flush_dcache_page(x,p)        do {} while(0)
+
+#define flush_cache_all() do {} while(0)
 #endif

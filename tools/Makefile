@@ -6,6 +6,8 @@ CURRENT_SOURCE += TestCase_buddy.c
 CURRENT_SOURCE += TestCase_Per_Cpu_Page.c
 CURRENT_SOURCE += TestCase_vmalloc.c
 CURRENT_SOURCE += TestCase_RB_tree.c
+CURRENT_SOURCE += TestCase_kmap.c
+CURRENT_SOURCE += TestCase_Hash.c
 
 all:
 	@cp ${CURRENT_SOURCE} ${OBJS_PATH}

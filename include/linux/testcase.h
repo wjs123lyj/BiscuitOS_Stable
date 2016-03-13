@@ -13,40 +13,44 @@ extern void TestCase_calculate_sizes(void);
 extern void TestCase_allocate_slab(void);
 
 /* Buddy Allocator */
-extern TestCase_Buddy_normal(void);
-extern TestCase_alloflags_to_migratetype(void);
-extern TestCase_GFP(void);
-extern TestCase_GFP_ZONE(void);
-extern TestCase_zonelist(void);
-extern TestCase_WMARK(void);
-extern TestCase_PCP(void);
-extern TestCase_rmqueu_smallest(void);
-extern TestCase_page_order(void);
-extern TestCase_Get_Buddy_Page(void);
-extern TestCase_fallback(void);
-extern TestCase_MovePage(void);
-extern TestCase_rmqueue_fallback(void);
-extern TestCase_pageblock_flage_group(void);
-extern TestCase_PageBlock(void);
-extern TestCase_free_one_page(void);
-extern TestCase_Find_Buddy(void);
-extern TestCase_page_is_buddy(void);
-extern TestCase_full_buddy(void);
-extern TestCase_SlowPath(void);
-extern TestCase_diff_alloc_page(void);
-extern TestCase_PageHighMem(void);
+extern void TestCase_Buddy_normal(void);
+extern void TestCase_alloflags_to_migratetype(void);
+extern void TestCase_GFP(void);
+extern void TestCase_GFP_ZONE(void);
+extern void TestCase_zonelist(void);
+extern void TestCase_WMARK(void);
+extern void TestCase_PCP(void);
+extern void TestCase_rmqueu_smallest(void);
+extern void TestCase_page_order(void);
+extern void TestCase_Get_Buddy_Page(void);
+extern void TestCase_fallback(void);
+extern void TestCase_MovePage(void);
+extern void TestCase_rmqueue_fallback(void);
+extern void TestCase_pageblock_flage_group(void);
+extern void TestCase_PageBlock(void);
+extern void TestCase_free_one_page(void);
+extern void TestCase_Find_Buddy(void);
+extern void TestCase_page_is_buddy(void);
+extern void TestCase_full_buddy(void);
+extern void TestCase_SlowPath(void);
+extern void TestCase_diff_alloc_page(void);
+extern void TestCase_PageHighMem(void);
 
 /* Per_Cpu_Page Allocator */
-extern TestCase_PCP_normal(void);
-extern TestCase_free_pcp(void);
-extern TestCase_get_migratetype(void);
-extern TestCase_free_pcppages_bulk(void);
-extern TestCase_full_pcp_buddy(void);
+extern void TestCase_PCP_normal(void);
+extern void TestCase_free_pcp(void);
+extern void TestCase_get_migratetype(void);
+extern void TestCase_free_pcppages_bulk(void);
+extern void TestCase_full_pcp_buddy(void);
 
 /* Vmalloc Allocator */
-extern TestCase_vmalloc(void);
+extern void TestCase_vmalloc(void);
+
+/* Kmap Allocator */
+extern void TestCase_kmap(void);
 
 /****** Kernel Lib ******/
 /* RB tree */
 extern TestCase_RB_user(void);
+/* HasH Algorithm*/
 #endif

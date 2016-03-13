@@ -198,9 +198,6 @@ static inline int pte_hidden(pte_t pte)
 #define PAGE_KERNEL         _MODE_PROT(pgprot_kernel,L_PTE_XN)
 #define PAGE_KERNEL_EXEC    (pgprot_t)pgprot_kernel
 
-#define pte_set(q,w,e)   do {} while(0)
-#define pte_clear(q,w,e) set_pte_ext(ptep,__pte(0),0)
-
 #define pte_pfn(pte)  (pte_val(pte) >> PAGE_SHIFT)
 #define pfn_pte(pfn,prot)  __pte(((pfn) << PAGE_SHIFT) | pgprot_val(prot))  
 
@@ -221,16 +218,8 @@ static inline int pte_hidden(pte_t pte)
 
 #define mk_pte(page,prot)  pfn_pte(page_to_pfn(page),prot)
 
-static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
-		unsigned long address,pte_t *ptep)
-{
-	pte_t pte = *ptep;
-	pte_clear(mm,address,ptep);
-	return pte;
-}
-
 #define pte_none(pte)         (!pte_val(pte))
-#define pte_present(pte)      0 //(pte_val(pte) & L_PTE_PRESENT)
+#define pte_present(pte)      (pte_val(pte) & L_PTE_PRESENT)
 #define pte_write(pte)        0 //(!(pte_val(pte) & L_PTE_RDONLY))
 #define pte_dirty(pte)        0 //(pte_val(pte) & L_PTE_DIRTY)
 #define pte_young(pte)        0 //(pte_val(pte) & L_PTE_YOUNG)
@@ -278,6 +267,17 @@ static inline void set_pte_at(struct mm_struct *mm,unsigned long addr,
 		__sync_icache_dcache(pteval);
 		set_pte_ext(ptep,pteval,PTE_EXT_NG);
 	}
+}
+
+#define pte_set(q,w,e)   do {} while(0)
+#define pte_clear(q,w,e) set_pte_ext(ptep,__pte(0),0)
+
+static inline pte_t *ptep_get_and_clear(struct mm_struct *mm,
+		unsigned long address,pte_t *ptep)
+{
+	pte_t *pte = ((pte_t *)(unsigned long)phys_to_mem(__pa(ptep)));
+	pte_clear(mm,address,ptep);
+	return (pte_t *)(unsigned long)__va(mem_to_phys(pte));
 }
 
 static inline int pmd_trans_splitting(pmd_t *pmd)

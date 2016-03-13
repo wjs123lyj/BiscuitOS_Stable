@@ -68,5 +68,16 @@ typedef __kernel_size_t size_t;
 #define SZ_256K (unsigned long)(SZ_128K << 1)
 #define SZ_512K (unsigned long)(SZ_256K << 1)
 
+struct list_head {
+	struct list_head *next,*prev;
+};
+
+struct hlist_head {
+	struct hlist_node *first;
+};
+
+struct hlist_node {
+	struct hlist_node *next,**pprev;
+};
 
 #endif
