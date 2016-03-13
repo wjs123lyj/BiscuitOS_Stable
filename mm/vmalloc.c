@@ -79,7 +79,8 @@ struct vm_struct *vmlist;
 
 int vmap_area_lock;
 //DEFINE_SPINLOCK(vmap_area_lock);
-static struct rb_root vmap_area_root = RB_ROOT;
+/* In order to share rbroot,we extern that */
+struct rb_root vmap_area_root = RB_ROOT;
 unsigned long vmap_area_pcpu_hole;
 static atomic_t vmap_lazy_nr = ATOMIC_INIT(0);
 static LIST_HEAD(vmap_area_list);
@@ -430,6 +431,9 @@ found:
 overflow:
 		spin_unlock(&vmap_area_lock);
 		if(!purged) {
+			/* Need more debug */
+			BUG();
+			stop();
 			purge_vmap_area_lazy();
 			purged = 1;
 			goto retry;
@@ -520,6 +524,7 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	insert_vmalloc_vm(area,va,flags,caller);
 	return area;
 }
+
 void vfree(const void *addr);
 static struct vmap_area *__find_vmap_area(unsigned long addr)
 {
@@ -539,6 +544,7 @@ static struct vmap_area *__find_vmap_area(unsigned long addr)
 	
 	return NULL;
 }
+
 static struct vmap_area *find_vmap_area(unsigned long addr)
 {
 	struct vmap_area *va;
@@ -569,14 +575,12 @@ static void free_vmap_area_noflush(struct vmap_area *va)
 static void vunmap_pte_range(pmd_t *pmd,unsigned long addr,unsigned long end)
 {
 	pte_t *pte;
-#if 0
 	pte = pte_offset_kernel(pmd,addr);
 	do {
 		pte_t ptent;
 		ptent = ptep_get_and_clear(&init_mm,addr,pte);
 		WARN_ON(!pte_none(ptent) && !pte_present(ptent));
 	} while(pte++,addr += PAGE_SIZE , addr != end);
-#endif
 }
 static void vunmap_pmd_range(pud_t *pud,unsigned long addr,unsigned long end)
 {
@@ -586,9 +590,7 @@ static void vunmap_pmd_range(pud_t *pud,unsigned long addr,unsigned long end)
 	pmd = pmd_offset(pud,addr);
 	do {
 		next = pmd_addr_end(addr,end);
-		/* Need debug */
-		//if(pmd_none_or_clear_bad(pmd))
-		if(0)
+		if(pmd_none_or_clear_bad(pmd))
 			continue;
 		vunmap_pte_range(pmd,addr,next);
 	} while(pmd++,addr = next,addr != end);
@@ -601,13 +603,12 @@ static void vunmap_pud_range(pgd_t *pgd,unsigned long addr,unsigned long end)
 	pud = pud_offset(pgd,addr);
 	do {
 		next = pud_addr_end(addr,end);
-		/* Need debug */
-		//if(pud_none_or_clear_bad(pud))
-		if(0)
+		if(pud_none_or_clear_bad(pud))
 			continue;
 		vunmap_pmd_range(pud,addr,next);
 	} while(pud++,addr = next,addr != end);
 }
+
 static void vunmap_page_range(unsigned long addr,unsigned long end)
 {
 	pgd_t *pgd;
@@ -617,9 +618,7 @@ static void vunmap_page_range(unsigned long addr,unsigned long end)
 	pgd = pgd_offset_k(addr);
 	do {
 		next = pgd_addr_end(addr,end);
-		/* Need debug */
-		//if(pgd_none_or_clear_bad(pgd))
-		if(0)
+		if(pgd_none_or_clear_bad(pgd))
 			continue;
 		vunmap_pud_range(pgd,addr,next);
 	} while(pgd++,addr = next,addr != end);
@@ -714,6 +713,7 @@ static int vmap_page_range_noflush(unsigned long start,unsigned long end,
 
 	return nr;
 }
+
 /*
  * Clear the pagetable entries of a given vmap_area.
  */
@@ -721,6 +721,7 @@ static void unmap_vmap_area(struct vmap_area *va)
 {
 	vunmap_page_range(va->va_start,va->va_end);
 }
+
 /*
  * Free and unmap a vmap area,caller ensuring flush_cache_vunmap had been
  * called for the correct range previously.
@@ -730,6 +731,7 @@ static void free_unmap_vmap_area_noflush(struct vmap_area *va)
 	unmap_vmap_area(va);
 	free_vmap_area_noflush(va);
 }
+
 /*
  * Free and unmap a vmap area.
  */
@@ -738,19 +740,23 @@ static void free_unmap_vmap_area(struct vmap_area *va)
 	flush_cache_vunmap(va->va_start,va->va_end);
 	free_unmap_vmap_area_noflush(va);
 }
-/*
- * Find and remove a continuous kernel virtual area.
+
+/**
+ * remove_vm_area - find and remove a continuous kernel virtual area
+ * @addr:           base address
+ *
+ * Search for the kernel VM area starting at @addr,and remove it.
+ * This function returns the found VM area,but using it is NOT safe
+ * on SMP machines,except for its size or flags.
  */
 struct vm_struct *remove_vm_area(const void *addr)
 {
 	struct vmap_area *va;
 
 	va = find_vmap_area((unsigned long)addr);
-	if(va && va->flags & VM_VM_AREA)
-	{
+	if(va && va->flags & VM_VM_AREA) {
 		struct vm_struct *vm = va->private;
 		struct vm_struct *tmp,**p;
-
 		/*
 		 * Remove from list and disallow access to this vm_struct
 		 * before unmap.(address range confiliction is maintained by
@@ -963,8 +969,7 @@ static void __vunmap(const void *addr,int deallocate_pages)
 	if(!addr)
 		return;
 
-	if((PAGE_SIZE - 1) & (unsigned long)addr)
-	{
+	if((PAGE_SIZE - 1) & (unsigned long)addr) {
 		mm_warn("Trying to vfree() bad address\n");
 		return;
 	}

@@ -55,4 +55,8 @@ extern void rb_erase(struct rb_node *,struct rb_root *);
 extern struct rb_node *rb_first(const struct rb_root *root);
 extern struct rb_node *rb_last(const struct rb_root *root);
 extern void rb_replace_node(struct rb_node *,struct rb_node *,struct rb_root *);
+
+/* Vmalloc */
+extern struct rb_root vmap_area_root;
+
 #endif

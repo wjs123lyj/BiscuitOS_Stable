@@ -124,7 +124,8 @@ extern struct mm_struct init_mm;
  * X is a value not pointer.
  */
 #define pgd_val(x)  (unsigned long)(((pgd_t *)phys_to_mem(virt_to_phys(x)))->pgd[0])
-#define pgd_none(x) 0 //!!!pgd_val(x)
+
+#define pgd_none(x) 0 
 #define pgd_bad(x)  0
 #define pgd_clear(x)  do {   \
 		       ((pgd_t *)phys_to_mem(virt_to_phys(x)))->pgd[0] = 0;	\
@@ -198,7 +199,7 @@ static inline int pte_hidden(pte_t pte)
 #define PAGE_KERNEL_EXEC    (pgprot_t)pgprot_kernel
 
 #define pte_set(q,w,e)   do {} while(0)
-#define pte_clear(q,w,e) do {} while(0)
+#define pte_clear(q,w,e) set_pte_ext(ptep,__pte(0),0)
 
 #define pte_pfn(pte)  (pte_val(pte) >> PAGE_SHIFT)
 #define pfn_pte(pfn,prot)  __pte(((pfn) << PAGE_SHIFT) | pgprot_val(prot))  
@@ -286,6 +287,54 @@ static inline int pmd_trans_splitting(pmd_t *pmd)
 
 #define pgtable_cache_init() do {} while(0)
 
-#define pgd_none_or_clear_bad(pgd) do {} while(0)
+/*
+ * When walking page tables,we usually want to skip any p?d_none entries;
+ * and any p?d_bad entries - reporing the error before resetting to none.
+ * Do the tests inline,but report and clear the bad entry in mm/memory.c.
+ */
+void pgd_clear_bad(pgd_t *);
+void pud_clear_bad(pud_t *);
+void pmd_clear_bad(pmd_t *);
+
+static inline int pgd_none_or_clear_bad(pgd_t *pgd)
+{
+	if(pgd_none(pgd))
+		return 1;
+	if(unlikely(pgd_bad(pgd))) {
+		pgd_clear_bad(pgd);
+		return 1;
+	}
+	return 0;
+}
+
+static inline int pud_none_or_clear_bad(pud_t *pud)
+{
+	if(pud_none(pud))
+		return 1;
+	if(unlikely(pud_bad(pud))) {
+		pud_clear_bad(pud);
+		return 1;
+	}
+	return 0;
+}
+
+static inline int pmd_none_or_clear_bad(pmd_t *pmd)
+{
+	if(pmd_none(pmd))
+		return 1;
+	if(unlikely(pmd_bad(pmd))) {
+		pmd_clear_bad(pmd);
+		return 1;
+	}
+	return 0;
+}
+
+extern void __pte_error(const char *file,int line,pte_t *);
+extern void __pmd_error(const char *file,int line,pmd_t *);
+extern void __pgd_error(const char *file,int line,pgd_t *);
+
+#define pte_ERROR(pte)     __pte_error(__FILE__,__LINE__,pte)
+#define pmd_ERROR(pmd)     __pmd_error(__FILE__,__LINE__,pmd)
+#define pgd_ERROR(pgd)     __pgd_error(__FILE__,__LINE__,pgd)
 
 #endif

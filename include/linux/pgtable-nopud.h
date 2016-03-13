@@ -27,4 +27,6 @@ static inline pud_t *pud_offset(pgd_t *pgd,unsigned long address)
 
 #define pud_addr_end(addr,end)     (end)
 
+#define pud_ERROR(pud)             (pgd_ERROR((pgd_t *)(pud)))
+
 #endif

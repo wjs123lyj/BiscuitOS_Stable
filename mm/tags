@@ -14,27 +14,27 @@ ALLOC_WMARK_MASK	page_alloc.c	46;"	d	file:
 ALLOC_WMARK_MIN	page_alloc.c	40;"	d	file:
 ARCH_LOW_ADDRESS_LIMIT	bootmem.c	32;"	d	file:
 CURRENT_SOURCE	Makefile	/^CURRENT_SOURCE := memblock.c$/;"	m
-DEBUG_DEFAULT_FLAGS	slub.c	142;"	d	file:
-DEBUG_METADATA_FLAGS	slub.c	145;"	d	file:
+DEBUG_DEFAULT_FLAGS	slub.c	143;"	d	file:
+DEBUG_METADATA_FLAGS	slub.c	146;"	d	file:
 DOWN	slub.c	/^	DOWN,    \/* No slab functionality available *\/$/;"	e	enum:__anon2	file:
-K	page_alloc.c	2361;"	d	file:
-MAX_OBJS_PER_PAGE	slub.c	183;"	d	file:
-MAX_PARTIAL	slub.c	41;"	d	file:
-MIN_PARTIAL	slub.c	35;"	d	file:
+K	page_alloc.c	2373;"	d	file:
+MAX_OBJS_PER_PAGE	slub.c	184;"	d	file:
+MAX_PARTIAL	slub.c	42;"	d	file:
+MIN_PARTIAL	slub.c	36;"	d	file:
 OBJS_PATH	Makefile	/^OBJS_PATH = ..\/${OBJS_DIR}$/;"	m
-OO_MASK	slub.c	182;"	d	file:
-OO_SHIFT	slub.c	181;"	d	file:
+OO_MASK	slub.c	183;"	d	file:
+OO_SHIFT	slub.c	182;"	d	file:
 PAGES_PER_WAITQUEUE	page_alloc.c	205;"	d	file:
 PARTIAL	slub.c	/^	PARTIAL, \/* Kmem_cache_node works *\/$/;"	e	enum:__anon2	file:
-PA_HASH_ORDER	highmem.c	16;"	d	file:
+PA_HASH_ORDER	highmem.c	18;"	d	file:
 PCPU_DFL_MAP_ALLOC	percpu.c	68;"	d	file:
 PCPU_SETUP_BUG_ON	percpu.c	1284;"	d	file:
 PCPU_SETUP_BUG_ON	percpu.c	1349;"	d	file:
 PCPU_SLOT_BASE_SHIFT	percpu.c	67;"	d	file:
 PageCompound	page_alloc.c	155;"	d	file:
-SLAB_DEBUG_FLAGS	slub.c	148;"	d	file:
-SLUB_MERGE_SAME	slub.c	158;"	d	file:
-SLUB_NEVER_MERGE	slub.c	154;"	d	file:
+SLAB_DEBUG_FLAGS	slub.c	149;"	d	file:
+SLUB_MERGE_SAME	slub.c	159;"	d	file:
+SLUB_NEVER_MERGE	slub.c	155;"	d	file:
 SYSFS	slub.c	/^	SYSFS    \/* Sysfs up *\/$/;"	e	enum:__anon2	file:
 TRACK_ALLOC	slub.c	/^	TRACK_ALLOC,$/;"	e	enum:track_item	file:
 TRACK_FREE	slub.c	/^	TRACK_FREE$/;"	e	enum:track_item	file:
@@ -55,7 +55,7 @@ ZONELIST_ORDER_DEFAULT	page_alloc.c	87;"	d	file:
 ZONELIST_ORDER_NODE	page_alloc.c	88;"	d	file:
 ZONELIST_ORDER_ZONE	page_alloc.c	89;"	d	file:
 __ClearPageHead	page_alloc.c	154;"	d	file:
-__OBJECT_POISON	slub.c	179;"	d	file:
+__OBJECT_POISON	slub.c	180;"	d	file:
 ___alloc_bootmem	bootmem.c	/^static void * __init ___alloc_bootmem(unsigned long size,unsigned long align,$/;"	f	file:
 ___alloc_bootmem_node	bootmem.c	/^static void * __init ___alloc_bootmem_node(struct bootmem_data *bdata,$/;"	f	file:
 ___alloc_bootmem_nopanic	bootmem.c	/^static void * __init ___alloc_bootmem_nopanic(unsigned long size,$/;"	f	file:
@@ -96,6 +96,7 @@ __insert_vmap_area	vmalloc.c	/^void __insert_vmap_area(struct vmap_area *va)$/;"
 __kmalloc	slub.c	/^void *__kmalloc(size_t size,gfp_t flags)$/;"	f
 __kmalloc_node	slub.c	/^void *__kmalloc_node(size_t size,gfp_t flags,int node)$/;"	f
 __kmalloc_track_caller	slub.c	/^void *__kmalloc_track_caller(size_t size,gfp_t gfpflags,unsigned long caller)$/;"	f
+__kmap_atomic	highmem.c	/^void *__kmap_atomic(struct page *page)$/;"	f
 __kmp_atomic_idx	highmem.c	/^int __kmp_atomic_idx;$/;"	v
 __kunmap_atomic	highmem.c	/^void __kunmap_atomic(void *kvaddr)$/;"	f
 __memblock_alloc_base	memblock.c	/^phys_addr_t __init __memblock_alloc_base(phys_addr_t size,phys_addr_t align,$/;"	f
@@ -158,7 +159,7 @@ alloc_node_mem_map	page_alloc.c	/^static __init void alloc_node_mem_map(struct p
 alloc_node_page_cgroup	page_cgroup.c	/^static int __init alloc_node_page_cgroup(int nid)$/;"	f	file:
 alloc_slab_page	slub.c	/^static inline struct page *alloc_slab_page(gfp_t flags,int node,$/;"	f	file:
 alloc_vmap_area	vmalloc.c	/^static struct vmap_area *alloc_vmap_area(unsigned long size,$/;"	f	file:
-allocate_slab	slub.c	/^static struct page *allocate_slab(struct kmem_cache *s,gfp_t flags,int node)$/;"	f	file:
+allocate_slab	slub.c	/^struct page *allocate_slab(struct kmem_cache *s,gfp_t flags,int node)$/;"	f
 anon_vma_cachep	rmap.c	/^static struct kmem_cache *anon_vma_cachep;$/;"	v	typeref:struct:kmem_cache	file:
 anon_vma_chain_cachep	rmap.c	/^static struct kmem_cache *anon_vma_chain_cachep;$/;"	v	typeref:struct:kmem_cache	file:
 anon_vma_ctor	rmap.c	/^static void anon_vma_ctor(void *data)$/;"	f	file:
@@ -176,7 +177,7 @@ build_zonelists	page_alloc.c	/^static void build_zonelists(struct pglist_data *p
 build_zonelists_node	page_alloc.c	/^static int build_zonelists_node(struct pglist_data *pgdat,$/;"	f	file:
 calculate_alignment	slub.c	/^static unsigned long calculate_alignment(unsigned long flags,$/;"	f	file:
 calculate_node_totalpages	page_alloc.c	/^static void calculate_node_totalpages(struct pglist_data *pgdat,$/;"	f	file:
-calculate_order	slub.c	/^static inline int calculate_order(int size)$/;"	f	file:
+calculate_order	slub.c	/^int calculate_order(int size) $/;"	f
 calculate_sizes	slub.c	/^static int calculate_sizes(struct kmem_cache *s,int forced_order)$/;"	f	file:
 change_pageblock_range	page_alloc.c	/^static void change_pageblock_range(struct page *pageblock_page,$/;"	f	file:
 check_bytes	slub.c	/^static u8 *check_bytes(u8 *start,unsigned int value,unsigned int bytes)$/;"	f	file:
@@ -202,7 +203,7 @@ dirty	vmalloc.c	/^	unsigned long free,dirty;$/;"	m	struct:vmap_block	file:
 disable_higher_order_debug	slub.c	/^static int disable_higher_order_debug;$/;"	v	file:
 discard_slab	slub.c	/^static void discard_slab(struct kmem_cache *s,struct page *page)$/;"	f	file:
 dma_reserve	page_alloc.c	/^static unsigned long __meminitdata dma_reserve;$/;"	v	file:
-down_write	slub.c	133;"	d	file:
+down_write	slub.c	134;"	d	file:
 dump_page	page_alloc.c	/^void dump_page(struct page *page)$/;"	f
 dump_page_flags	page_alloc.c	/^static void dump_page_flags(unsigned long flags)$/;"	f	file:
 early_kmem_cache_node_alloc	slub.c	/^static void early_kmem_cache_node_alloc(int node)$/;"	f	file:
@@ -217,7 +218,7 @@ first_online_pgdat	mmzone.c	/^struct pglist_data *first_online_pgdat(void)$/;"	f
 flush_all	slub.c	/^void flush_all(struct kmem_cache *s)$/;"	f
 flush_cpu_slab	slub.c	/^static void flush_cpu_slab(void *d)$/;"	f	file:
 flush_slab	slub.c	/^static inline void flush_slab(struct kmem_cache *s,struct kmem_cache_cpu *c)$/;"	f	file:
-for_each_object	slub.c	243;"	d	file:
+for_each_object	slub.c	244;"	d	file:
 free	vmalloc.c	/^	struct list_head free;$/;"	m	struct:vmap_block_queue	typeref:struct:vmap_block_queue::list_head	file:
 free	vmalloc.c	/^	unsigned long free,dirty;$/;"	m	struct:vmap_block	file:
 free_all_bootmem	bootmem.c	/^unsigned long __init free_all_bootmem(void)$/;"	f
@@ -266,7 +267,7 @@ init_mm	init-mm.c	/^struct mm_struct init_mm = {$/;"	v	typeref:struct:mm_struct
 init_object	slub.c	/^static void init_object(struct kmem_cache *s,void *object,u8 val)$/;"	f	file:
 insert_vmalloc_vm	vmalloc.c	/^void insert_vmalloc_vm(struct vm_struct *vm,struct vmap_area *va,$/;"	f
 is_vmalloc_or_module_addr	vmalloc.c	/^int is_vmalloc_or_module_addr(const void *x)$/;"	f
-isgraph	slub.c	305;"	d	file:
+isgraph	slub.c	306;"	d	file:
 kernel_map_pages	debug-pagealloc.c	/^void kernel_map_pages(struct page *page,int numpages,int enable)$/;"	f
 kfree	slub.c	/^void kfree(const void *x)$/;"	f
 kmalloc_caches	slub.c	/^struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];$/;"	v	typeref:struct:kmem_cache
@@ -472,12 +473,12 @@ remove_vm_area	vmalloc.c	/^struct vm_struct *remove_vm_area(const void *addr)$/;
 reserve_bootmem	bootmem.c	/^int __init reserve_bootmem(unsigned long addr,unsigned long size,$/;"	f
 restore_bytes	slub.c	/^static void restore_bytes(struct kmem_cache *s,char *message,u8 data,$/;"	f	file:
 rmqueue_bulk	page_alloc.c	/^static int rmqueue_bulk(struct zone *zone,unsigned int order,$/;"	f	file:
-rmv_page_order	page_alloc.c	/^static inline void rmv_page_order(struct page *page)$/;"	f	file:
+rmv_page_order	page_alloc.c	/^void rmv_page_order(struct page *page)$/;"	f
 schedule_work	percpu.c	114;"	d	file:
 set_freepointer	slub.c	/^static inline void set_freepointer(struct kmem_cache *s,void *object,void *fp)$/;"	f	file:
 set_min_partial	slub.c	/^static void set_min_partial(struct kmem_cache *s,unsigned long min)$/;"	f	file:
 set_mminit_loglevel	mm_init.c	/^static __init int set_mminit_loglevel(char *str)$/;"	f	file:
-set_page_order	page_alloc.c	/^static inline void set_page_order(struct page *page,int order)$/;"	f	file:
+set_page_order	page_alloc.c	/^void set_page_order(struct page *page,int order)$/;"	f
 set_page_poison	debug-pagealloc.c	/^static inline set_page_poison(struct page *page)$/;"	f	file:
 set_pageblock_flags_group	page_alloc.c	/^void set_pageblock_flags_group(struct page *page,unsigned long flags,$/;"	f
 set_pageblock_migratetype	page_alloc.c	/^static void set_pageblock_migratetype(struct page *page,int migratetype)$/;"	f	file:
@@ -511,7 +512,7 @@ slab_free_hook	slub.c	/^static inline void slab_free_hook(struct kmem_cache *s,v
 slab_free_hook_irq	slub.c	/^static inline void slab_free_hook_irq(struct kmem_cache *s,$/;"	f	file:
 slab_is_available	slub.c	/^int slab_is_available(void)$/;"	f
 slab_lock	slub.c	/^static inline void slab_lock(struct page *page)$/;"	f	file:
-slab_order	slub.c	/^static inline int slab_order(int size,int min_objects,$/;"	f	file:
+slab_order	slub.c	/^int slab_order(int size,int min_objects,$/;"	f
 slab_out_of_memory	slub.c	/^static void slab_out_of_memory(struct kmem_cache *s,$/;"	f	file:
 slab_pad_check	slub.c	/^static int slab_pad_check(struct kmem_cache *s,struct page *page)$/;"	f	file:
 slab_per_alloc_hook	slub.c	/^static inline int slab_per_alloc_hook(struct kmem_cache *s,$/;"	f	file:
@@ -542,13 +543,13 @@ track	slub.c	/^struct track {$/;"	s	file:
 track_item	slub.c	/^enum track_item {$/;"	g	file:
 try_purge_vmap_area_lazy	vmalloc.c	/^static void try_purge_vmap_area_lazy(void)$/;"	f	file:
 unfreeze_slab	slub.c	/^static void unfreeze_slab(struct kmem_cache *s,struct page *page,int tail)$/;"	f	file:
-unlock_kmao_any	highmem.c	38;"	d	file:
+unlock_kmao_any	highmem.c	40;"	d	file:
 unmap_kernel_range_noflush	vmalloc.c	/^void unmap_kernel_range_noflush(unsigned long addr,unsigned long size)$/;"	f
 unmap_vmap_area	vmalloc.c	/^static void unmap_vmap_area(struct vmap_area *va)$/;"	f	file:
 unpoison_highpage	debug-pagealloc.c	/^static void unpoison_highpage(struct page *page)$/;"	f	file:
 unpoison_page	debug-pagealloc.c	/^static void unpoison_page(struct page *page)$/;"	f	file:
 unpoison_pages	debug-pagealloc.c	/^static void unpoison_pages(struct page *page,int n)$/;"	f	file:
-up_write	slub.c	134;"	d	file:
+up_write	slub.c	135;"	d	file:
 usemap_size	page_alloc.c	/^static unsigned long __init usemap_size(unsigned long zonesize)$/;"	f	file:
 va	vmalloc.c	/^	struct vmap_area *va;$/;"	m	struct:vmap_block	typeref:struct:vmap_block::vmap_area	file:
 vbq	vmalloc.c	/^	struct vmap_block_queue *vbq;$/;"	m	struct:vmap_block	typeref:struct:vmap_block::vmap_block_queue	file:
@@ -561,7 +562,7 @@ vmalloc_to_page	vmalloc.c	/^struct page *vmalloc_to_page(const void *vmalloc_add
 vmap_area_lock	percpu.c	/^static int vmap_area_lock;$/;"	v	file:
 vmap_area_lock	vmalloc.c	/^int vmap_area_lock;$/;"	v
 vmap_area_pcpu_hole	vmalloc.c	/^unsigned long vmap_area_pcpu_hole;$/;"	v
-vmap_area_root	vmalloc.c	/^static struct rb_root vmap_area_root = RB_ROOT;$/;"	v	typeref:struct:rb_root	file:
+vmap_area_root	vmalloc.c	/^struct rb_root vmap_area_root = RB_ROOT;$/;"	v	typeref:struct:rb_root
 vmap_block	vmalloc.c	/^struct vmap_block {$/;"	s	file:
 vmap_block_queue	vmalloc.c	/^struct vmap_block_queue {$/;"	s	file:
 vmap_block_tree_lock	vmalloc.c	/^static int vmap_block_tree_lock;$/;"	v	file:
