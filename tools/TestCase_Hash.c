@@ -23,92 +23,90 @@ struct hlist_head *phash = NULL;
 void TestCase_Hash(void)
 {
 	int i,k;
-	struct hlist_head *head;
 	struct hlist_node *hnode;
+	struct hlist_head *head;
 	struct node *node;
 	int *value;
 
-	/* Get the test data */
-	value = (int *)kmalloc(sizeof(int) * VALUE_NUM , GFP_KERNEL);
-	for(i = 0 ; i < VALUE_NUM ; i++) 
+	/* Prepare test data */
+	value = (int *)kmalloc(sizeof(int) * VALUE_NUM,GFP_KERNEL);
+	for(i = 0 ; i < VALUE_NUM ; i++)
 		value[i] = i;
-		
-	/* Allocate memory to Hash Head */
-	phash = (struct hlist_head *)kmalloc(
-			sizeof(struct hlist_head) * (1 << HEAD_NUM),GFP_KERNEL);
 
+	/* Prepare hash head array */
+	phash = (struct hlist_head *)kmalloc(sizeof(struct hlist_head) *
+					(1 << HEAD_NUM) , GFP_KERNEL);
 	/* Initialize hash head */
 	for(i = 0 ; i < (1 << HEAD_NUM) ; i++)
-		INIT_HLIST_HEAD(phash + i);
+		INIT_HLIST_HEAD(&phash[i]);
 
-	/* Add test data into hash list */
+	/* Create Test node */
 	for(i = 0 ; i < VALUE_NUM ; i++) {
 		node = (struct node *)kmalloc(sizeof(struct node),GFP_KERNEL);
 		if(!node) {
 			mm_err("No memory\n");
-			
+
 			/* Never water memory */
-			goto bad;
+			goto bad_memory;
 		}
 
-		/* Set the node value */
+		/* Prepare test data */
 		node->num = value[i];
-		/* Get the hash head */
-		head = &phash[hash_32(node->num,HEAD_NUM)];
-		/* Initialize hash node */
+		/* Initialize the hash node */
 		INIT_HLIST_NODE(&node->node);
+		/* Get the hash head for node */
+		head = &phash[hash_32(node->num,HEAD_NUM)];
 		/* Add node into hash list */
 		hlist_add_head(&node->node,head);
 	}
 
-	/* Trave all node */
+	/* Trave all hash list */
 	for(i = 0 ; i < (1 << HEAD_NUM) ; i++) {
-		head = phash + i;
-		mm_debug("Head %3d :",i);
-		if(!hlist_empty(head)) 
-			hlist_for_each_entry(node,hnode,head,node)
+		mm_debug("HEAD %d:",i);
+		if(!hlist_empty(&phash[i]))
+			hlist_for_each_entry(node,hnode,&phash[i],node)
 				mm_debug("%d->",node->num);
 		mm_debug("NULL\n");
 	}
 
-	k = value[5];
-	/* Search data from Hash list */
+	/* Search data in hash list */
+	k = value[34];
 	head = &phash[hash_32(k,HEAD_NUM)];
-	hlist_for_each_entry(node,hnode,head,node) 
-		if(node->num == k) 
-			mm_debug("Find data %d\n",k);
+	mm_debug("Search %d in head %d\n",k,hash_32(k,HEAD_NUM));
+	if(!hlist_empty(head))
+		hlist_for_each_entry(node,hnode,head,node)
+			if(k == node->num)
+				mm_debug("Find the data %d\n",k);
 
-    /* Free all hlist node */
-	for(i = 0 ; i < (1 << HEAD_NUM) ; i++) {
-		head = phash + i;
-		while(!hlist_empty(head)) {
-			node = hlist_entry(head->first,struct node,node);
+	/* Delete all node */
+	for(i = 0 ; i < (1 << HEAD_NUM) ; i++)
+		while(!hlist_empty(&phash[i])) {
+			node = hlist_entry(phash[i].first,struct node,node);
 			hlist_del(&node->node);
 			kfree(node);
 		}
-	}
 
-	/* Free check */
-	mm_debug("After free operation\n");
+	/* Final check */
 	for(i = 0 ; i < (1 << HEAD_NUM) ; i++) {
-		head = phash + i;
-		if(!hlist_empty(head))
-			hlist_for_each_entry(node,hnode,head,node)
-				mm_debug("Remain node %d\n",node->num);
+		if(!hlist_empty(&phash[i])) {
+			mm_debug("HEAD %d REMAIN:",i);
+			hlist_for_each_entry(node,hnode,&phash[i],node)
+				mm_debug("%d->",node->num);
+			mm_debug("NULL\n");
+		}
 	}
-	/* Final free */
+	/* Free all and complete test */
 	kfree(phash);
 	kfree(value);
 
 	return;
-bad:
-	for(i-- ; i >= 0 ; i--) {
-		head = &phash[hash_32(value[i],HEAD_NUM)];
-		hlist_for_each_entry(node,hnode,head,node) {
-			hlist_del(hnode);
+bad_memory:
+	for(i = 0 ; i < (1 << HEAD_NUM) ; i++)
+		while(!hlist_empty(&phash[i])) {
+			node = hlist_entry(phash[i].first,struct node,node);
+			hlist_del(phash[i].first);
 			kfree(node);
 		}
-	}
 	kfree(phash);
 	kfree(value);
 }
