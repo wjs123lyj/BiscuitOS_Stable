@@ -48,9 +48,13 @@ extern void TestCase_vmalloc(void);
 
 /* Kmap Allocator */
 extern void TestCase_kmap(void);
+extern void TestCase_kmap_atomic(void);
 
 /****** Kernel Lib ******/
 /* RB tree */
-extern TestCase_RB_user(void);
+extern void TestCase_RB_user(void);
 /* HasH Algorithm*/
+extern void TestCase_Hash(void);
+/* Wait queue */
+extern void TestCase_wait_queue(void);
 #endif

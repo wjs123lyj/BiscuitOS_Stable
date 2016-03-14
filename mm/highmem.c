@@ -10,6 +10,7 @@
 #include "linux/cachetype.h"
 #include "linux/uaccess.h"
 #include "linux/tlbflush.h"
+#include "linux/hardirq.h"
 
 pte_t *pkmap_page_table;
 
@@ -43,7 +44,8 @@ static DEFINE_SPINLOCK(kmap_lock);
 
 #define lock_kmap()    spin_lock(&kmap_lock)
 #define unlock_kmap()  spin_unlock(&kmap_lock)
-#define unlock_kmao_any(flags) do {} while(0)
+#define unlock_kmap_any(flags) do {} while(0)
+#define lock_kmap_any(flags) do {} while(0)
 
 static struct page_address_slot *page_slot(struct page *page)
 {
@@ -68,69 +70,23 @@ void *page_address(struct page *page)
 
 	pos = page_slot(page);
 	ret = NULL;
-	//spin_lock_irqsave(&psa->lock,flags);
-	if(!list_empty(&pos->lh))
-	{
+	spin_lock_irqsave(&psa->lock,flags);
+	if(!list_empty(&pos->lh)) {
 		struct page_address_map *pam;
 
-		list_for_each_entry(pam,&pos->lh,list)
-		{
-			if(pam->page == page)
-			{
+		list_for_each_entry(pam,&pos->lh,list) {
+			if(pam->page == page) {
 				return pam->virtual;
 				goto done;
 			}
 		}
 	}
 done:
-	//spin_unlock_irqrestore(&pas->lock,flags);
+	spin_unlock_irqrestore(&pas->lock,flags);
 	return ret;
 }
-/*
- * Map a highmem page into memory.
- */
-void kunmap_high(struct page *page)
-{
-	unsigned long vaddr;
-	unsigned long nr;
-	unsigned long flags;
-	int need_wakeup;
 
-//	lock_kmap_any(flags);
-	vaddr = (unsigned long)page_address(page);
-	BUG_ON(!vaddr);
-	nr = PKMAP_NR(vaddr);
-
-	/*
-	 * A count must never go down to zero
-	 * without a TLB flush!
-	 */
-	need_wakeup = 0;
-	switch(--pkmap_count[nr])
-	{
-		case 0:
-			BUG();
-		case 1:
-			/*
-			 * Avoid an unnecessary wake_up() function call.
-			 * The common case is pkmap_count[] == 1,but
-			 * no waiters.
-			 * The tasks queued in the wait-queue are guarded
-			 * by both the lock in the wait-queue-head and by
-			 * the kmap_lock.As the kmap_lock is held here,
-			 * no need for the wait-queue-head's lock.Simply
-			 * test if the queue is empty.
-			 */
-//			need_wakeup = waitqueue_active(&pkmap_map_wait);
-			;
-	}
-	//unlock_kmap_any(flags);
-
-	/* do wake-up,if needed,race-free outside of the spin lock */
-	if(need_wakeup)
-//		wake_up(&pkmap_map_wait);
-		;
-}
+void kunmap_high(struct page *page);
 
 void __kunmap_atomic(void *kvaddr)
 {
@@ -146,14 +102,14 @@ void __kunmap_atomic(void *kvaddr)
 #ifdef CONFIG_DEBUG_HIGHMEM
 		BUG_ON(vaddr != __fix_to_virt(FIX_KMAP_DEGIN + idx));
 		set_pte_ext(TOP_PTE(vaddr),__pte(0),0);
-		//local_flush_tlb_kernel_page(vaddr);
+		local_flush_tlb_kernel_page(vaddr);
 #else
 		(void)idx;  /* to kill a warning */
 #endif
 		kmap_atomic_idx_pop();
 	} else if(vaddr >= PKMAP_ADDR(0) && vaddr < PKMAP_ADDR(LAST_PKMAP)) {
 		/* This address was obtained through kmap_high_get() */
-		kunmap_high(pte_page(pkmap_page_table[PKMAP_NR(vaddr)]));
+			kunmap_high(pte_page(&pkmap_page_table[PKMAP_NR(vaddr)]));
 	}
 	pagefault_enable();
 }
@@ -172,27 +128,28 @@ void __init page_address_init(void)
 	}
 	spin_lock_init(&pool_lock);
 }
-/*
- * pin a highmem page into memory.
+
+/**
+ * kmap_high_get - pin a highmem page into memory
+ * @page: &struct page to pfn
  *
- * Return the page's current virtual memory address,or NULL if no mapping
- * exists.If and only if a non null address is returned then a matching 
- * call to kunmap_high() is necessary.
+ * Returns the page's current virtual memory address,or NULL if no mapping
+ * exists.If and only if a non null address is returned then a 
+ * matching call to kunmap_high() is necessary.
  *
- * This can be called from and context.
+ * This can be called from any context.
  */
 void *kmap_high_get(struct page *page)
 {
 	unsigned long vaddr,flags;
 	
-//	lock_kmap_any(flags);
+	lock_kmap_any(flags);
 	vaddr = (unsigned long)page_address(page);
-	if(vaddr)
-	{
+	if(vaddr) {
 		BUG_ON(pkmap_count[PKMAP_NR(vaddr)] < 1);
 		pkmap_count[PKMAP_NR(vaddr)]++;
 	}
-//	unlock_kmap_any(flags);
+	unlock_kmap_any(flags);
 	return (void *)vaddr;
 }
 
@@ -227,7 +184,7 @@ void *__kmap_atomic(struct page *page)
 	 */
 	BUG_ON(!pte_none(*(TOP_PTE(vaddr))));
 #endif
-	//set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
+	set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
 	/*
 	 * When debugging is off,kunmap_atomic leaves the previous mapping
 	 * in place,so this TLB flush ensure the TLB is update with the
@@ -305,7 +262,7 @@ static void flush_all_zero_pkmaps(void)
 		pkmap_count[i] = 0;
 
 		/* sanity check */
-		//BUG_ON(pte_none(pkmap_page_table[i]));
+	//	BUG_ON(pte_none(pkmap_page_table[i]));
 
 		/*
 		 * Don't need an atomic fetch-and-clear op here;
@@ -314,7 +271,7 @@ static void flush_all_zero_pkmaps(void)
 		 * getting the kmap_lock(which is held here).
 		 * So no dangers,event with speculative execution.
 		 */
-		page = pte_page(pkmap_page_table[i]);
+//		page = pte_page(pkmap_page_table[i]);
 //		pte_clear(&init_mm,(unsigned long)page_address(page),
 //				&pkmap_page_table[i]);
 
@@ -347,8 +304,8 @@ start:
 		/* Can't sleep !*/
 	}
 	vaddr = PKMAP_ADDR(last_pkmap_nr);
-//	set_pte_at(&init_mm,vaddr,
-//			&(pmkap_page_table[last_pkmap_nr]),mk_pte(page,kmap_prot));
+	set_pte_at(&init_mm,vaddr,
+			&(pkmap_page_table[last_pkmap_nr]),mk_pte(page,kmap_prot));
 
 	pkmap_count[last_pkmap_nr] = 1;
 	set_page_address(page,(void *)vaddr);
@@ -382,10 +339,66 @@ void *kmap_high(struct page *page)
 	return (void *)(unsigned long)vaddr;
 }
 
+/**
+ * kunmap_high - map a highmem page into memory
+ * @page:&struct page to unmap
+ *
+ * If ARCH_NEED_KMAP_HIGH_GET is not defined then this may be called
+ * only from user context.
+ */
+void kunmap_high(struct page *page)
+{
+	unsigned long vaddr;
+	unsigned long nr;
+	unsigned long flags;
+	int need_wakeup;
+
+	lock_kmap_any(flags);
+	vaddr = (unsigned long)page_address(page);
+	BUG_ON(!vaddr);
+	nr = PKMAP_NR(vaddr);
+
+	/*
+	 * A count must never go down to zero
+	 * without a TLB flush.
+	 */
+	need_wakeup = 0;
+	switch(--pkmap_count[nr]) {
+		case 0:
+			BUG();
+		case 1:
+			/*
+			 * Avoid an unnecessary wake_up() function call.
+			 * The common case is pkmap_count[] == 1,but
+			 * no waiters.
+			 * The tasks queued in the wait-queue are guarded
+			 * by both the lock in the wait-queue-head and by
+			 * the kmap_lock.As the kmap_lock is held here,
+			 * no need for the wait-queue-head's lock.Simply
+			 * test if the queue is empty.
+			 */
+			; // need_wakeup = waitqueue_active(&pkmap_map_wait);
+	}
+	lock_kmap_any(flags);
+
+	/* do wake-up,if needed,race-free outside of the spin lock */
+	if(need_wakeup)
+		//wake_up(&pkmap_map_wait);
+		;
+}
+
 void *kmap(struct page *page)
 {
 	might_sleep();
 	if(!PageHighMem(page))
 		return page_address(page);
 	return kmap_high(page);
+}
+
+void kunmap(struct page *page)
+{
+	BUG_ON(in_interrupt());
+	if(!PageHighMem(page))
+		return;
+	kunmap_high(page);
 }

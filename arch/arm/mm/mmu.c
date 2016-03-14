@@ -582,8 +582,7 @@ static inline void prepare_page_table(void)
 static pte_t * __init early_pte_alloc(pmd_t *pmd,unsigned long addr,
 		unsigned long prot)
 {
-	if(pmd_none(pmd))
-	{
+	if(pmd_none(pmd)) {
 		pte_t *pte = early_alloc(2 * PTRS_PER_PTE * sizeof(pte_t));
 		__pmd_populate(pmd,__pa(pte),prot);
 	}

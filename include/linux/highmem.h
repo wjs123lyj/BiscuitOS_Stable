@@ -27,7 +27,6 @@ DECLARE_PER_CPU(int,__kmap_atomic_idx);
 extern void *kmap_high_get(struct page *page);
 extern void *page_address(struct page *page);
 extern void *__kmap_atomic(struct page *page);
-static inline int kmap_atomic_idx_push(void);
 void __kunmap_atomic(void *kvaddr);
 /*
  * Prevent people trying to call kunmap_atomic() as if it were kunmap()

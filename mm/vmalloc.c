@@ -1119,9 +1119,9 @@ struct page *vmalloc_to_page(const void *vmalloc_addr)
 				//ptep = pte_offset_map(pmd,addr);
 				pte = *ptep;
 				//if(pte_present(pte))
-				if(0)
-					page = (struct page *)(unsigned long)pte_page(pte);
-				pte_unmap(ptep);
+		//		if(0)
+					//page = (struct page *)(unsigned long)pte_page(pte);
+		//		pte_unmap(ptep);
 			}
 		}
 	}

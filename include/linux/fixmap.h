@@ -1,5 +1,6 @@
 #ifndef _FIXMAP_H_
 #define _FIXMAP_H_    1
+#include "linux/page.h"
 
 /*
  * Nothing to fancy for now.
@@ -22,4 +23,19 @@
 
 #define __fix_to_virt(x)  (FIXADDR_START + ((x) <<  PAGE_SHIFT))
 #define __virt_to_fix(x)  (((x) - FIXADDR_START) >> PAGE_SHIFT)
+
+extern void __this_fixmap_does_not_exist(void);
+
+static inline unsigned long fix_to_virt(const unsigned int idx)
+{
+	if(idx >= FIX_KMAP_END)
+		WARN_ON(1);
+	return __fix_to_virt(idx);
+}
+
+static inline unsigned int virt_to_fix(const unsigned long vaddr)
+{
+	BUG_ON(vaddr >= FIXADDR_TOP || vaddr < FIXADDR_START);
+	return __virt_to_fix(vaddr);
+}
 #endif
