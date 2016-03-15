@@ -45,6 +45,7 @@ extern void TestCase_full_pcp_buddy(void);
 
 /* Vmalloc Allocator */
 extern void TestCase_vmalloc(void);
+extern void TestCase_vmalloc_PageTable(void);
 
 /* Kmap Allocator */
 extern void TestCase_kmap(void);

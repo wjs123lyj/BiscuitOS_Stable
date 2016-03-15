@@ -48,3 +48,35 @@ void TestCase_vmalloc(void)
 	vfree(addr);
 	M_show(__pa(pte),__pa(pte) + 20);
 }
+
+/*
+ * TestCase_vmalloc_PageTable.
+ */
+void TestCase_vmalloc_PageTable(void)
+{
+	unsigned int address;
+	pgd_t *pgd;
+	pmd_t *pmd;
+	pte_t *pte;
+	struct page *page;
+
+	address = vmalloc(PAGE_SIZE);
+
+	mm_debug("Address %p\n",(void *)(unsigned long)address);
+
+	pgd = pgd_offset(&init_mm,address);
+	mm_debug("PGD %p\n",pgd);
+	mm_debug("PGD_VAL %p\n",(void *)pgd_val(pgd));
+	pmd = pmd_offset(pgd,address);
+	mm_debug("PMD %p\n",pmd);
+	mm_debug("PMD_VAL %p\n",(void *)pmd_val(pmd));
+	pte = pte_offset_kernel(pmd,address);
+	mm_debug("PTE %p\n",pte);
+	page = pmd_page(pmd);
+	PageFlage(page,"A");
+	pte = pte_offset_map(pmd,address);
+	mm_debug("PPTE %p\n",pte);
+	page = pte_page(pte);
+	address = (unsigned int)(unsigned long)page_address(page);
+	mm_debug("UserAddress %p\n",(void *)(unsigned long)address);
+}

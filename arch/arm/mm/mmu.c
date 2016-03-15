@@ -587,7 +587,7 @@ static pte_t * __init early_pte_alloc(pmd_t *pmd,unsigned long addr,
 		__pmd_populate(pmd,__pa(pte),prot);
 	}
 	BUG_ON(pmd_bad(pmd));
-	
+
 	return pte_offset_kernel(pmd,addr);
 }
 /*
@@ -599,13 +599,11 @@ void __init alloc_init_pte(pmd_t *pmd,unsigned long addr,
 {
 	pte_t *pte = early_pte_alloc(pmd,addr,type->prot_l1);
 	do {
-	//	set_pte_ext(pte,pfn_pte(pfn,__pgprot(type->prot_pte)),0);
+		set_pte_ext(pte,pfn_pte(pfn,__pgprot(type->prot_pte)),0);
 		pfn++;
 	} while(pte++,addr += PAGE_SIZE,addr != end);
 }
-/*
- * Alloc and init section
- */
+
 void alloc_init_section(pgd_t *pgd,unsigned long addr,
 		unsigned long end,phys_addr_t phys,
 		const struct mem_type *type)
@@ -703,7 +701,9 @@ static void __init create_36bit_mapping(struct map_desc *md,
 		pgd  += SUPERSECTION_SIZE >> PGDIR_SHIFT;
 	} while(addr != end);
 }
+
 #define vectors_base()  (vectors_high() ? 0xffff0000 : 0)
+
 /*
  * Create the page directory entries and any necessary page
  * tables for the mapping specified by 'md'.We are able to cope

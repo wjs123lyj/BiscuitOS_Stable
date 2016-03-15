@@ -123,7 +123,8 @@ extern struct mm_struct init_mm;
 /*
  * X is a value not pointer.
  */
-#define pgd_val(x)  (unsigned long)(((pgd_t *)phys_to_mem(virt_to_phys(x)))->pgd[0])
+#define pgd_val(x)  \
+		(unsigned long)(((pgd_t *)phys_to_mem(__pa(x)))->pgd[0])
 
 #define pgd_none(x) 0 
 #define pgd_bad(x)  0
@@ -132,7 +133,8 @@ extern struct mm_struct init_mm;
 			   ((pgd_t *)phys_to_mem(virt_to_phys(x)))->pgd[1] = 0; \
 		} while(0)
 
-#define pmd_val(x)   (unsigned long)(((pmd_t *)phys_to_mem(virt_to_phys(x)))->pmd)
+#define pmd_val(x)   \
+		(unsigned long)(((pmd_t *)phys_to_mem(__pa(x)))->pmd)
 #define pmd_none(x)  (!pmd_val(x))
 #define pmd_bad(x)   (pmd_val(x) & 2)
 
@@ -206,9 +208,10 @@ static inline int pte_hidden(pte_t pte)
  */
 #define __phys_to_pfn(paddr)  ((paddr) >> PAGE_SHIFT)
 
-#define pmd_page(pmd)   pfn_to_page(__phys_to_pfn(pmd_val(pmd)))
+#define pmd_page(pmd)   \
+		pfn_to_page(__phys_to_pfn((pmd_val(pmd))))
 
-#define __pte_map(pmd)   (pte_t *)(unsigned long)kmap_atomic(pmd_page(*(pmd)))
+#define __pte_map(pmd)   (pte_t *)(unsigned long)kmap_atomic(pmd_page((pmd)))
 #define __pte_unmap(pte) kunmap_atomic(pte)
 
 

@@ -854,7 +854,7 @@ static void *__vmalloc_area_node(struct vm_struct *area,gfp_t gfp_mask,
 		}
 		area->pages[i] = page;
 	}
-	
+
 	if(map_vm_area(area,prot,&pages))
 		goto fail;
 	return area->addr;
