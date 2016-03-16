@@ -1156,6 +1156,17 @@ void free_vm_area(struct vm_struct *area)
 	kfree(area);
 }
 
+static struct vm_struct *find_vm_area(const void *addr)
+{
+	struct vmap_area *va;
+
+	va = find_vmap_area((unsigned long)addr);
+	if(va && va->flags & VM_VM_AREA)
+		return va->private;
+
+	return NULL;
+}
+
 /*
  * Implement a stub for vmalloc_sync_all() if the architeture chose not 
  * to have one.
@@ -1202,7 +1213,6 @@ struct vm_struct *alloc_vm_area(size_t size)
 	return area;
 }
 
-#define PAGE_KERNEL_EXEC PAGE_KERNEL
 /**
  * vmalloc_exec - allocate virtually contiguous,executable memory
  * @size:          allocation size
@@ -1337,7 +1347,7 @@ static int aligned_vread(char *buf,char *addr,unsigned long count)
 	return copied;
 }
 
-static int aligned_write(char *buf,char *addr,unsigned long count)
+static int aligned_vwrite(char *buf,char *addr,unsigned long count)
 {
 	struct page *p;
 	int copied = 0;

@@ -178,4 +178,8 @@
  * Debug function in Buddy allocator.
  */
 #define BUDDY_DEBUG_PAGE_ORDER 1
+/*
+ * Support SPLOCK PTLocks
+ */
+#define USE_SPLIT_PTLOCKS 1
 #endif

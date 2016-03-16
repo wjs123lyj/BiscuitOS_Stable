@@ -8,6 +8,7 @@
 #include "linux/hugetlb.h"
 #include "linux/mm.h"
 #include "linux/pgtable.h"
+#include "linux/pgalloc.h"
 
 struct page *mem_map;
 

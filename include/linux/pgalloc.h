@@ -1,11 +1,12 @@
 #ifndef _PGALLOC_H_
 #define _PGALLOC_H_
 
-#include "pgtable.h"
-#include "gfp.h"
-#include "pgtable-hwdef.h"
-#include "domain.h"
-#include "cacheflush.h"
+#include "linux/pgtable.h"
+#include "linux/gfp.h"
+#include "linux/pgtable-hwdef.h"
+#include "linux/domain.h"
+#include "linux/cacheflush.h"
+#include "linux/mm.h"
 
 #define _PAGE_USER_TABLE   (PMD_TYPE_TABLE | PMD_BIT4 | \
 							PMD_DOMAIN(DOMAIN_USER))
@@ -99,5 +100,17 @@ static inline void pte_free_kernel(struct mm_struct *mm,pte_t *pte)
 }
 
 #define pmd_pgtable(pmd)   pmd_page(pmd)
+
+static inline void pmd_populate(struct mm_struct *mm,pmd_t *pmdp,
+		pgtable_t ptep)
+{
+	__pmd_populate(pmdp,page_to_phys(ptep),_PAGE_USER_TABLE);
+}
+
+static inline void pte_free(struct mm_struct *mm,pgtable_t pte)
+{
+	pgtable_page_dtor(pte);
+	__free_page(pte);
+}
 
 #endif

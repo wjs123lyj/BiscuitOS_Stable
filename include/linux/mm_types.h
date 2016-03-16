@@ -50,6 +50,9 @@ struct page {
 								   * set PAGE_MAPPING_ANON below,
 								   */
 		};
+#if USE_SPLIT_PTLOCKS
+	spinlock_t ptl;
+#endif
 		struct kmem_cache *slab;
 		struct page *first_page;  /* Compound tail pages */
 	};
@@ -86,6 +89,10 @@ struct mm_struct {
 	unsigned long start_code,end_code,start_data,end_data;
 	unsigned long start_brk,brk,start_stack;
 	unsigned long arg_start,arg_end,env_start,env_end;
+};
+
+struct vm_area_struct {
+	struct mm_struct *vm_mm;
 };
 
 #endif

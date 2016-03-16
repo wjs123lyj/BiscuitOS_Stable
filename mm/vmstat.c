@@ -21,3 +21,23 @@ void mod_zone_page_state(struct zone *zone,enum zone_stat_item item,
 	__mod_zone_page_state(zone,item,delta);
 	local_irq_restore(flags);
 }
+
+void inc_zone_page_state(struct page *page,enum zone_stat_item item)
+{
+	unsigned long flags;
+	struct zone *zone;
+
+	zone = page_zone(page);
+	local_irq_save(flags);
+	__inc_zone_state(zone,item);
+	local_irq_restore(flags);
+}
+
+void dec_zone_page_state(struct page *page,enum zone_stat_item item)
+{
+	unsigned long flags;
+
+	local_irq_save(flags);
+	__dec_zone_page_state(page,item);
+	local_irq_restore(flags);
+}

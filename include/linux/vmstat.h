@@ -21,6 +21,13 @@ static inline void zap_zone_vm_stats(struct zone *zone)
 {
 	memset(zone->vm_stat,0,sizeof(zone->vm_stat));
 }
+
+static inline void __inc_zone_state(struct zone *zone,enum zone_stat_item item)
+{
+	atomic_long_inc(&zone->vm_stat[item]);
+	atomic_long_inc(&vm_stat[item]);
+}
+
 static inline void __dec_zone_state(struct zone *zone,enum zone_stat_item item)
 {
 	atomic_long_dec(&zone->vm_stat[item]);

@@ -8,6 +8,7 @@
 #include "linux/debug.h"
 #include "linux/page-flags.h"
 #include "linux/memory.h"
+#include "linux/spinlock.h"
 
 
 #define SECTIONS_WIDTH      0
@@ -297,9 +298,6 @@ static inline pmd_t *pmd_alloc(struct mm_struct *mm,pud_t *pud,
 		NULL : pmd_offset(pud,address);
 }
 
-#define pte_alloc_kernel(pmd,address)     \
-	((unlikely(pmd_none((pmd))) && __pte_alloc_kernel(pmd,address)) ? \
-	 NULL : pte_offset_kernel(pmd,address))
 /*
  * Determine if an address is within the vmalloc range.
  */
@@ -324,6 +322,29 @@ static inline void enable_debug_pagealloc(void)
 }
 #else
 
+#if USE_SPLIT_PTLOCKS
+/*
+ * We tuck a spinlock to guard each pagetable page into its struct page,
+ * at page->private,with BUILD_BUG_ON to make sure that this will not
+ * overflow into the next struct page(as it might with DEBUG_SPINLOCK).
+ * When freeing,reset page->mapping so free_pages_check won't complain.
+ */
+#define __pte_lockptr(page)    &((page)->ptl)
+#define pte_lock_init(_page) do {             \
+			spin_lock_init(__pte_lockptr(_page));           \
+} while(0)
+#define pte_lock_deinit(page)    ((page)->mapping = NULL)
+#define pte_lockptr(mm,pmd)      ({(void)(mm);__pte_lockptr(pmd_page(pmd));})
+#else
+/*
+ * We use mm->page_table_lock to guard all pagetable pages of the mm.
+ */
+#define pte_lock_init(page)     do {} while(0)
+#define pte_lock_deinit(page)   do {} while(0)
+#define pte_lockptr(mm,pmd)     ({(void)(pmd);&(mm)->page_table_lock;})
+#endif
+
+
 static inline void enable_debug_pagealloc(void)
 {
 }
@@ -337,6 +358,18 @@ static inline void kernel_map_pages(struct page *page,int numpages,int enable)
 		spin_lock(ptl);                    \
 		pte_unmap(pte);                       \
 } while(0)
+
+
+
+#define pte_offset_map_lock(mm,pmd,address,ptlp)           \
+	({                                              \
+	     spinlock_t *__ptl = pte_lockptr(mm,pmd);          \
+	     pte_t *__pte = pte_offset_map(pmd,address);        \
+	     *(ptlp) = __ptl;               \
+	     spin_lock(__ptl);                     \
+	     __pte;                           \
+	 })
+
 
 #define pte_alloc_map(mm,vma,pmd,address)                        \
 	((unlikely(pmd_none(pmd)) && __pte_alloc(mm,vma,     \
@@ -355,16 +388,21 @@ static inline void kernel_map_pages(struct page *page,int numpages,int enable)
 typedef int (*pte_fn_t)(pte_t *pte,pgtable_t token,unsigned long addr,
 		void *data);
 
-/*
- * We use mm->page_table_lock to guard all pagetable pages of the mm.
- */
-#define pte_lock_init(page) do {} while(0)
-#define pte_lock_deinit(page)  do {} while(0)
+
+extern void inc_zone_page_state(struct page *page,enum zone_stat_item item);
 
 static inline void pgtable_page_ctor(struct page *page)
 {
 	pte_lock_init(page);
 	inc_zone_page_state(page,NR_PAGETABLE);
+}
+
+extern void dec_zone_page_state(struct page *page,enum zone_stat_item item);
+
+static inline void pgtable_page_dtor(struct page *page)
+{
+	pte_lock_deinit(page);
+	dec_zone_page_state(page,NR_PAGETABLE);
 }
 
 #endif

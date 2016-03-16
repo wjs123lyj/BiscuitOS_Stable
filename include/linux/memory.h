@@ -80,4 +80,10 @@ extern int __pte_alloc_kernel(pmd_t *pmd,unsigned long address);
 #define virt_addr_valid(kaddr) ((unsigned long)(kaddr) >= PAGE_OFFSET  \
 			&& (unsigned long)(kaddr) < (unsigned long)high_memory)
 
+/*
+ * Convert a page to/from a physical address.
+ */
+#define page_to_phys(page) (__pfn_to_phys(page_to_pfn(page)))
+#define phys_to_page(phys) (pfn_to_page(__phys_to_pfn(phys)))
+
 #endif
