@@ -28,6 +28,7 @@ typedef struct { unsigned int pgprot;} pgprot_t;
 #define PHYS_OFFSET (unsigned long)0x50000000
 #define PHYS_PFN_OFFSET (unsigned long)((PHYS_OFFSET) >> PAGE_SHIFT)
 
+typedef struct page *pgtable_t;
 
 #define virt_to_phys(x) ((unsigned long)(x) - PAGE_OFFSET + PHYS_OFFSET)
 #define phys_to_virt(x) ((unsigned long)(x) - PHYS_OFFSET + PAGE_OFFSET)

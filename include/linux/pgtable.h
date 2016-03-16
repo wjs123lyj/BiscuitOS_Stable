@@ -273,14 +273,14 @@ static inline void set_pte_at(struct mm_struct *mm,unsigned long addr,
 }
 
 #define pte_set(q,w,e)   do {} while(0)
-#define pte_clear(q,w,e) set_pte_ext(ptep,__pte(0),0)
+#define pte_clear(mm,addr,ptep) set_pte_ext(ptep,__pte(0),0)
 
 static inline pte_t *ptep_get_and_clear(struct mm_struct *mm,
 		unsigned long address,pte_t *ptep)
 {
-	pte_t *pte = ((pte_t *)(unsigned long)phys_to_mem(__pa(ptep)));
+	pte_t *pte = ptep;
 	pte_clear(mm,address,ptep);
-	return (pte_t *)(unsigned long)__va(mem_to_phys(pte));
+	return pte;
 }
 
 static inline int pmd_trans_splitting(pmd_t *pmd)
@@ -339,5 +339,11 @@ extern void __pgd_error(const char *file,int line,pgd_t *);
 #define pte_ERROR(pte)     __pte_error(__FILE__,__LINE__,pte)
 #define pmd_ERROR(pmd)     __pmd_error(__FILE__,__LINE__,pmd)
 #define pgd_ERROR(pgd)     __pgd_error(__FILE__,__LINE__,pgd)
+
+#ifndef __HAVE_ARCH_ENTER_LAZY_MMU_MODE
+#define arch_enter_lazy_mmu_mode() do {} while(0)
+#define arch_leave_lazy_mmu_mode() do {} while(0)
+#define arch_flush_lazy_mmu_mode() do {} while(0)
+#endif
 
 #endif

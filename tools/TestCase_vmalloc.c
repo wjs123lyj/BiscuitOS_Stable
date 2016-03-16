@@ -55,6 +55,7 @@ void TestCase_vmalloc(void)
 void TestCase_vmalloc_PageTable(void)
 {
 	unsigned int address;
+	unsigned int find_address;
 	pgd_t *pgd;
 	pmd_t *pmd;
 	pte_t *pte;
@@ -77,6 +78,7 @@ void TestCase_vmalloc_PageTable(void)
 	pte = pte_offset_map(pmd,address);
 	mm_debug("PPTE %p\n",pte);
 	page = pte_page(pte);
-	address = (unsigned int)(unsigned long)page_address(page);
-	mm_debug("UserAddress %p\n",(void *)(unsigned long)address);
+	find_address = (unsigned int)(unsigned long)page_address(page);
+	mm_debug("UserAddress %p\n",(void *)(unsigned long)find_address);
+	vfree(address);
 }

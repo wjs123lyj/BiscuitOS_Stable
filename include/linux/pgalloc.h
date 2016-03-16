@@ -70,6 +70,25 @@ static inline pte_t * pte_alloc_one_kernel(struct mm_struct *mm,
 
 	return pte;
 }
+
+static inline pgtable_t pte_alloc_one(struct mm_struct *mm,unsigned long addr)
+{
+	struct page *pte;
+
+#ifdef CONFIG_HIGHPTE
+	pte = alloc_pages(PGALLOC_GFP | __GFP_HIGHMEM , 0);
+#else
+	pte = alloc_pages(PGALLOC_GFP,0);
+#endif
+	if(pte) {
+		if(!PageHighMem(pte))
+			clean_pte_table(page_address(pte));
+		pgtable_page_ctor(pte);
+	}
+
+	return pte;
+}
+
 /*
  * Free one PTE table.
  */
@@ -78,4 +97,7 @@ static inline void pte_free_kernel(struct mm_struct *mm,pte_t *pte)
 	if(pte)
 		free_page((unsigned long)pte);
 }
+
+#define pmd_pgtable(pmd)   pmd_page(pmd)
+
 #endif

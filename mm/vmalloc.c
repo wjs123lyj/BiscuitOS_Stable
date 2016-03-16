@@ -1006,8 +1006,16 @@ static void __vunmap(const void *addr,int deallocate_pages)
 	kfree(area);
 	return;
 }
-/*
- * vfree - release memory allocator by vmalloc()
+
+/**
+ * vfree - release memory allocated by vmalloc()
+ * @addr:       memory base address
+ *
+ * Free the virtually continuous memory area starting at @addr,as
+ * obtained from valloc(),vmalloc_32() or __vmalloc().If @addr is
+ * NULL,no operation is performed.
+ *
+ * Must not be called in interrupt context.
  */
 void vfree(const void *addr)
 {
@@ -1017,6 +1025,7 @@ void vfree(const void *addr)
 
 	__vunmap(addr,1);
 }
+
 struct vmap_area *node_to_va(struct rb_node *n)
 {
 	return n ? rb_entry(n,struct vmap_area,rb_node) : NULL;
@@ -1094,39 +1103,8 @@ void unmap_kernel_range_noflush(unsigned long addr,unsigned long size)
 {
 	vunmap_page_range(addr,addr + size);
 }
-/*
- * Walk a vmap address to the struct page it maps.
- */
-struct page *vmalloc_to_page(const void *vmalloc_addr)
-{
-	unsigned long addr = (unsigned long)vmalloc_addr;
-	struct page *page = NULL;
-	pgd_t *pgd = pgd_offset_k(addr);
 
-	/*
-	 * XXX we might need to change this if we add VIRTUAL_BUG_ON for 
-	 * architechure that do not vmalloc module space
-	 */
-	VIRTUAL_BUG_ON(!is_vmalloc_or_module_addr(vmalloc_addr));
-
-	if(!pgd_none(pgd)) {
-		pud_t *pud = pud_offset(pgd,addr);
-		if(!pud_none(pud)) {
-			pmd_t *pmd = pmd_offset(pud,addr);
-			if(!pmd_none(pmd)) {
-				pte_t *ptep,pte;
-				/* Need rebuilt */
-				//ptep = pte_offset_map(pmd,addr);
-				pte = *ptep;
-				//if(pte_present(pte))
-		//		if(0)
-					//page = (struct page *)(unsigned long)pte_page(pte);
-		//		pte_unmap(ptep);
-			}
-		}
-	}
-	return page;
-}
+struct page *vmalloc_to_page(const void *vmalloc_addr);
 
 void __init vmalloc_init(void)
 {
@@ -1154,4 +1132,388 @@ void __init vmalloc_init(void)
 	vmap_area_pcpu_hole = VMALLOC_END;
 
 	vmap_initialized = true;
+}
+
+struct vm_struct *get_vm_area_caller(unsigned long size,unsigned long flags,
+		void *caller)
+{
+	return __get_vm_area_node(size,1,flags,VMALLOC_START,VMALLOC_END,
+								-1,GFP_KERNEL,caller);
+}
+
+static int f(pte_t *pte,pgtable_t table,unsigned long addr,void *data)
+{
+	/* apply_to_page_range() does all the hard work. */
+	return 0;
+}
+
+void free_vm_area(struct vm_struct *area)
+{
+	struct vm_struct *ret;
+
+	ret = remove_vm_area(area->addr);
+	BUG_ON(ret != area);
+	kfree(area);
+}
+
+/*
+ * Implement a stub for vmalloc_sync_all() if the architeture chose not 
+ * to have one.
+ */
+void vmalloc_sync_all(void)
+{
+}
+
+/**
+ * alloc_vm_area - allocate a range of kernel address space
+ * @size: size of the area.
+ * 
+ * Returns: NULL on failure,vm_struct on success
+ * 
+ * This function reserves a range of kernel address space,and
+ * allocates pagetables to map that range.No actual mappings
+ * are created.If the kernel address space is not shared
+ * between processess,it syncs the pagetable across all
+ * processes.
+ */
+struct vm_struct *alloc_vm_area(size_t size)
+{
+	struct vm_struct *area;
+
+	area = get_vm_area_caller(size,VM_IOREMAP,
+			__builtin_return_address(0));
+
+	if(area == NULL)
+		return NULL;
+
+	/* 
+	 * This ensure that page tables are constructed for this region
+	 * of kernel virtual address space and mapped into init_mm.
+	 */
+	if(apply_to_page_range(&init_mm,(unsigned long)area->addr,
+				area->size,f,NULL)) {
+		free_vm_area(area);
+	}
+
+	/* Make sure the pagetables are constructed in process kernel
+	   mappings */
+	vmalloc_sync_all();
+
+	return area;
+}
+
+#define PAGE_KERNEL_EXEC PAGE_KERNEL
+/**
+ * vmalloc_exec - allocate virtually contiguous,executable memory
+ * @size:          allocation size
+ *
+ * Kernel-internal function to allocate enough pages to cover @size
+ * the page level allocator and map them into contiguous and
+ * executable kernel virtual space.
+ *
+ * For tight control over page level allocator and protection flags
+ * use __vmalloc() instead.
+ */
+
+void *vmalloc_exec(unsigned long size)
+{
+	return __vmalloc_node(size,1,GFP_KERNEL | __GFP_HIGHMEM,
+			PAGE_KERNEL_EXEC,-1,__builtin_return_address(0));
+}
+
+#if defined(GONFIG_64BIT) && defined(CONFIG_ZONE_DMA32)
+#define GFP_VMALLOC32 GFP_DMA32 | GFP_KERNEL
+#elif defined(CONFIG_64BIT) && defined(CONFIG_ZONE_DMA)
+#define GFP_VMALLOC32 GFP_DMA | GFP_KERNEL
+#else
+#define GFP_VMALLOC32 GFP_KERNEL
+#endif
+
+/**
+ * vmalloc_32 - allocate virtually contiguous memory(32bit addressable)
+ * @size:                allocation size
+ *
+ * Allocate enough 32bit PA addressable pages to cover @size from the
+ * page level allocator and map them into contiguous kernel virtual space.
+ */
+void *vmalloc_32(unsigned long size)
+{
+	return __vmalloc_node(size,1,GFP_VMALLOC32,PAGE_KERNEL,
+			-1,__builtin_return_address(0));
+}
+
+/**
+ * vmalloc_32_user - allocate zeroed virtual contiguous 32bit memory
+ *   @size:           allocation size
+ * The resulting memory area is 32bit addressable and zered so it can be
+ * mapped to userspace without leaking data.
+ */
+void *vmalloc_32_user(unsigned long size)
+{
+	struct vm_struct *area;
+	void *ret;
+
+	ret = __vmalloc_node(size,1,GFP_VMALLOC32 | __GFP_ZERO,PAGE_KERNEL,
+			-1,__builtin_return_address(0));
+	if(ret) {
+		area = find_vm_area(ret);
+		area->flags |= VM_USERMAP;
+	}
+	return ret;
+}
+
+/*
+ * Walk a vmap address to the struct page it maps. 
+ */
+struct page *vmalloc_to_page(const void *vmalloc_addr)
+{
+	unsigned long addr = (unsigned long)vmalloc_addr;
+	struct page *page = NULL;
+	pgd_t *pgd = pgd_offset_k(addr);
+
+	/*
+	 * XXX we might need to change this if we add VIRTUAL_BUG_ON for
+	 * architectures that do not vmalloc module space
+	 */
+	VIRTUAL_BUG_ON(!is_vmalloc_or_module_addr(vmalloc_addr));
+
+	if(!pgd_none(pgd)) {
+		pud_t *pud = pud_offset(pgd,addr);
+		if(!pud_none(pud)) {
+			pmd_t *pmd = pmd_offset(pud,addr);
+			if(!pmd_none(pmd)) {
+				pte_t *pte;
+
+				pte = pte_offset_map(pmd,addr);
+				if(pte_present(pte))
+					page = pte_page(pte);
+				pte_unmap(pte);
+			}
+		}
+	}
+	return page;
+}
+
+/*
+ * Small helper routine,copy contents to buf from addr.
+ * If the page is not present,fill zero
+ */
+static int aligned_vread(char *buf,char *addr,unsigned long count)
+{
+	struct page *p;
+	int copied = 0;
+
+	while(count) {
+		unsigned long offset,length;
+
+		offset = (unsigned long)addr & ~PAGE_MASK;
+		length = PAGE_SIZE - offset;
+		if(length > count)
+			length = count;
+		p = vmalloc_to_page(addr);
+		/*
+		 * To do safe access to this _mapped_area,we need
+		 * lock.But adding lock here means that we need to add
+		 * overhead of vmalloc()/vfree() calles for this _debug_
+		 * interface,rarely used.Instead of that,we'll use
+		 * kmap() and get small overhead in this access function.
+		 */
+		if(p) {
+			/*
+			 * We can expect USER0 is not used (see vread/vwrite's
+			 * function description)
+			 */
+			void *map = kmap_atomic(p,KM_USER0);
+			memcpy(buf,map + offset,length);
+			kunmap_atomic(map,KM_USER0);
+		} else
+			memset(buf,0,length);
+
+		addr += length;
+		buf += length;
+		copied += length;
+		count -= length;
+	}
+	return copied;
+}
+
+static int aligned_write(char *buf,char *addr,unsigned long count)
+{
+	struct page *p;
+	int copied = 0;
+
+	while(count) {
+		unsigned long offset,length;
+
+		offset = (unsigned long)addr & ~PAGE_MASK;
+		length = PAGE_SIZE - offset;
+		if(length > count)
+			length = count;
+		p = vmalloc_to_page(addr);
+		/*
+		 * To do safe access to this _mapped_area,we need
+		 * lock.But adding lock here means that we need to add
+		 * overhead of vmalloc()/vfree() calles for this _debug_
+		 * interface,rarely used.Instead of that,we'll use
+		 * kmap() and get small overhead in this access function.
+		 */
+		if(p) {
+			/*
+			 * We can expect USER0 is not used(see vread/vwrite's
+			 * function description) 
+			 */
+			void *map = kmap_atomic(p,KM_USER0);
+			memcpy(map + offset,buf,length);
+			kunmap_atomic(map,KM_USER0);
+		}
+		addr += length;
+		buf += length;
+		copied += length;
+		count -= length;
+	}
+	return copied;
+}
+
+/**
+ * vread() - read vmalloc area in a safe way.
+ * @buf:      buffer for reading data
+ * @addr:     vm address.
+ * count:     number of bytes to be read.
+ *
+ * Return # of bytes which addr and buf should be increased.
+ * (same number of @count).Returns 0 if [addr...addr+count] doesn't
+ * includes any intersect with alive vmalloc area.
+ *
+ * This function checks that addr is a valid vmalloc'ed area,and
+ * copy data from that area to a given buffer.If the given memory range
+ * of [addr...addr+count] includes some valid address,data is copied to
+ * proper area of @buf.If there are memory holes,they'll be zero-filled.
+ * IOREMAP area is treated as memory hole and no copy is done.
+ *
+ * If [addr...addr+count] doesn't includes any intersects with alive
+ * vm_struct area,returns 0.
+ * @buf should be kernel's buffer.Becase this function uses KM_USER0,
+ * the caller should guarantee KM_USER0 is not used.
+ *
+ * Note:In usual ops,vread() is never necessary because the caller
+ * should know vmalloc() area is valid and can be use memcpy().
+ * This is for routines which have to access vmalloc area without
+ * any information,as /dev/kmem.
+ */
+long vread(char *buf,char *addr,unsigned long count)
+{
+	struct vm_struct *tmp;
+	char *vaddr,*buf_start = buf;
+	unsigned long buflen = count;
+	unsigned long n;
+
+	/* Don't allow overflow */
+	if((unsigned long)addr + count < count)
+		count = -(unsigned long)addr;
+
+	read_lock(&vmlist_lock);
+	for(tmp = vmlist ; count && tmp ; tmp = tmp->next) {
+		vaddr = (char *)tmp->addr;
+		if(addr >= vaddr + tmp->size - PAGE_SIZE)
+			continue;
+		while(addr < vaddr) {
+			if(count == 0)
+				goto finished;
+			*buf = '\0';
+			buf++;
+			addr++;
+			count--;
+		}
+		n = vaddr + tmp->size - PAGE_SIZE - addr;
+		if(n > count)
+			n = count;
+		if(!(tmp->flags & VM_IOREMAP))
+			aligned_vread(buf,addr,n);
+		else /* IOREMAP area is treated as memory hole */
+			memset(buf,0,n);
+		buf += n;
+		addr += n;
+		count -= n;
+	}
+finished:
+	read_unlock(&vmlist_lock);
+
+	if(buf == buf_start)
+		return 0;
+	/* zero-fill memory holes */
+	if(buf != buf_start + buflen)
+		memset(buf,0,buflen - (buf - buf_start));
+
+	return buflen;
+}
+
+/**
+ * vwrite() - write vmalloc area in a safe way.
+ * @buf:      buffer for source data.
+ * @addr:     vm address.
+ * @count:    number of bytes to be read.
+ *
+ * Returns # of bytes which addr and buf should by incresed.
+ * (same number to @count).
+ * If [addr...addr+count]doesn't includes any intersect with valid
+ * vmalloc area,returns 0.
+ *
+ * This function checks that addr is a valid vmalloc'ed area,and
+ * copy data from a buffer to the given addr.If specified range of
+ * [addr..addr+count]include some valid address,data is copied from
+ * proper area of @buf.If there ara memory holes,no copy to hole.
+ * IOREMAP area is treated as memory hole and no copy is done.
+ *
+ * If[addr...addr+count]doesn't includes any intersects with alive
+ * vm_struct area,return 0.
+ * @buf should be kernel's buffer.Becase this function uses KM_USER0.
+ * the caller should guarantee KM_USER0 is not used.
+ *
+ * Note:In usual ops,vwrite() is never necessary because the caller
+ * should know vmalloc() area is valid and can use memcpy().
+ * This is for routines which have to access vmalloc area without
+ * any information,as /dev/kmem.
+ *
+ * The caller should guarantee KM_USER1 is not used.
+ */
+long vwrite(char *buf,char *addr,unsigned long count)
+{
+	struct vm_struct *tmp;
+	char *vaddr;
+	unsigned long n,buflen;
+	int copied = 0;
+
+	/* Don't allow overflow */
+	if((unsigned long)addr + count < count)
+		count = -(unsigned long)addr;
+	buflen = count;
+
+	read_lock(&vmlist_lock);
+	for(tmp = vmlist ; count && tmp ; tmp = tmp->next) {
+		vaddr = (char *)tmp->addr;
+		if(addr >= vaddr + tmp->size - PAGE_SIZE)
+			continue;
+		while(addr < vaddr) {
+			if(count == 0)
+				goto finished;
+			buf++;
+			addr++;
+			count++;
+		}
+		n = vaddr + tmp->size - PAGE_SIZE - addr;
+		if(n > count)
+			n = count;
+		if(!(tmp->flags & VM_IOREMAP)) {
+			aligned_vwrite(buf,addr,n);
+			copied++;
+		}
+		buf += n;
+		addr += n;
+		count -= n;
+	}
+finished:
+	read_unlock(&vmlist_lock);
+	if(!copied)
+		return 0;
+	return buflen;
 }

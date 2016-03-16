@@ -333,5 +333,38 @@ static inline void kernel_map_pages(struct page *page,int numpages,int enable)
 }
 #endif
 
+#define pte_unmap_unlock(pte,ptl)      do {        \
+		spin_lock(ptl);                    \
+		pte_unmap(pte);                       \
+} while(0)
+
+#define pte_alloc_map(mm,vma,pmd,address)                        \
+	((unlikely(pmd_none(pmd)) && __pte_alloc(mm,vma,     \
+											 pmd,address)) ? \
+	 NULL : pte_offset_map(pmd,address))
+
+#define pte_alloc_map_lock(mm,pmd,address,ptlp)    \
+	((unlikely(pmd_none(pmd)) && __pte_alloc(mm,NULL,     \
+											 pmd,address)) ?  \
+	 NULL : pte_offset_map_lock(mm,pmd,address,ptlp))
+
+#define pte_alloc_kernel(pmd,address)      \
+	((unlikely(pmd_none(pmd)) && __pte_alloc_kernel(pmd,address)) ? \
+									NULL : pte_offset_kernel(pmd,address))
+
+typedef int (*pte_fn_t)(pte_t *pte,pgtable_t token,unsigned long addr,
+		void *data);
+
+/*
+ * We use mm->page_table_lock to guard all pagetable pages of the mm.
+ */
+#define pte_lock_init(page) do {} while(0)
+#define pte_lock_deinit(page)  do {} while(0)
+
+static inline void pgtable_page_ctor(struct page *page)
+{
+	pte_lock_init(page);
+	inc_zone_page_state(page,NR_PAGETABLE);
+}
 
 #endif
