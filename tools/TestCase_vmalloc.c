@@ -56,6 +56,7 @@ void TestCase_vmalloc_PageTable(void)
 {
 	unsigned int address;
 	unsigned int find_address;
+	unsigned int *area;
 	pgd_t *pgd;
 	pmd_t *pmd;
 	pte_t *pte;
@@ -78,7 +79,38 @@ void TestCase_vmalloc_PageTable(void)
 	pte = pte_offset_map(pmd,address);
 	mm_debug("PPTE %p\n",pte);
 	page = pte_page(pte);
-	find_address = (unsigned int)(unsigned long)page_address(page);
+	find_address = page_to_phys(page);
 	mm_debug("UserAddress %p\n",(void *)(unsigned long)find_address);
+	mm_debug("Find physical address  %p\n",vaddr_to_phys(address));
+	area = phys_to_mem(vaddr_to_phys(address));
+	area[1] = 0xF4454;
+	mm_debug("AREA Data %p\n",area[1]);
 	vfree(address);
+}
+
+/*
+ * Calculate physical page number.
+ */
+void TestCase_PHYS_NUM(void)
+{
+#define NUM_NUMA 1
+	struct pglist_data *pgdat;
+	struct zonelist *zonelist;
+	struct zoneref *zrf;
+	struct zone *zone;
+	struct page *page;
+	int i;
+	int high_idx[NUM_NUMA] = { 1 };
+
+
+	for(i = 0 ; i < NUM_NUMA ; i++) {
+		pgdat = NODE_DATA(i);
+		zonelist = pgdat->node_zonelists;
+
+		for_each_zone_zonelist(zone,zrf,zonelist,high_idx[i])
+			mm_debug("Zone %s start_pfn %p start_phys %p\n",
+					zone->name,zone->zone_start_pfn,
+					pfn_to_phys(zone->zone_start_pfn));
+
+	}
 }

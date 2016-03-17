@@ -563,3 +563,27 @@ void PCP(struct zone *zone,char *s)
 			 zone->pageset->pcp.high,
 			 zone->pageset->pcp.batch);
 }
+
+/*
+ * Vaddress convert to virtual memory address.
+ */
+unsigned int vaddr_to_phys(unsigned int addr)
+{
+	struct page *page;
+	pgd_t *pgd;
+	pmd_t *pmd;
+	pte_t *pte;
+
+	pgd = pgd_offset_k(addr);
+	if(!pgd_none(pgd)) {
+		pmd = pmd_offset(pgd,addr);
+		if(!pmd_none(pmd)) {
+			pte = pte_offset_kernel(pmd,addr);
+			if(!pte_none(pte)) {
+				page = pte_page(pte);
+				return (unsigned int)(unsigned long)page_to_phys(page);
+			}
+		}
+	}
+	return 0;
+}

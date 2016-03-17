@@ -164,6 +164,6 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-	TestCase_vmalloc_PageTable();	
+	TestCase_PHYS_NUM();	
 	return 0;
 }
