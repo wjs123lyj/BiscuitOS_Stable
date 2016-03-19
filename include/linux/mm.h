@@ -405,4 +405,31 @@ static inline void pgtable_page_dtor(struct page *page)
 	dec_zone_page_state(page,NR_PAGETABLE);
 }
 
+static inline void get_page(struct page *page)
+{
+	/*
+	 * Getting a normal page or the head of compound page
+	 * requires to already have an elevated page->_cound.Only if
+	 * we're getting a tail page,the elevated page->_count is
+	 * required only in the head page,so for tail pages the 
+	 * bugcheck only verifies that the page->_count isn't
+	 * negative.
+	 */
+	VM_BUG_ON(atomic_read(&page->_count) < !PageTail(page));
+	atomic_inc(&page->_count);
+	/*
+	 * Getting a tail page will elevate both the head and tail
+	 * page->_count(s).
+	 */
+	if(unlikely(PageTail(page))) {
+		/*
+		 * This is safe only because
+		 * __split_huge_page_refcount can't run under
+		 * get_page().
+		 */
+		VM_BUG_ON(atomic_read(&page->first_page->_count) <= 0);
+		atomic_inc(&page->first_page->_count);
+	}
+}
+
 #endif

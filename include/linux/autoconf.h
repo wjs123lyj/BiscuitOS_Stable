@@ -182,4 +182,8 @@
  * Support SPLOCK PTLocks
  */
 #define USE_SPLIT_PTLOCKS 1
+/*
+ * Support HighMEM debugging
+ */
+#define CONFIG_DEBUG_HIGHMEM 1
 #endif

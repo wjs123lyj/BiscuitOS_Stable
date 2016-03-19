@@ -127,9 +127,7 @@ static void put_compound_page(struct page *page)
 }
 void put_page(struct page *page)
 {
-	/* Need debug */
-	//if(unlikely(PageCompound(page)))
-	if(0)
+	if(unlikely(PageCompound(page)))
 		put_compound_page(page);
 	else if(put_page_testzero(page))
 		__put_single_page(page);

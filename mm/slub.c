@@ -1827,8 +1827,9 @@ static inline void slab_free(struct kmem_cache *s,
 		set_freepointer(s,object,c->freelist);
 		c->freelist = object;
 		stat(s,FREE_FASTPATH);
-	} else
+	} else 
 		__slab_free(s,page,x,addr);
+
 
 	local_irq_restore(flags);
 }

@@ -100,7 +100,6 @@ void __kunmap_atomic(void *kvaddr)
 		if(cache_is_vivt())
 			; //__cpuc_flush_dcache_area((void *)vaddr,PAGE_SIZE);
 #ifdef CONFIG_DEBUG_HIGHMEM
-		BUG_ON(vaddr != __fix_to_virt(FIX_KMAP_DEGIN + idx));
 		set_pte_ext(TOP_PTE(vaddr),__pte(0),0);
 		local_flush_tlb_kernel_page(vaddr);
 #else
@@ -182,7 +181,7 @@ void *__kmap_atomic(struct page *page)
 	 * With debugging enabled,kunmap_atomic forces that entry to 0.
 	 * Make sure it was indeed properly unmapped.
 	 */
-	BUG_ON(!pte_none(*(TOP_PTE(vaddr))));
+	BUG_ON(!pte_none((TOP_PTE(vaddr))));
 #endif
 	set_pte_ext(TOP_PTE(vaddr),mk_pte(page,kmap_prot),0);
 	/*
@@ -190,7 +189,7 @@ void *__kmap_atomic(struct page *page)
 	 * in place,so this TLB flush ensure the TLB is update with the
 	 * new mapping.
 	 */
-	
+
 	return (void *)vaddr;
 }
 

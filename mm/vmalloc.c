@@ -1295,7 +1295,7 @@ struct page *vmalloc_to_page(const void *vmalloc_addr)
 				pte_t *pte;
 
 				pte = pte_offset_map(pmd,addr);
-				if(pte_present(pte))
+				if(pte_present(pte)) 
 					page = pte_page(pte);
 				pte_unmap(pte);
 			}
@@ -1334,7 +1334,8 @@ static int aligned_vread(char *buf,char *addr,unsigned long count)
 			 * function description)
 			 */
 			void *map = kmap_atomic(p,KM_USER0);
-			memcpy(buf,map + offset,length);
+			/* In order to use memory directly,so...*/
+			memcpy(buf,phys_to_mem(vaddr_to_phys(map + offset)),length);
 			kunmap_atomic(map,KM_USER0);
 		} else
 			memset(buf,0,length);
@@ -1373,7 +1374,8 @@ static int aligned_vwrite(char *buf,char *addr,unsigned long count)
 			 * function description) 
 			 */
 			void *map = kmap_atomic(p,KM_USER0);
-			memcpy(map + offset,buf,length);
+			/* In order to use memory direct,we...*/
+			memcpy(phys_to_mem(vaddr_to_phys(map + offset)),buf,length);
 			kunmap_atomic(map,KM_USER0);
 		}
 		addr += length;
@@ -1417,7 +1419,6 @@ long vread(char *buf,char *addr,unsigned long count)
 	unsigned long buflen = count;
 	unsigned long n;
 
-	/* Don't allow overflow */
 	if((unsigned long)addr + count < count)
 		count = -(unsigned long)addr;
 

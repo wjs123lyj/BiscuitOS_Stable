@@ -18,4 +18,14 @@ static inline void mem_cgroup_del_lru_list(struct page *page,int lru)
 	return;
 }
 
+static inline int mem_cgroup_cache_charge(struct page *page,
+		struct mm_struct *mm,gfp_t gfp_mask)
+{
+	return 0;
+}
+
+static inline void mem_cgroup_uncharge_cache_page(struct page *page)
+{
+}
+
 #endif

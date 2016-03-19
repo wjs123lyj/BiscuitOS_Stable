@@ -81,36 +81,63 @@ void TestCase_vmalloc_PageTable(void)
 	page = pte_page(pte);
 	find_address = page_to_phys(page);
 	mm_debug("UserAddress %p\n",(void *)(unsigned long)find_address);
-	mm_debug("Find physical address  %p\n",vaddr_to_phys(address));
+	mm_debug("Find physical address  %p\n",
+			(void *)(unsigned long)vaddr_to_phys(address));
 	area = phys_to_mem(vaddr_to_phys(address));
 	area[1] = 0xF4454;
-	mm_debug("AREA Data %p\n",area[1]);
+	mm_debug("AREA Data %p\n",(void *)(unsigned long)area[1]);
 	vfree(address);
 }
 
 /*
- * Calculate physical page number.
+ * TestCase_vmwrite_vread
  */
-void TestCase_PHYS_NUM(void)
+void TestCase_vwrite_vread(void)
 {
-#define NUM_NUMA 1
-	struct pglist_data *pgdat;
-	struct zonelist *zonelist;
-	struct zoneref *zrf;
-	struct zone *zone;
+	unsigned int vaddr;
+	char *write_buf;
+	char *read_buf;
+	unsigned int write_addr;
+	unsigned int read_addr;
+	unsigned int use_addr;
+	int count = 20;
+	pgd_t *pgd;
+	pmd_t *pmd;
+	pte_t *pte;
 	struct page *page;
-	int i;
-	int high_idx[NUM_NUMA] = { 1 };
 
+	vaddr = vmalloc(PAGE_SIZE);
 
-	for(i = 0 ; i < NUM_NUMA ; i++) {
-		pgdat = NODE_DATA(i);
-		zonelist = pgdat->node_zonelists;
+	write_buf = (char *)kmalloc(40,GFP_KERNEL);
+	read_buf  = (char *)kmalloc(40,GFP_KERNEL);
 
-		for_each_zone_zonelist(zone,zrf,zonelist,high_idx[i])
-			mm_debug("Zone %s start_pfn %p start_phys %p\n",
-					zone->name,zone->zone_start_pfn,
-					pfn_to_phys(zone->zone_start_pfn));
+	write_addr = vaddr;
+	read_addr = write_addr;
 
+	pgd = pgd_offset_k(vaddr);
+	if(!pgd_none(pgd)) {
+		pmd = pmd_offset(pgd,vaddr);
+		if(!pmd_none(pmd)) {
+			pte = pte_offset_kernel(pmd,vaddr);
+			if(!pte_none(pte)) {
+				page = pte_page(pte);
+				use_addr = pfn_to_phys(page_to_pfn(page));
+				goto found;
+			}
+		}
 	}
+
+	return;
+found:
+	/* Prepare test data */
+	memcpy(write_buf,"Buddy_Zhang",sizeof("Buddy_Zhang"));
+	vwrite(write_buf,write_addr,sizeof("Buddy_Zhang"));
+	mm_debug("Write %s\n",write_buf);
+	vread(read_buf,read_addr,sizeof("Buddy_zhang"));
+	mm_debug("Read  %s\n",read_buf);
+
+	/* Finish Test */
+	vfree(vaddr);
+	kfree(read_buf);
+	kfree(write_buf);
 }

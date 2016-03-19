@@ -164,6 +164,6 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-	TestCase_PHYS_NUM();	
+	TestCase_vwrite_vread();
 	return 0;
 }
