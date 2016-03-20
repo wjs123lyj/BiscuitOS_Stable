@@ -1,22 +1,10 @@
 #ifndef _RCULIST_H_
 #define _RCULIST_H_
 
-#include "poison.h"
-#include "list.h"
-#include "../asm/system.h"
+#include "linux/poison.h"
+#include "linux/list.h"
+#include "asm/system.h"
 
-#define __rcu_assign_pointer(p,v,space)   \
-	({ \
-	 if(!__builtin_constant_p(v) || \
-		 ((v) != NULL))  \
-	 smp_wmb(); \
-	 (p) = (typeof(*v) __force space *)(v);  \
-	 })
-/*
- * Assign to RCU-protected pointer.
- */
-#define rcu_assign_pointer(p,v)   \
-	__rcu_assign_pointer((p),(v),__rcu)
 /*
  * Return the ->next pointer of a list_head in an rcu safe
  * way,we must not access it directly.

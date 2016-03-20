@@ -39,4 +39,29 @@ static inline int rcu_read_lock_held(void)
 #define rcu_dereference_raw(p)  rcu_dereference_check(p,1)
 #define rcu_read_lock(x)     do {} while(0)
 #define rcu_read_unlock(x)   do {} while(0)
+
+#define __rcu_assign_pointer(p,v,space)   \
+	({ \
+	 (p) = (typeof(*v) space *)(v); \
+	 })
+
+/**
+ * rcu_assign_pointer() - assign to RCU-protected pointer
+ * @p:pointer to assign to
+ * @v:value to assign(public)
+ *
+ * Assigns the specified value to the specified RCU-protected
+ * pointer,ensuring that any concurrent RCU readers will see
+ * any prior initialization.Returns the value assigned.
+ * 
+ * Inserts memory barriers on architectures that require them
+ * (pretty much all of them other than x86),and also prevents
+ * the compiler from recordering the code that initializes the 
+ * structure after the pointer assignment.More importantly,this
+ * call documents which pointers will be derefreenced by RCU read-side
+ * code.
+ */
+#define rcu_assign_pointer(p,v) \
+	__rcu_assign_pointer((p),(v),__rcu)
+
 #endif

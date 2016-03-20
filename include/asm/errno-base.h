@@ -5,6 +5,7 @@
 #define ENOENT     2   /* No such file or directory */
 #define ENOMEM     12  /* Out of memory */
 #define EBUSY      16  /* Device or resource busy */
+#define EEXIST     17  /* File exists */
 #define EINVAL     22  /* Invalid argument */
 #define ENOSPC     28  /* No space left on device */
 #define ENOSYS     38  /* Function not implemented */

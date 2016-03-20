@@ -131,4 +131,6 @@ extern size_t *pcpu_group_sizes __read_mostly;
 
 #define per_cpu(var,cpu)    (*((void)(cpu),VERIFY_PERCPU_PTR(&(var))))
 
+#define __get_cpu_var(var) (var)
+
 #endif

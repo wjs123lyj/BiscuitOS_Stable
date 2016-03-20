@@ -186,4 +186,8 @@
  * Support HighMEM debugging
  */
 #define CONFIG_DEBUG_HIGHMEM 1
+/*
+ * Support small path in radix tree
+ */
+#define CONFIG_BASE_SMALL 0
 #endif

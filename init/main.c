@@ -164,6 +164,6 @@ __attribute__((destructor)) __exit Pown_down(void)
  */
 int main()
 {
-	TestCase_vwrite_vread();
+	TestCase_radix_tree();
 	return 0;
 }

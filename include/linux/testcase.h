@@ -59,4 +59,6 @@ extern void TestCase_RB_user(void);
 extern void TestCase_Hash(void);
 /* Wait queue */
 extern void TestCase_wait_queue(void);
+/* Radix tree */
+extern void TestCase_radix_tree(void);
 #endif
