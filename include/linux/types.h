@@ -80,4 +80,6 @@ struct hlist_node {
 	struct hlist_node *next,**pprev;
 };
 
+typedef unsigned long sector_t;
+
 #endif
